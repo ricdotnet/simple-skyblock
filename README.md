@@ -9,6 +9,11 @@ A simple Paper plugin for Minecraft 1.21.10 that automatically generates a skybl
 - Islands are generated from a custom structure (easily customizable)
 - Saves island locations per player
 - Teleports players to their island on join
+- Randomly select coordinates for a custom stronghold structure (easily customizable)
+  - Always generates at Y -40
+  - Placed when any player first loads the chunks where the structure is located
+  - Use an eye of ender to find the direction of the structure
+    - Due to how minecraft works the eye of ender usage will throw a snowball instead of the actual eye of ender, keep an eye open for that
 
 ## Building
 
