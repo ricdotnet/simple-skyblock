@@ -1,0 +1,7 @@
+name: SimpleSkyblock
+version: '${project.version}'
+main: dev.ricr.skyblock.SimpleSkyblock
+api-version: '1.21'
+author: ricdotnet
+description: A simple skyblock plugin that generates islands for new players
+
