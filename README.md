@@ -5,11 +5,8 @@ A simple Paper plugin for Minecraft 1.21.10 that automatically generates a skybl
 ## Features
 
 - Automatically generates a simple island for new players
-- Islands are spaced 200 blocks apart in a spiral pattern
-- Each island includes:
-  - A 7x7 grass platform (stone base, dirt layer, grass top)
-  - An oak tree in the center
-  - A chest for starter items
+- Islands are spaced 350 blocks apart in a spiral pattern
+- Islands are generated from a custom structure (easily customizable)
 - Saves island locations per player
 - Teleports players to their island on join
 
@@ -22,7 +19,7 @@ cd plugin
 ./gradlew build
 ```
 
-The compiled JAR file will be in `target/SimpleSkyblock-1.0.0.jar`
+The compiled JAR file will be in `target/SimpleSkyblock-{version}.jar`
 
 ## Installation
 
@@ -36,8 +33,9 @@ The plugin stores player island data in `plugins/SimpleSkyblock/` directory. Eac
 
 ## Island Generation
 
-- Islands are generated at Y=64 (standard sea level)
-- Islands are spaced 200 blocks apart
-- The first island is at (0, 64, 0)
-- Subsequent islands follow a spiral pattern
+- Islands are generated at Y={64:70} (standard sea level)
+- Islands are spaced 350 blocks apart
+- The first island is at (0, {64:70}, 0)
+- Later islands follow a spiral pattern
+- Due to how structures are generated, islands may not be perfectly centered (could offset a few blocks)
 
