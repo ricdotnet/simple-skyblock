@@ -22,6 +22,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.io.papermc.paper.paper.api)
+    implementation("org.xerial:sqlite-jdbc:3.51.0.0")
 }
 
 group = "dev.ricr.skyblock"

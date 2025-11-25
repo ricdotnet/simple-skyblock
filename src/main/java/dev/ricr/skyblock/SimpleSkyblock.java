@@ -1,5 +1,6 @@
 package dev.ricr.skyblock;
 
+import dev.ricr.skyblock.database.ConnectionManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.generators.StrongholdGenerator;
 import dev.ricr.skyblock.listeners.ChunkLoadListener;
@@ -10,8 +11,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.sql.SQLException;
 
 public class SimpleSkyblock extends JavaPlugin {
+    public ConnectionManager connectionManager;
 
     @Override
     public void onEnable() {
@@ -25,6 +28,9 @@ public class SimpleSkyblock extends JavaPlugin {
                 return;
             }
         }
+
+        // Connect to a simple sqlite database
+        this.connectionManager = new ConnectionManager(this);
 
         // We load the server config into memory for fast access
         // Any changes to it, we then trigger a save
@@ -44,6 +50,14 @@ public class SimpleSkyblock extends JavaPlugin {
     @Override
     public void onDisable() {
         getLogger().info("SimpleSkyblock has been disabled!");
+
+        if  (connectionManager != null) {
+            try {
+                this.connectionManager.getConnection().close();
+            } catch (SQLException e) {
+                getLogger().severe("Failed to close the database connection: " + e.getMessage());
+            }
+        }
     }
 }
 
