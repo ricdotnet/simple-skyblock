@@ -14,6 +14,7 @@ A simple Paper plugin for Minecraft 1.21.10 that automatically generates a skybl
   - Placed when any player first loads the chunks where the structure is located
   - Use an eye of ender to find the direction of the structure
     - Due to how minecraft works the eye of ender usage will throw a snowball instead of the actual eye of ender, keep an eye open for that
+- Right-click on obsidian with a bucket to get your lava back
 
 ## Building
 

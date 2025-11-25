@@ -1,5 +1,5 @@
 name: SimpleSkyblock
-version: '${project.version}'
+version: '0.0.1'
 main: dev.ricr.skyblock.SimpleSkyblock
 api-version: '1.21'
 author: ricdotnet
