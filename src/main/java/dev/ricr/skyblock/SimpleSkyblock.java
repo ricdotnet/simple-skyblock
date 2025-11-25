@@ -3,6 +3,7 @@ package dev.ricr.skyblock;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.generators.StrongholdGenerator;
 import dev.ricr.skyblock.listeners.ChunkLoadListener;
+import dev.ricr.skyblock.listeners.MobSpawnListener;
 import dev.ricr.skyblock.listeners.PlayerJoinListener;
 import dev.ricr.skyblock.listeners.PlayerUseListener;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -37,6 +38,7 @@ public class SimpleSkyblock extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(islandGenerator), this);
         getServer().getPluginManager().registerEvents(new ChunkLoadListener(strongholdGenerator), this);
         getServer().getPluginManager().registerEvents(new PlayerUseListener(this, serverConfig), this);
+        getServer().getPluginManager().registerEvents(new MobSpawnListener(this), this);
 
         getLogger().info("SimpleSkyblock has been enabled!");
     }
