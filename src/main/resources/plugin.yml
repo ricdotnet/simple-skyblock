@@ -25,6 +25,7 @@ commands:
   leaderboard:
     description: View the leaderboard
     usage: /leaderboard
+    aliases: [baltop]
 
 permissions:
   simpleskyblock.balance:
