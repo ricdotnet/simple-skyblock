@@ -37,10 +37,10 @@ public class InventoryClickListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        event.setCancelled(true);
 
         Inventory inventory = event.getInventory();
         if (inventory.getHolder(false) instanceof ShopTypeGUI) {
+            event.setCancelled(true);
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || clicked.getType() == Material.AIR) {
                 return;
@@ -56,6 +56,7 @@ public class InventoryClickListener implements Listener {
         }
 
         if (inventory.getHolder(false) instanceof ItemsListGUI itemsListGUI) {
+            event.setCancelled(true);
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || clicked.getType() == Material.AIR) {
                 return;
@@ -83,6 +84,7 @@ public class InventoryClickListener implements Listener {
         }
 
         if (inventory.getHolder(false) instanceof ConfirmGUI confirmGUI) {
+            event.setCancelled(true);
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || clicked.getType() == Material.AIR || !isGlassPaneOrBarrierBlock(clicked.getType())) {
                 return;
