@@ -24,5 +24,8 @@ public class Sale {
     private String item;
 
     @DatabaseField(canBeNull = false)
+    private int quantity;
+
+    @DatabaseField(canBeNull = false)
     private String type; // BOUGHT or SOLD
 }

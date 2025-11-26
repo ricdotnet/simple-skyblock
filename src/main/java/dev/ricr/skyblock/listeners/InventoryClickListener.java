@@ -3,7 +3,9 @@ package dev.ricr.skyblock.listeners;
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Balance;
+import dev.ricr.skyblock.database.Sale;
 import dev.ricr.skyblock.enums.ShopType;
+import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.shop.ConfirmGUI;
 import dev.ricr.skyblock.shop.ItemsListGUI;
@@ -117,10 +119,23 @@ public class InventoryClickListener implements Listener {
             int itemAmount = clicked.getAmount();
 
             Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
+            Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSaleDao();
+            Sale sale = new Sale();
+
             double totalPrice;
             double finalBalance = 0;
 
+            TransactionType transactionType;
             if (name.contains("Buy")) {
+                transactionType = TransactionType.Buy;
+            } else if (name.contains("Sell")) {
+                transactionType = TransactionType.Sell;
+            } else {
+                player.sendMessage(Component.text("Something went wrong.", NamedTextColor.RED));
+                return;
+            }
+
+            if (transactionType == TransactionType.Buy) {
                 totalPrice = prices.buyPrice() * itemAmount;
 
                 try {
@@ -130,10 +145,11 @@ public class InventoryClickListener implements Listener {
                         finalBalance = userBalance.getValue() - totalPrice;
                         userBalance.setValue(finalBalance);
                         balanceDao.update(userBalance);
+                        sale.setUser(userBalance);
 
                         player.getInventory().addItem(new ItemStack(material, itemAmount));
 
-                        player.sendMessage(Component.text(String.format("You bought %s %s for $%s", itemAmount, "placeholder", totalPrice), NamedTextColor.GREEN));
+                        player.sendMessage(Component.text(String.format("You bought %s %s for $%s", itemAmount, ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice), NamedTextColor.GREEN));
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
                     } else {
                         player.sendMessage(Component.text("You don't have enough money to buy this item.", NamedTextColor.RED));
@@ -143,7 +159,7 @@ public class InventoryClickListener implements Listener {
                 } catch (SQLException e) {
                     // ignore for now
                 }
-            } else if (name.contains("Sell")) {
+            } else {
                 totalPrice = prices.sellPrice() * itemAmount;
 
                 if (!player.getInventory().contains(material, itemAmount)) {
@@ -158,14 +174,28 @@ public class InventoryClickListener implements Listener {
                     finalBalance = userBalance.getValue() + totalPrice;
                     userBalance.setValue(finalBalance);
                     balanceDao.update(userBalance);
+                    sale.setUser(userBalance);
 
                     player.getInventory().removeItem(new ItemStack(material, itemAmount));
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
 
-                    player.sendMessage(Component.text(String.format("You sold %s %s for $%s", itemAmount, "placeholder", totalPrice), NamedTextColor.GREEN));
+                    player.sendMessage(Component.text(String.format("You sold %s %s for $%s", itemAmount, ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice), NamedTextColor.GREEN));
                 } catch (SQLException e) {
                     // ignore for now
                 }
+            }
+
+            try {
+                sale.setItem(material.name());
+                sale.setValue(totalPrice);
+                sale.setQuantity(itemAmount);
+                sale.setType(transactionType.toString());
+
+                saleDao.create(sale);
+
+                plugin.getLogger().info(String.format("Created sale entry costs %s for %s", totalPrice, player.getName()));
+            } catch (SQLException e) {
+                // ignore for now
             }
 
             player.sendMessage(Component.text(String.format("Your balance is now $%s", finalBalance), NamedTextColor.GOLD));

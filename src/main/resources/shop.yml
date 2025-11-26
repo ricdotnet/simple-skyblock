@@ -2,31 +2,42 @@ blocks:
   - material: COBBLESTONE
     name: 'Cobblestone'
     buy: 50.0
-    sell: 1.0
+    sell: 3.0
   - material: STONE
     name: 'Stone'
     buy: 100.0
-    sell: 3.0
+    sell: 5.0
   - material: DIRT
     name: 'Dirt'
     buy: 500.0
+    sell: 5.0
   - material: SAND
     name: 'Sand'
     buy: 500.0
+    sell: 5.0
+  - material: GRAVEL
+    name: 'Gravel'
+    buy: 500.0
+    sell: 5.0
   - material: OBSIDIAN
     name: 'Obsidian'
-    buy: 1200.0
+    buy: 1000.0
+    sell: 100.0
 
 items:
   - material: BONE
     name: 'Bone'
+    buy: 10.0
     sell: 0.5
   - material: ROTTEN_FLESH
     name: 'Rotten Flesh'
+    buy: 10.0
     sell: 0.5
   - material: GUNPOWDER
     name: 'Gunpowder'
+    buy: 10.0
     sell: 0.5
   - material: ARROW
     name: 'Arrow'
+    buy: 10.0
     sell: 0.5
