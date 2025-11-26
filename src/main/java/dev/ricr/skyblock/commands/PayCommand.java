@@ -55,10 +55,22 @@ public class PayCommand implements CommandExecutor {
             if (player.isOp()) {
                 targetPlayerBalance.setValue(targetPlayerBalance.getValue() + amount);
                 balanceDao.update(targetPlayerBalance);
-                    player.sendMessage(Component.text(String.format("Paid $%s to %s", amount, targetPlayerName), NamedTextColor.GREEN));
             } else {
-                // update sending player balance
-                player.sendMessage("This feature is only available for operators at the moment.");
+                Balance senderBalance = balanceDao.queryForId(player.getUniqueId().toString());
+
+                if (senderBalance.getValue() >= amount) {
+                    senderBalance.setValue(senderBalance.getValue() - amount);
+                    targetPlayerBalance.setValue(targetPlayerBalance.getValue() + amount);
+                } else {
+                    player.sendMessage(Component.text("You don't have enough money to pay that amount", NamedTextColor.RED));
+                    return true;
+                }
+
+                balanceDao.update(senderBalance);
+                balanceDao.update(targetPlayerBalance);
+
+                player.sendMessage(Component.text(String.format("Paid $%s to %s", amount, targetPlayerName), NamedTextColor.GREEN));
+                targetPlayer.sendMessage(Component.text(String.format("You received $%s from %s", amount, player.getName()), NamedTextColor.GREEN));
             }
         } catch (SQLException e) {
             // ignore for now
