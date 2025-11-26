@@ -1,6 +1,6 @@
 package dev.ricr.skyblock.utils;
 
-import dev.ricr.skyblock.CustomStructures;
+import dev.ricr.skyblock.enums.CustomStructures;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.structure.Mirror;

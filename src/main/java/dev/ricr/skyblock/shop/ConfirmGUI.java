@@ -1,12 +1,14 @@
 package dev.ricr.skyblock.shop;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.enums.TransactionType;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -26,13 +28,9 @@ public class ConfirmGUI implements InventoryHolder {
         inventory.setItem(13, itemStack);
 
         if (pricePair.buyPrice() >= 0) {
-            ItemStack buySingle = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1);
-            ItemStack buyHalfStack = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, itemStack.getMaxStackSize() / 2);
-            ItemStack buyFullStack = new ItemStack(Material.GREEN_STAINED_GLASS_PANE, item.getMaxStackSize());
-
-            setOptionMeta(item, buySingle, 1, pricePair.buyPrice(), "Buy");
-            setOptionMeta(item, buyHalfStack, itemStack.getMaxStackSize() / 2, pricePair.buyPrice(), "Buy");
-            setOptionMeta(item, buyFullStack, itemStack.getMaxStackSize(), pricePair.buyPrice(), "Buy");
+            ItemStack buySingle = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1), pricePair.buyPrice(), TransactionType.Buy);
+            ItemStack buyHalfStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, itemStack.getMaxStackSize() / 2), pricePair.buyPrice(), TransactionType.Buy);
+            ItemStack buyFullStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, item.getMaxStackSize()), pricePair.buyPrice(), TransactionType.Buy);
 
             inventory.setItem(11, buySingle);
             inventory.setItem(10, buyHalfStack);
@@ -40,13 +38,9 @@ public class ConfirmGUI implements InventoryHolder {
         }
 
         if (pricePair.sellPrice() >= 0) {
-            ItemStack sellSingle = new ItemStack(Material.RED_STAINED_GLASS_PANE, 1);
-            ItemStack sellHalfStack = new ItemStack(Material.RED_STAINED_GLASS_PANE, itemStack.getMaxStackSize() / 2);
-            ItemStack sellFullStack = new ItemStack(Material.RED_STAINED_GLASS_PANE, item.getMaxStackSize());
-
-            setOptionMeta(item, sellSingle, 1, pricePair.sellPrice(), "Sell");
-            setOptionMeta(item, sellHalfStack, itemStack.getMaxStackSize() / 2, pricePair.sellPrice(), "Sell");
-            setOptionMeta(item, sellFullStack, itemStack.getMaxStackSize(), pricePair.sellPrice(), "Sell");
+            ItemStack sellSingle = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, 1), pricePair.sellPrice(), TransactionType.Sell);
+            ItemStack sellHalfStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, itemStack.getMaxStackSize() / 2), pricePair.sellPrice(), TransactionType.Sell);
+            ItemStack sellFullStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, item.getMaxStackSize()), pricePair.sellPrice(), TransactionType.Sell);
 
             inventory.setItem(15, sellSingle);
             inventory.setItem(16, sellHalfStack);
@@ -54,13 +48,17 @@ public class ConfirmGUI implements InventoryHolder {
         }
     }
 
-    private void setOptionMeta(Material material, ItemStack itemStack, int stackSize, double price, String transactionType) {
+    private ItemStack setOptionMeta(Material material, ItemStack itemStack, double price, TransactionType transactionType) {
         ItemMeta meta = itemStack.getItemMeta();
+        int stackSize = itemStack.getAmount();
 
         if (meta != null) {
             meta.displayName(Component.text(transactionType + " " + material.name()));
             meta.lore(List.of(Component.text("Total: $" + price * stackSize)));
+            meta.itemName(Component.text(transactionType.name()));
             itemStack.setItemMeta(meta);
         }
+
+        return itemStack;
     }
 }

@@ -6,6 +6,9 @@ import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.shop.BlockItems;
 import dev.ricr.skyblock.shop.ConfirmGUI;
 import dev.ricr.skyblock.shop.ShopGUI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
@@ -15,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.sql.SQLException;
 
@@ -46,55 +50,61 @@ public class InventoryClickListener implements Listener {
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || clicked.getType() == Material.AIR || !isGlassPane(clicked.getType())) return;
 
-            player.sendMessage("Clicked " + clicked.getType().name());
-            player.closeInventory();
-        }
+            Material material = clicked.getType();
+            BlockItems.PricePair prices = BlockItems.SHOP_ITEMS.get(material);
+            Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
+            double finalBalance = 0;
 
-//        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
-//
-//        if (event.getClick().isLeftClick()) {
-//            this.plugin.getLogger().info("Player " + player.getName() + " is buying " + material.name());
-//
-//            try {
-//                Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
-//                if (userBalance.getValue() >= prices.buyPrice()) {
-//                    userBalance.setValue(userBalance.getValue() - prices.buyPrice());
-//                    balanceDao.update(userBalance);
-//                    player.getInventory().addItem(new ItemStack(material, 1));
-//
-//                    player.sendMessage("Bought " + material.name() + " for $" + prices.buyPrice());
-//                    player.sendMessage("Your balance is now $" + userBalance.getValue());
-//                } else {
-//                    player.sendMessage("You don't have enough money to buy this item.");
-//                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-//                    return;
-//                }
-//            } catch (SQLException e) {
-//                // ignore for now
-//            }
-//        } else if (event.getClick().isRightClick()) {
-//            this.plugin.getLogger().info("Player " + player.getName() + " is selling " + material.name());
-//
-//            if (!player.getInventory().contains(material)) {
-//                player.sendMessage("You don't have that item in your inventory.");
-//                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-//                return;
-//            }
-//
-//            try {
-//                Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
-//                userBalance.setValue(userBalance.getValue() + prices.sellPrice());
-//                balanceDao.update(userBalance);
-//
-//                player.getInventory().removeItem(new ItemStack(material, 1));
-//                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
-//
-//                player.sendMessage("Sold " + material.name() + " for $" + prices.sellPrice());
-//                player.sendMessage("Your balance is now $" + userBalance.getValue());
-//            } catch (SQLException e) {
-//                // ignore for now
-//            }
-//        }
+            ItemMeta meta = clicked.getItemMeta();
+            String name = meta.itemName().toString();
+            int itemAmount = clicked.getAmount();
+            double totalPrice = prices.buyPrice() * itemAmount;
+
+            if (name.contains("Buy")) {
+                try {
+                    Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
+
+                    if (userBalance.getValue() >= totalPrice) {
+                        finalBalance = userBalance.getValue() - totalPrice;
+                        userBalance.setValue(finalBalance - totalPrice);
+                        balanceDao.update(userBalance);
+                        player.getInventory().addItem(new ItemStack(material, itemAmount));
+
+                        player.sendMessage(Component.text(String.format("You bought %s %s for $%s", itemAmount, meta.displayName(), totalPrice), NamedTextColor.GREEN));
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
+                    } else {
+                        player.sendMessage(Component.text("You don't have enough money to buy this item.", NamedTextColor.RED));
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                        return;
+                    }
+                } catch (SQLException e) {
+                    // ignore for now
+                }
+            } else if (name.contains("Sell")) {
+                if (!player.getInventory().contains(material, itemAmount)) {
+                    player.sendMessage(Component.text("You don't have enough of that item in your inventory.", NamedTextColor.RED));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                    return;
+                }
+
+                try {
+                    Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
+
+                    finalBalance = userBalance.getValue() + totalPrice;
+                    userBalance.setValue(finalBalance);
+                    balanceDao.update(userBalance);
+
+                    player.getInventory().removeItem(new ItemStack(material, itemAmount));
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+
+                    player.sendMessage(Component.text(String.format("You sold %s %s for $%s", itemAmount, meta.displayName(), totalPrice), NamedTextColor.GREEN));
+                } catch (SQLException e) {
+                    // ignore for now
+                }
+            }
+
+            player.sendMessage(Component.text(String.format("Your balance is now $%s", finalBalance), NamedTextColor.GOLD));
+        }
     }
 
     private boolean isGlassPane(Material material) {

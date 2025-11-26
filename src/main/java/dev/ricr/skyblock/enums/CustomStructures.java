@@ -1,4 +1,4 @@
-package dev.ricr.skyblock;
+package dev.ricr.skyblock.enums;
 
 public enum CustomStructures {
     ISLAND("skyblock_island.nbt"),
