@@ -7,6 +7,8 @@
 plugins {
     `java-library`
     `maven-publish`
+    java
+    id("io.github.goooler.shadow") version "8.1.8"
 }
 
 repositories {
@@ -22,16 +24,39 @@ repositories {
 
 dependencies {
     compileOnly(libs.io.papermc.paper.paper.api)
+    implementation("org.xerial:sqlite-jdbc:3.51.0.0")
+    implementation("com.j256.ormlite:ormlite-core:6.1")
+    implementation("com.j256.ormlite:ormlite-jdbc:6.1")
+    implementation("org.projectlombok:lombok:1.18.42")
+    annotationProcessor("org.projectlombok:lombok:1.18.42")
 }
 
 group = "dev.ricr.skyblock"
-version = "0.0.1"
+version = "0.0.2-SNAPSHOT"
 description = "SimpleSkyblock"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
 publishing {
     publications.create<MavenPublication>("maven") {
         from(components["java"])
+    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+tasks {
+    shadowJar {
+        archiveClassifier.set("") // overwrite normal jar
+        mergeServiceFiles()       // required for ORMLite/SQLite
+        minimize()                // optional: remove unused classes
+    }
+
+    build {
+        dependsOn(shadowJar)
     }
 }
 

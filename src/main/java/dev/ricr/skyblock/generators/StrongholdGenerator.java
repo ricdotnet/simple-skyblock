@@ -1,9 +1,10 @@
 package dev.ricr.skyblock.generators;
 
-import dev.ricr.skyblock.CustomStructures;
+import dev.ricr.skyblock.enums.CustomStructures;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.utils.StructureUtils;
+import lombok.Getter;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.joml.Vector3d;
@@ -14,6 +15,7 @@ public class StrongholdGenerator {
 
     private final SimpleSkyblock plugin;
     private final FileConfiguration serverConfig;
+    @Getter
     private final Vector3d strongholdLocation;
     private final int MIN = -3500;
     private final int MAX = 3500;
@@ -24,10 +26,6 @@ public class StrongholdGenerator {
         this.strongholdLocation = this.randomCoordinates();
 
         saveStrongholdLocation(this.strongholdLocation);
-    }
-
-    public Vector3d getStrongholdLocation() {
-        return this.strongholdLocation;
     }
 
     public boolean isStrongholdPlaced() {
