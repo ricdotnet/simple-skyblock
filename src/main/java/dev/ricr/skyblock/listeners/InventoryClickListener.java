@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.listeners;
 
 import com.j256.ormlite.dao.Dao;
+import dev.ricr.skyblock.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.Sale;
@@ -201,6 +202,10 @@ public class InventoryClickListener implements Listener {
             }
 
             player.sendMessage(Component.text(String.format("Your balance is now $%s", finalBalance), NamedTextColor.GOLD));
+        }
+
+        if (inventory.getHolder(false) instanceof LeaderBoardGUI) {
+            event.setCancelled(true);
         }
     }
 
