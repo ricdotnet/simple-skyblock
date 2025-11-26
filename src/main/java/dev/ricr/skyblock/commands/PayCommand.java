@@ -68,13 +68,13 @@ public class PayCommand implements CommandExecutor {
 
                 balanceDao.update(senderBalance);
                 balanceDao.update(targetPlayerBalance);
-
-                player.sendMessage(Component.text(String.format("Paid $%s to %s", amount, targetPlayerName), NamedTextColor.GREEN));
-                targetPlayer.sendMessage(Component.text(String.format("You received $%s from %s", amount, player.getName()), NamedTextColor.GREEN));
             }
         } catch (SQLException e) {
             // ignore for now
         }
+
+        player.sendMessage(Component.text(String.format("Paid $%s to %s", amount, targetPlayerName), NamedTextColor.GREEN));
+        targetPlayer.sendMessage(Component.text(String.format("You received $%s from %s", amount, player.getName()), NamedTextColor.GREEN));
 
         return true;
     }
