@@ -1,7 +1,25 @@
 name: SimpleSkyblock
-version: '0.0.1'
+version: '0.0.2-SNAPSHOT'
 main: dev.ricr.skyblock.SimpleSkyblock
 api-version: '1.21'
 author: ricdotnet
 description: A simple skyblock plugin that generates islands for new players
 
+commands:
+  balance:
+    description: Get your economy balance
+    usage: /balance
+    permission: simpleskyblock.balance
+    aliases: [bal]
+  shop:
+    description: Open the shop GUI
+    usage: /shop
+    permission: simpleskyblock.shop
+
+permissions:
+  simpleskyblock.balance:
+    description: Allows players to check their economy balance
+    default: true
+  simpleskyblock.shop:
+    description: Allows players to open the shop GUI
+    default: true

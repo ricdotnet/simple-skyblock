@@ -1,9 +1,12 @@
 package dev.ricr.skyblock;
 
-import dev.ricr.skyblock.database.ConnectionManager;
+import dev.ricr.skyblock.commands.BalanceCommand;
+import dev.ricr.skyblock.commands.ShopCommand;
+import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.generators.StrongholdGenerator;
 import dev.ricr.skyblock.listeners.ChunkLoadListener;
+import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.PlayerJoinListener;
 import dev.ricr.skyblock.listeners.PlayerUseListener;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -11,10 +14,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.sql.SQLException;
+import java.util.Objects;
 
 public class SimpleSkyblock extends JavaPlugin {
-    public ConnectionManager connectionManager;
+    public DatabaseManager databaseManager;
 
     @Override
     public void onEnable() {
@@ -30,19 +33,24 @@ public class SimpleSkyblock extends JavaPlugin {
         }
 
         // Connect to a simple sqlite database
-        this.connectionManager = new ConnectionManager(this);
+        this.databaseManager = new DatabaseManager(this);
 
         // We load the server config into memory for fast access
         // Any changes to it, we then trigger a save
         FileConfiguration serverConfig = ServerUtils.loadConfig(dataFolder);
 
         StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this, serverConfig);
-        IslandGenerator islandGenerator = new IslandGenerator(this);
+        IslandGenerator islandGenerator = new IslandGenerator(this, serverConfig);
 
         // Register listeners
-        getServer().getPluginManager().registerEvents(new PlayerJoinListener(islandGenerator), this);
-        getServer().getPluginManager().registerEvents(new ChunkLoadListener(strongholdGenerator), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this, islandGenerator), this);
+        getServer().getPluginManager().registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
         getServer().getPluginManager().registerEvents(new PlayerUseListener(this, serverConfig), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(this), this);
+
+        // Register commands
+        Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand(this));
+        Objects.requireNonNull(getCommand("shop")).setExecutor(new ShopCommand(this));
 
         getLogger().info("SimpleSkyblock has been enabled!");
     }
@@ -50,14 +58,6 @@ public class SimpleSkyblock extends JavaPlugin {
     @Override
     public void onDisable() {
         getLogger().info("SimpleSkyblock has been disabled!");
-
-        if  (connectionManager != null) {
-            try {
-                this.connectionManager.getConnection().close();
-            } catch (SQLException e) {
-                getLogger().severe("Failed to close the database connection: " + e.getMessage());
-            }
-        }
     }
 }
 
