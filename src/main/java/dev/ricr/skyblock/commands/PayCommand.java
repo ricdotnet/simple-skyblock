@@ -17,7 +17,7 @@ import java.sql.SQLException;
 
 @AllArgsConstructor
 public class PayCommand implements CommandExecutor {
-    SimpleSkyblock plugin;
+    private final SimpleSkyblock plugin;
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
@@ -58,6 +58,7 @@ public class PayCommand implements CommandExecutor {
                     player.sendMessage(Component.text(String.format("Paid $%s to %s", amount, targetPlayerName), NamedTextColor.GREEN));
             } else {
                 // update sending player balance
+                player.sendMessage("This feature is only available for operators at the moment.");
             }
         } catch (SQLException e) {
             // ignore for now

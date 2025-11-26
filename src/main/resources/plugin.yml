@@ -19,6 +19,9 @@ commands:
     description: Open the shop GUI
     usage: /shop
     permission: simpleskyblock.shop
+  reloadshop:
+    description: Reload the shop config
+    usage: /reloadshop
 
 permissions:
   simpleskyblock.balance:
@@ -30,3 +33,6 @@ permissions:
   simpleskyblock.shop:
     description: Allows players to open the shop GUI
     default: true
+  reloadshop:
+    description: Allows admins to reload the shop config
+    default: op

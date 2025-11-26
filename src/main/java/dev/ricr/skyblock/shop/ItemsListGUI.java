@@ -1,0 +1,76 @@
+package dev.ricr.skyblock.shop;
+
+import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.enums.ShopType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.List;
+import java.util.Map;
+
+@AllArgsConstructor
+public class ItemsListGUI implements InventoryHolder {
+    @Getter
+    private final Inventory inventory;
+    private final SimpleSkyblock plugin;
+    @Getter
+    private final ShopType shopType;
+
+    public ItemsListGUI(SimpleSkyblock plugin, Map<Material, ShopItems.PricePair> shopItems, ShopType shopType) {
+        this.plugin = plugin;
+        this.shopType = shopType;
+        this.inventory = Bukkit.createInventory(this, 54, Component.text("Shop"));
+
+        // starting at slot 10 for having a border around
+        int slot = 10;
+        for (Map.Entry<Material, ShopItems.PricePair> entry : shopItems.entrySet()) {
+            while (isBorderSlot(slot)) {
+                slot++;
+            }
+
+            Material material = entry.getKey();
+            ShopItems.PricePair prices = entry.getValue();
+
+            ItemStack item = new ItemStack(material, 1);
+            ItemMeta meta = item.getItemMeta();
+
+            if (meta != null) {
+                meta.displayName(Component.text(material.name()));
+                meta.lore(List.of(Component.text("Sell: " + priceOrNotAvailable(prices.sellPrice())), Component.text("Buy: " + priceOrNotAvailable(prices.buyPrice()))));
+                item.setItemMeta(meta);
+            }
+
+            inventory.setItem(slot++, item);
+        }
+
+        ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);
+        ItemMeta meta = goBackButton.getItemMeta();
+        meta.displayName(Component.text("Go back"));
+        goBackButton.setItemMeta(meta);
+        inventory.setItem(49, goBackButton);
+    }
+
+    private boolean isBorderSlot(int slot) {
+        int inventoryWidth = 9;
+
+        int row = slot / inventoryWidth;
+        int col = slot % inventoryWidth;
+
+        return col == 0 || col == inventoryWidth - 1 || row == 0 || row == inventoryWidth - 1;
+    }
+
+    private String priceOrNotAvailable(double price) {
+        if (price == -1) {
+            return "Not available";
+        } else {
+            return String.format("$%s", price);
+        }
+    }
+}

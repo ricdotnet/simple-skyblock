@@ -1,5 +1,7 @@
 package dev.ricr.skyblock.utils;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -23,6 +25,10 @@ public class ServerUtils {
         } catch (Exception e) {
             logger.severe("Failed to save config: " + e.getMessage());
         }
+    }
+
+    public static String getTextFromComponent(Component component) {
+        return PlainTextComponentSerializer.plainText().serialize(component);
     }
 
 }

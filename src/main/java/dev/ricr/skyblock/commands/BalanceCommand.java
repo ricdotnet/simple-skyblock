@@ -16,7 +16,7 @@ import java.sql.SQLException;
 
 @AllArgsConstructor
 public class BalanceCommand implements CommandExecutor {
-    SimpleSkyblock plugin;
+    private final SimpleSkyblock plugin;
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {

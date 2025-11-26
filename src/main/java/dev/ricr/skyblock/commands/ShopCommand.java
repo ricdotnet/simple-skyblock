@@ -1,7 +1,7 @@
 package dev.ricr.skyblock.commands;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.shop.ShopGUI;
+import dev.ricr.skyblock.shop.ShopTypeGUI;
 import lombok.AllArgsConstructor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 @AllArgsConstructor
 public class ShopCommand implements CommandExecutor {
-    SimpleSkyblock plugin;
+    private final SimpleSkyblock plugin;
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
@@ -20,8 +20,8 @@ public class ShopCommand implements CommandExecutor {
             return true;
         }
 
-        ShopGUI shopGUI = new ShopGUI(this.plugin);
-        player.openInventory(shopGUI.getInventory());
+        ShopTypeGUI shopTypeGUI = new ShopTypeGUI(this.plugin);
+        player.openInventory(shopTypeGUI.getInventory());
 
         return true;
     }

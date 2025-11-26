@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.shop;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -17,12 +18,14 @@ public class ConfirmGUI implements InventoryHolder {
     @Getter
     private final Inventory inventory;
     private final SimpleSkyblock plugin;
+    @Getter
+    private final ShopType shopType;
 
-    public ConfirmGUI(SimpleSkyblock plugin, Material item, BlockItems.PricePair pricePair) {
+    public ConfirmGUI(SimpleSkyblock plugin, Material item, ShopItems.PricePair pricePair, ShopType shopType) {
         this.plugin = plugin;
+        this.shopType = shopType;
         this.inventory = Bukkit.createInventory(this, 27, Component.text("Confirm order"));
 
-        // 9 10 11 _ 13 _ 15 16 17
         ItemStack itemStack = new ItemStack(item, 1);
         inventory.setItem(13, itemStack);
 
@@ -45,6 +48,12 @@ public class ConfirmGUI implements InventoryHolder {
             inventory.setItem(16, sellHalfStack);
             inventory.setItem(17, sellFullStack);
         }
+
+        ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);
+        ItemMeta meta = goBackButton.getItemMeta();
+        meta.displayName(Component.text("Go back"));
+        goBackButton.setItemMeta(meta);
+        inventory.setItem(22, goBackButton);
     }
 
     private ItemStack setOptionMeta(Material material, ItemStack itemStack, double price, TransactionType transactionType) {

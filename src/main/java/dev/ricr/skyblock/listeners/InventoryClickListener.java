@@ -3,9 +3,12 @@ package dev.ricr.skyblock.listeners;
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Balance;
-import dev.ricr.skyblock.shop.BlockItems;
+import dev.ricr.skyblock.enums.ShopType;
+import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.shop.ConfirmGUI;
-import dev.ricr.skyblock.shop.ShopGUI;
+import dev.ricr.skyblock.shop.ItemsListGUI;
+import dev.ricr.skyblock.shop.ShopTypeGUI;
+import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
@@ -29,31 +32,85 @@ public class InventoryClickListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
         event.setCancelled(true);
 
         Inventory inventory = event.getInventory();
-        if (inventory.getHolder(false) instanceof ShopGUI) {
+        if (inventory.getHolder(false) instanceof ShopTypeGUI) {
             ItemStack clicked = event.getCurrentItem();
-            if (clicked == null || clicked.getType() == Material.AIR) return;
+            if (clicked == null || clicked.getType() == Material.AIR) {
+                return;
+            }
 
             Material material = clicked.getType();
-            BlockItems.PricePair prices = BlockItems.SHOP_ITEMS.get(material);
+            switch (material) {
+                case COBBLESTONE ->
+                        player.openInventory(new ItemsListGUI(this.plugin, ShopItems.BLOCKS, ShopType.Blocks).getInventory());
+                case DIAMOND ->
+                        player.openInventory(new ItemsListGUI(this.plugin, ShopItems.ITEMS, ShopType.Items).getInventory());
+            }
+        }
 
-            ConfirmGUI confirmGUI = new ConfirmGUI(this.plugin, material, prices);
+        if (inventory.getHolder(false) instanceof ItemsListGUI itemsListGUI) {
+            ItemStack clicked = event.getCurrentItem();
+            if (clicked == null || clicked.getType() == Material.AIR) {
+                return;
+            }
+
+            if ("Go back".equals(ServerUtils.getTextFromComponent(clicked.getItemMeta().displayName()))) {
+                player.openInventory(new ShopTypeGUI(this.plugin).getInventory());
+                return;
+            }
+
+            Material material = clicked.getType();
+            ShopItems.PricePair prices = null;
+
+            switch (itemsListGUI.getShopType()) {
+                case ShopType.Blocks -> prices = ShopItems.BLOCKS.get(material);
+                case ShopType.Items -> prices = ShopItems.ITEMS.get(material);
+            }
+
+            if (prices == null) {
+                return;
+            }
+
+            ConfirmGUI confirmGUI = new ConfirmGUI(this.plugin, material, prices, itemsListGUI.getShopType());
             player.openInventory(confirmGUI.getInventory());
         }
 
         if (inventory.getHolder(false) instanceof ConfirmGUI confirmGUI) {
             ItemStack clicked = event.getCurrentItem();
-            if (clicked == null || clicked.getType() == Material.AIR || !isGlassPane(clicked.getType())) return;
+            if (clicked == null || clicked.getType() == Material.AIR || !isGlassPaneOrBarrierBlock(clicked.getType())) {
+                return;
+            }
+
+            if ("Go back".equals(ServerUtils.getTextFromComponent(clicked.getItemMeta().displayName()))) {
+                switch (confirmGUI.getShopType()) {
+                    case ShopType.Blocks ->
+                            player.openInventory(new ItemsListGUI(this.plugin, ShopItems.BLOCKS, ShopType.Blocks).getInventory());
+                    case ShopType.Items ->
+                            player.openInventory(new ItemsListGUI(this.plugin, ShopItems.ITEMS, ShopType.Items).getInventory());
+                }
+                return;
+            }
 
             // get item being bought or sold
             ItemStack actionableItem = inventory.getItem(13);
             if (actionableItem == null) return;
 
             Material material = actionableItem.getType();
-            BlockItems.PricePair prices = BlockItems.SHOP_ITEMS.get(material);
+            ShopItems.PricePair prices = null;
+
+            switch (confirmGUI.getShopType()) {
+                case ShopType.Blocks -> prices = ShopItems.BLOCKS.get(material);
+                case ShopType.Items -> prices = ShopItems.ITEMS.get(material);
+            }
+
+            if (prices == null) {
+                return;
+            }
 
             ItemMeta meta = clicked.getItemMeta();
             String name = meta.itemName().toString();
@@ -81,6 +138,7 @@ public class InventoryClickListener implements Listener {
                     } else {
                         player.sendMessage(Component.text("You don't have enough money to buy this item.", NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                        return;
                     }
                 } catch (SQLException e) {
                     // ignore for now
@@ -114,7 +172,7 @@ public class InventoryClickListener implements Listener {
         }
     }
 
-    private boolean isGlassPane(Material material) {
-        return material == Material.GREEN_STAINED_GLASS_PANE || material == Material.RED_STAINED_GLASS_PANE;
+    private boolean isGlassPaneOrBarrierBlock(Material material) {
+        return material == Material.GREEN_STAINED_GLASS_PANE || material == Material.RED_STAINED_GLASS_PANE || material == Material.BARRIER;
     }
 }
