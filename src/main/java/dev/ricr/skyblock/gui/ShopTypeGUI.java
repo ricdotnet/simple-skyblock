@@ -1,7 +1,6 @@
-package dev.ricr.skyblock.shop;
+package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;

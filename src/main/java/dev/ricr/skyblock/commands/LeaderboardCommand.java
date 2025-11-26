@@ -1,6 +1,6 @@
 package dev.ricr.skyblock.commands;
 
-import dev.ricr.skyblock.LeaderBoardGUI;
+import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import lombok.AllArgsConstructor;
 import org.bukkit.command.Command;

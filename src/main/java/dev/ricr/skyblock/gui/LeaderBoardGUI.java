@@ -1,6 +1,7 @@
-package dev.ricr.skyblock;
+package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
+import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import lombok.Getter;

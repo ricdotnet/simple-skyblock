@@ -1,8 +1,9 @@
-package dev.ricr.skyblock.shop;
+package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
+import dev.ricr.skyblock.shop.ShopItems;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;

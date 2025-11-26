@@ -1,16 +1,16 @@
 package dev.ricr.skyblock.listeners;
 
 import com.j256.ormlite.dao.Dao;
-import dev.ricr.skyblock.LeaderBoardGUI;
+import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.Sale;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
-import dev.ricr.skyblock.shop.ConfirmGUI;
-import dev.ricr.skyblock.shop.ItemsListGUI;
-import dev.ricr.skyblock.shop.ShopTypeGUI;
+import dev.ricr.skyblock.gui.ConfirmGUI;
+import dev.ricr.skyblock.gui.ItemsListGUI;
+import dev.ricr.skyblock.gui.ShopTypeGUI;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
