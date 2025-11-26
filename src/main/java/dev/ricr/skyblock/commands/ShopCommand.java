@@ -1,7 +1,6 @@
 package dev.ricr.skyblock.commands;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.shop.BlockItems;
 import dev.ricr.skyblock.shop.ShopGUI;
 import lombok.AllArgsConstructor;
 import org.bukkit.command.Command;
@@ -17,7 +16,7 @@ public class ShopCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players!");
+            sender.sendMessage("This command can only be executed by players");
             return true;
         }
 

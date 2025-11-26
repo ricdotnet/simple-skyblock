@@ -4,6 +4,8 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Balance;
 import lombok.AllArgsConstructor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,7 +21,7 @@ public class BalanceCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players!");
+            sender.sendMessage("This command can only be executed by players");
             return true;
         }
 
@@ -34,7 +36,7 @@ public class BalanceCommand implements CommandExecutor {
             return true;
         }
 
-        player.sendMessage("Your balance is: $" + userBalance.getValue());
+        player.sendMessage(Component.text(String.format("Your balance is: $%s", userBalance.getValue()), NamedTextColor.GOLD));
 
         return true;
     }

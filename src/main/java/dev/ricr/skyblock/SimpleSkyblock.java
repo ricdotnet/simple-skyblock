@@ -1,6 +1,7 @@
 package dev.ricr.skyblock;
 
 import dev.ricr.skyblock.commands.BalanceCommand;
+import dev.ricr.skyblock.commands.PayCommand;
 import dev.ricr.skyblock.commands.ShopCommand;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
@@ -50,6 +51,7 @@ public class SimpleSkyblock extends JavaPlugin {
 
         // Register commands
         Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand(this));
+        Objects.requireNonNull(getCommand("pay")).setExecutor(new PayCommand(this));
         Objects.requireNonNull(getCommand("shop")).setExecutor(new ShopCommand(this));
 
         getLogger().info("SimpleSkyblock has been enabled!");

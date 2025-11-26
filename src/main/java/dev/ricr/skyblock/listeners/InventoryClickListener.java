@@ -8,10 +8,8 @@ import dev.ricr.skyblock.shop.ConfirmGUI;
 import dev.ricr.skyblock.shop.ShopGUI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -50,37 +48,46 @@ public class InventoryClickListener implements Listener {
             ItemStack clicked = event.getCurrentItem();
             if (clicked == null || clicked.getType() == Material.AIR || !isGlassPane(clicked.getType())) return;
 
-            Material material = clicked.getType();
+            // get item being bought or sold
+            ItemStack actionableItem = inventory.getItem(13);
+            if (actionableItem == null) return;
+
+            Material material = actionableItem.getType();
             BlockItems.PricePair prices = BlockItems.SHOP_ITEMS.get(material);
-            Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
-            double finalBalance = 0;
 
             ItemMeta meta = clicked.getItemMeta();
             String name = meta.itemName().toString();
             int itemAmount = clicked.getAmount();
-            double totalPrice = prices.buyPrice() * itemAmount;
+
+            Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
+            double totalPrice;
+            double finalBalance = 0;
 
             if (name.contains("Buy")) {
+                totalPrice = prices.buyPrice() * itemAmount;
+
                 try {
                     Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
 
                     if (userBalance.getValue() >= totalPrice) {
                         finalBalance = userBalance.getValue() - totalPrice;
-                        userBalance.setValue(finalBalance - totalPrice);
+                        userBalance.setValue(finalBalance);
                         balanceDao.update(userBalance);
+
                         player.getInventory().addItem(new ItemStack(material, itemAmount));
 
-                        player.sendMessage(Component.text(String.format("You bought %s %s for $%s", itemAmount, meta.displayName(), totalPrice), NamedTextColor.GREEN));
+                        player.sendMessage(Component.text(String.format("You bought %s %s for $%s", itemAmount, "placeholder", totalPrice), NamedTextColor.GREEN));
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
                     } else {
                         player.sendMessage(Component.text("You don't have enough money to buy this item.", NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                        return;
                     }
                 } catch (SQLException e) {
                     // ignore for now
                 }
             } else if (name.contains("Sell")) {
+                totalPrice = prices.sellPrice() * itemAmount;
+
                 if (!player.getInventory().contains(material, itemAmount)) {
                     player.sendMessage(Component.text("You don't have enough of that item in your inventory.", NamedTextColor.RED));
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
@@ -97,7 +104,7 @@ public class InventoryClickListener implements Listener {
                     player.getInventory().removeItem(new ItemStack(material, itemAmount));
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
 
-                    player.sendMessage(Component.text(String.format("You sold %s %s for $%s", itemAmount, meta.displayName(), totalPrice), NamedTextColor.GREEN));
+                    player.sendMessage(Component.text(String.format("You sold %s %s for $%s", itemAmount, "placeholder", totalPrice), NamedTextColor.GREEN));
                 } catch (SQLException e) {
                     // ignore for now
                 }

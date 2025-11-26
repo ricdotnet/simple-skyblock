@@ -11,6 +11,10 @@ commands:
     usage: /balance
     permission: simpleskyblock.balance
     aliases: [bal]
+  pay:
+    description: Pay or give money to another player
+    usage: /pay
+    permission: simpleskyblock.pay
   shop:
     description: Open the shop GUI
     usage: /shop
@@ -19,6 +23,9 @@ commands:
 permissions:
   simpleskyblock.balance:
     description: Allows players to check their economy balance
+    default: true
+  simpleskyblock.pay:
+    description: Allows players to pay other players
     default: true
   simpleskyblock.shop:
     description: Allows players to open the shop GUI
