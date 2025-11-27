@@ -3,6 +3,8 @@ package dev.ricr.skyblock.commands;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import lombok.AllArgsConstructor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -20,8 +22,13 @@ public class LeaderboardCommand implements CommandExecutor {
             return true;
         }
 
-        LeaderBoardGUI leaderBoardGUI = new LeaderBoardGUI(this.plugin);
-        player.openInventory(leaderBoardGUI.getInventory());
+        try {
+            LeaderBoardGUI leaderBoardGUI = new LeaderBoardGUI(this.plugin);
+            player.openInventory(leaderBoardGUI.getInventory());
+        } catch (NullPointerException e) {
+            player.sendMessage(Component.text("Failed to load leaderboard", NamedTextColor.RED));
+            this.plugin.getLogger().severe("Failed to load leaderboard: " + e.getMessage());
+        }
 
         return false;
     }

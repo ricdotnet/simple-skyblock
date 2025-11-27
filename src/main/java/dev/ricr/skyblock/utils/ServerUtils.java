@@ -4,8 +4,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class ServerUtils {
@@ -25,6 +28,10 @@ public class ServerUtils {
         } catch (Exception e) {
             logger.severe("Failed to save config: " + e.getMessage());
         }
+    }
+
+    public static List<Component> getLoreOrEmptyComponentList(ItemMeta meta) {
+        return meta.lore() != null ? meta.lore() : new ArrayList<>();
     }
 
     public static String getTextFromComponent(Component component) {
