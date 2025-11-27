@@ -44,7 +44,8 @@ public class ShopItems {
             loadEntry(plugin, entry, ITEMS);
         }
 
-        plugin.getLogger().info(String.format("Loaded %d blocks and %d items from shop.yml", BLOCKS.size(), ITEMS.size()));
+        plugin.getLogger()
+                .info(String.format("Loaded %d blocks and %d items from shop.yml", BLOCKS.size(), ITEMS.size()));
     }
 
     private static void loadEntry(SimpleSkyblock plugin, Map<?, ?> shopList, Map<Material, PricePair> targetList) {
@@ -52,12 +53,15 @@ public class ShopItems {
         Material material = Material.matchMaterial(materialName);
 
         if (material == null) {
-            plugin.getLogger().warning("Invalid material: " + materialName);
+            plugin.getLogger()
+                    .warning("Invalid material: " + materialName);
             return;
         }
 
-        double buy = shopList.containsKey("buy") ? Double.parseDouble(shopList.get("buy").toString()) : -1.0;
-        double sell = shopList.containsKey("sell") ? Double.parseDouble(shopList.get("sell").toString()) : -1.0;
+        double buy = shopList.containsKey("buy") ? Double.parseDouble(shopList.get("buy")
+                .toString()) : -1.0;
+        double sell = shopList.containsKey("sell") ? Double.parseDouble(shopList.get("sell")
+                .toString()) : -1.0;
 
         targetList.put(material, new PricePair(sell, buy));
     }

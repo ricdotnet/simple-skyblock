@@ -38,4 +38,8 @@ public class ServerUtils {
         return PlainTextComponentSerializer.plainText().serialize(component);
     }
 
+    public static double formatMoneyValue(double value) {
+        return Math.round(value * 100.00) / 100.00;
+    }
+
 }

@@ -3,10 +3,10 @@ package dev.ricr.skyblock.gui;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.shop.ShopItems;
-import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -46,8 +46,23 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
             ItemMeta meta = item.getItemMeta();
 
             if (meta != null) {
+                String sellPrice = priceOrNotAvailable(prices.sellPrice());
+                String buyPrice = priceOrNotAvailable(prices.buyPrice());
+
                 meta.displayName(Component.text(material.name()));
-                meta.lore(List.of(Component.text("Sell: " + priceOrNotAvailable(prices.sellPrice())), Component.text("Buy: " + priceOrNotAvailable(prices.buyPrice()))));
+                meta.lore(List.of(
+                        Component.empty(),
+                        Component.text()
+                                .content("Sell: ")
+                                .append(Component.text(sellPrice, "Not available".equals(sellPrice) ?
+                                        NamedTextColor.RED : NamedTextColor.GREEN))
+                                .build(),
+                        Component.text()
+                                .content("Buy: ")
+                                .append(Component.text(buyPrice, "Not available".equals(buyPrice) ?
+                                        NamedTextColor.RED : NamedTextColor.GREEN))
+                                .build()
+                ));
                 item.setItemMeta(meta);
             }
 
@@ -103,7 +118,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
         if (price == -1) {
             return "Not available";
         } else {
-            return String.format("$%s", price);
+            return String.format("₿%s", price);
         }
     }
 }

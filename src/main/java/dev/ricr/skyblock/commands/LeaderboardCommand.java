@@ -16,7 +16,8 @@ public class LeaderboardCommand implements CommandExecutor {
     private final SimpleSkyblock plugin;
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] strings) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
+                             @NotNull String[] strings) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be executed by players");
             return true;
@@ -27,7 +28,8 @@ public class LeaderboardCommand implements CommandExecutor {
             player.openInventory(leaderBoardGUI.getInventory());
         } catch (NullPointerException e) {
             player.sendMessage(Component.text("Failed to load leaderboard", NamedTextColor.RED));
-            this.plugin.getLogger().severe("Failed to load leaderboard: " + e.getMessage());
+            this.plugin.getLogger()
+                    .severe("Failed to load leaderboard: " + e.getMessage());
         }
 
         return false;

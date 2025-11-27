@@ -40,9 +40,12 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         inventory.setItem(13, itemStack);
 
         if (pricePair.buyPrice() >= 0) {
-            ItemStack buySingle = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1), pricePair.buyPrice(), TransactionType.Buy);
-            ItemStack buyHalfStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, itemStack.getMaxStackSize() / 2), pricePair.buyPrice(), TransactionType.Buy);
-            ItemStack buyFullStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, item.getMaxStackSize()), pricePair.buyPrice(), TransactionType.Buy);
+            ItemStack buySingle = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1),
+                    pricePair.buyPrice(), TransactionType.Buy);
+            ItemStack buyHalfStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
+                    itemStack.getMaxStackSize() / 2), pricePair.buyPrice(), TransactionType.Buy);
+            ItemStack buyFullStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
+                    item.getMaxStackSize()), pricePair.buyPrice(), TransactionType.Buy);
 
             inventory.setItem(11, buySingle);
             inventory.setItem(10, buyHalfStack);
@@ -50,9 +53,12 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         if (pricePair.sellPrice() >= 0) {
-            ItemStack sellSingle = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, 1), pricePair.sellPrice(), TransactionType.Sell);
-            ItemStack sellHalfStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, itemStack.getMaxStackSize() / 2), pricePair.sellPrice(), TransactionType.Sell);
-            ItemStack sellFullStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, item.getMaxStackSize()), pricePair.sellPrice(), TransactionType.Sell);
+            ItemStack sellSingle = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, 1),
+                    pricePair.sellPrice(), TransactionType.Sell);
+            ItemStack sellHalfStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE,
+                    itemStack.getMaxStackSize() / 2), pricePair.sellPrice(), TransactionType.Sell);
+            ItemStack sellFullStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE,
+                    item.getMaxStackSize()), pricePair.sellPrice(), TransactionType.Sell);
 
             inventory.setItem(15, sellSingle);
             inventory.setItem(16, sellHalfStack);
@@ -101,7 +107,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         ItemMeta meta = clicked.getItemMeta();
-        String name = meta.itemName().toString();
+        String name = meta.itemName()
+                .toString();
         int itemAmount = clicked.getAmount();
 
         Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
@@ -125,7 +132,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             totalPrice = prices.buyPrice() * itemAmount;
 
             try {
-                Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
+                Balance userBalance = balanceDao.queryForId(player.getUniqueId()
+                        .toString());
 
                 if (userBalance.getValue() >= totalPrice) {
                     finalBalance = userBalance.getValue() - totalPrice;
@@ -133,12 +141,16 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     balanceDao.update(userBalance);
                     sale.setUser(userBalance);
 
-                    player.getInventory().addItem(new ItemStack(material, itemAmount));
+                    player.getInventory()
+                            .addItem(new ItemStack(material, itemAmount));
 
-                    player.sendMessage(Component.text(String.format("You bought %s %s for $%s", itemAmount, ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice), NamedTextColor.GREEN));
+                    player.sendMessage(Component.text(String.format("You bought %s %s for ₿%s", itemAmount,
+                                    ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice),
+                            NamedTextColor.GREEN));
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
                 } else {
-                    player.sendMessage(Component.text("You don't have enough money to buy this item.", NamedTextColor.RED));
+                    player.sendMessage(Component.text("You don't have enough money to buy this item.",
+                            NamedTextColor.RED));
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                     return;
                 }
@@ -148,24 +160,30 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         } else {
             totalPrice = prices.sellPrice() * itemAmount;
 
-            if (!player.getInventory().contains(material, itemAmount)) {
-                player.sendMessage(Component.text("You don't have enough of that item in your inventory.", NamedTextColor.RED));
+            if (!player.getInventory()
+                    .contains(material, itemAmount)) {
+                player.sendMessage(Component.text("You don't have enough of that item in your inventory.",
+                        NamedTextColor.RED));
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 return;
             }
 
             try {
-                Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
+                Balance userBalance = balanceDao.queryForId(player.getUniqueId()
+                        .toString());
 
                 finalBalance = userBalance.getValue() + totalPrice;
                 userBalance.setValue(finalBalance);
                 balanceDao.update(userBalance);
                 sale.setUser(userBalance);
 
-                player.getInventory().removeItem(new ItemStack(material, itemAmount));
+                player.getInventory()
+                        .removeItem(new ItemStack(material, itemAmount));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
 
-                player.sendMessage(Component.text(String.format("You sold %s %s for $%s", itemAmount, ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice), NamedTextColor.GREEN));
+                player.sendMessage(Component.text(String.format("You sold %s %s for ₿%s", itemAmount,
+                                ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice),
+                        NamedTextColor.GREEN));
             } catch (SQLException e) {
                 // ignore for now
             }
@@ -179,21 +197,23 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
             saleDao.create(sale);
 
-            plugin.getLogger().info(String.format("Created sale entry costs %s for %s", totalPrice, player.getName()));
+            plugin.getLogger()
+                    .info(String.format("Created sale entry costs %s for %s", totalPrice, player.getName()));
         } catch (SQLException e) {
             // ignore for now
         }
 
-        player.sendMessage(Component.text(String.format("Your balance is now $%s", finalBalance), NamedTextColor.GOLD));
+        player.sendMessage(Component.text(String.format("Your balance is now ₿%s", finalBalance), NamedTextColor.GOLD));
     }
 
-    private ItemStack setOptionMeta(Material material, ItemStack itemStack, double price, TransactionType transactionType) {
+    private ItemStack setOptionMeta(Material material, ItemStack itemStack, double price,
+                                    TransactionType transactionType) {
         ItemMeta meta = itemStack.getItemMeta();
         int stackSize = itemStack.getAmount();
 
         if (meta != null) {
             meta.displayName(Component.text(transactionType + " " + material.name()));
-            meta.lore(List.of(Component.text("Total: $" + price * stackSize)));
+            meta.lore(List.of(Component.text("Total: ₿" + price * stackSize)));
             meta.itemName(Component.text(transactionType.name()));
             itemStack.setItemMeta(meta);
         }
