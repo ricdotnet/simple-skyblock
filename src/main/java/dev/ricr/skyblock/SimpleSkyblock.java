@@ -1,8 +1,9 @@
 package dev.ricr.skyblock;
 
 import dev.ricr.skyblock.commands.BalanceCommand;
+import dev.ricr.skyblock.commands.LeaderboardCommand;
 import dev.ricr.skyblock.commands.PayCommand;
-import dev.ricr.skyblock.commands.ReloadShop;
+import dev.ricr.skyblock.commands.ReloadShopCommand;
 import dev.ricr.skyblock.commands.ShopCommand;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
@@ -57,7 +58,8 @@ public class SimpleSkyblock extends JavaPlugin {
         Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand(this));
         Objects.requireNonNull(getCommand("pay")).setExecutor(new PayCommand(this));
         Objects.requireNonNull(getCommand("shop")).setExecutor(new ShopCommand(this));
-        Objects.requireNonNull(getCommand("reloadshop")).setExecutor(new ReloadShop(this));
+        Objects.requireNonNull(getCommand("reloadshop")).setExecutor(new ReloadShopCommand(this));
+        Objects.requireNonNull(getCommand("leaderboard")).setExecutor(new LeaderboardCommand(this));
 
         getLogger().info("SimpleSkyblock has been enabled!");
     }

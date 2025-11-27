@@ -1,7 +1,7 @@
 package dev.ricr.skyblock.commands;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.shop.ShopTypeGUI;
+import dev.ricr.skyblock.gui.ShopTypeGUI;
 import lombok.AllArgsConstructor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

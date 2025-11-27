@@ -1,12 +1,16 @@
-package dev.ricr.skyblock.shop;
+package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
+import dev.ricr.skyblock.shop.ShopItems;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -16,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @AllArgsConstructor
-public class ItemsListGUI implements InventoryHolder {
+public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
     @Getter
     private final Inventory inventory;
     private final SimpleSkyblock plugin;
@@ -42,8 +46,23 @@ public class ItemsListGUI implements InventoryHolder {
             ItemMeta meta = item.getItemMeta();
 
             if (meta != null) {
+                String sellPrice = priceOrNotAvailable(prices.sellPrice());
+                String buyPrice = priceOrNotAvailable(prices.buyPrice());
+
                 meta.displayName(Component.text(material.name()));
-                meta.lore(List.of(Component.text("Sell: " + priceOrNotAvailable(prices.sellPrice())), Component.text("Buy: " + priceOrNotAvailable(prices.buyPrice()))));
+                meta.lore(List.of(
+                        Component.empty(),
+                        Component.text()
+                                .content("Sell: ")
+                                .append(Component.text(sellPrice, "Not available".equals(sellPrice) ?
+                                        NamedTextColor.RED : NamedTextColor.GREEN))
+                                .build(),
+                        Component.text()
+                                .content("Buy: ")
+                                .append(Component.text(buyPrice, "Not available".equals(buyPrice) ?
+                                        NamedTextColor.RED : NamedTextColor.GREEN))
+                                .build()
+                ));
                 item.setItemMeta(meta);
             }
 
@@ -55,6 +74,35 @@ public class ItemsListGUI implements InventoryHolder {
         meta.displayName(Component.text("Go back"));
         goBackButton.setItemMeta(meta);
         inventory.setItem(49, goBackButton);
+    }
+
+    @Override
+    public void handleInventoryClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() == Material.AIR) {
+            return;
+        }
+
+        Material material = clicked.getType();
+        ShopItems.PricePair prices = null;
+
+        if (material == Material.BARRIER) {
+            player.openInventory(new ShopTypeGUI(this.plugin).getInventory());
+            return;
+        }
+
+        switch (this.getShopType()) {
+            case ShopType.Blocks -> prices = ShopItems.BLOCKS.get(material);
+            case ShopType.Items -> prices = ShopItems.ITEMS.get(material);
+        }
+
+        if (prices == null) {
+            return;
+        }
+
+        ConfirmGUI confirmGUI = new ConfirmGUI(this.plugin, material, prices, this.getShopType());
+        player.openInventory(confirmGUI.getInventory());
     }
 
     private boolean isBorderSlot(int slot) {
@@ -70,7 +118,7 @@ public class ItemsListGUI implements InventoryHolder {
         if (price == -1) {
             return "Not available";
         } else {
-            return String.format("$%s", price);
+            return String.format("₿%s", price);
         }
     }
 }

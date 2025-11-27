@@ -1,5 +1,5 @@
 name: SimpleSkyblock
-version: '0.0.2-SNAPSHOT'
+version: '0.0.3-SNAPSHOT'
 main: dev.ricr.skyblock.SimpleSkyblock
 api-version: '1.21'
 author: ricdotnet
@@ -22,6 +22,10 @@ commands:
   reloadshop:
     description: Reload the shop config
     usage: /reloadshop
+  leaderboard:
+    description: View the leaderboard
+    usage: /leaderboard
+    aliases: [baltop]
 
 permissions:
   simpleskyblock.balance:
@@ -36,3 +40,6 @@ permissions:
   reloadshop:
     description: Allows admins to reload the shop config
     default: op
+  leaderboard:
+    description: Allows players to view the balance leaderboard
+    default: true

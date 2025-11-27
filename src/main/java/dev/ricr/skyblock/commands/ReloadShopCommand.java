@@ -9,7 +9,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.entity.Player;
 
 @AllArgsConstructor
-public class ReloadShop implements CommandExecutor {
+public class ReloadShopCommand implements CommandExecutor {
     private final SimpleSkyblock plugin;
 
     @Override

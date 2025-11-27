@@ -27,5 +27,5 @@ public class Sale {
     private int quantity;
 
     @DatabaseField(canBeNull = false)
-    private String type; // BOUGHT or SOLD
+    private String type; // Buy or Sell
 }
