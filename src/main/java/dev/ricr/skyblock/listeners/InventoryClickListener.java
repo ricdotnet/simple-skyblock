@@ -31,7 +31,7 @@ public class InventoryClickListener implements Listener {
             case ItemsListGUI itemsListGUI -> itemsListGUI.handleInventoryClick(event, player);
             case ConfirmGUI confirmGUI -> confirmGUI.handleInventoryClick(event, player);
             case LeaderBoardGUI leaderBoardGUI -> leaderBoardGUI.handleInventoryClick(event);
-            default -> this.plugin.getLogger().warning("Unknown inventory holder: " + inventoryHolder.getClass().getName());
+            default -> {/* we ignore default inventories */}
         }
     }
 }
