@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 public class ServerUtils {
     private static final Logger logger = Logger.getLogger("SimpleSkyblock");
+    public static final String COIN_SYMBOL = "₿";
 
     public static FileConfiguration loadConfig(File dataFolder) {
         File serverConfig = new File(dataFolder, "config.yml");

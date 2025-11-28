@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.listeners;
 
+import dev.ricr.skyblock.gui.GambleSessionGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.gui.ConfirmGUI;
@@ -24,13 +25,17 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        InventoryHolder inventoryHolder = event.getInventory().getHolder(false);
+        InventoryHolder inventoryHolder = event.getInventory()
+                .getHolder(false);
+
         switch (inventoryHolder) {
-            case null -> this.plugin.getLogger().warning("Inventory holder is null");
+            case null -> this.plugin.getLogger()
+                    .warning("Inventory holder is null");
             case ShopTypeGUI shopTypeGUI -> shopTypeGUI.handleInventoryClick(event, player);
             case ItemsListGUI itemsListGUI -> itemsListGUI.handleInventoryClick(event, player);
             case ConfirmGUI confirmGUI -> confirmGUI.handleInventoryClick(event, player);
             case LeaderBoardGUI leaderBoardGUI -> leaderBoardGUI.handleInventoryClick(event);
+            case GambleSessionGUI gambleSessionGUI -> event.setCancelled(true);
             default -> {/* we ignore default inventories */}
         }
     }
