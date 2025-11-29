@@ -105,8 +105,8 @@ public class GambleCommand implements CommandExecutor {
 
             this.plugin.getServer()
                     .sendMessage(Component.text(String.format("%s started a gamble session with %s%s bets. Do /gamble" +
-                                    " %s to join",
-                            ServerUtils.COIN_SYMBOL, amount, player.getName(), player.getName()),
+                                            " %s to join",
+                                    player.getName(), ServerUtils.COIN_SYMBOL, amount, player.getName()),
                             NamedTextColor.GREEN));
 
             this.initiateGambleSessionCountdown(gambleSession);
@@ -157,6 +157,10 @@ public class GambleCommand implements CommandExecutor {
                 }
 
                 gambleSession.addPlayer(player);
+
+                playerHost.sendMessage(Component.text(String.format("%s joined your gamble session",
+                        player.getName()), NamedTextColor.AQUA));
+
                 player.sendMessage(Component.text(String.format("You joined the gamble session of %s",
                                 playerHost.getName()),
                         NamedTextColor.YELLOW));
