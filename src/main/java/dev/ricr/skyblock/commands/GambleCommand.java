@@ -82,6 +82,8 @@ public class GambleCommand implements CommandExecutor {
                     player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble " +
                                     "for %s%s",
                             ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
+
+                    return true;
                 }
             } catch (SQLException e) {
                 // ignore for now
@@ -92,6 +94,7 @@ public class GambleCommand implements CommandExecutor {
                 player.sendMessage(Component.text(String.format("You already have an ongoing gamble session. Type " +
                         "/gamble %s to " +
                         "join", player.getName()), NamedTextColor.GREEN));
+
                 return true;
             }
 
@@ -109,6 +112,7 @@ public class GambleCommand implements CommandExecutor {
             return true;
         } else if (host != null) {
             Player playerHost = Bukkit.getPlayer(args[0]);
+
             if (playerHost == null) {
                 player.sendMessage(Component.text(String.format("No gamble session found for player %s", host),
                         NamedTextColor.RED));
@@ -130,7 +134,7 @@ public class GambleCommand implements CommandExecutor {
             }
 
             if (gambleSession.getHost()
-                    .getUniqueId() == playerHost.getUniqueId()) {
+                    .getUniqueId() == player.getUniqueId()) {
                 player.sendMessage(Component.text("You rejoined your own gamble session", NamedTextColor.YELLOW));
             } else {
 

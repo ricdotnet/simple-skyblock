@@ -147,7 +147,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     player.sendMessage(Component.text(String.format("You bought %s %s for %s%s", itemAmount,
                             ServerUtils.getTextFromComponent(actionableItem.displayName()), ServerUtils.COIN_SYMBOL,
                             ServerUtils.formatMoneyValue(totalPrice)), NamedTextColor.GREEN));
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
                 } else {
                     player.sendMessage(Component.text("You don't have enough money to buy this item.",
                             NamedTextColor.RED));

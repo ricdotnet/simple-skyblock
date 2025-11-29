@@ -11,6 +11,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -32,7 +36,8 @@ public class GambleSessionGUI implements InventoryHolder {
     private final double originalAmount;
     private double amount;
 
-    private Inventory inventory;
+    private final BossBar bossBar;
+    private final Inventory inventory;
 
     private final AtomicInteger countdownClock = new AtomicInteger(ServerUtils.GAMBLE_COUNTDOWN);
 
@@ -40,19 +45,28 @@ public class GambleSessionGUI implements InventoryHolder {
         this.plugin = plugin;
         this.host = host;
         this.originalAmount = amount;
-        this.amount = amount;
-        this.inventory = Bukkit.createInventory(this, 27, Component.text(String.format("Gamble session: %s%s",
-                ServerUtils.COIN_SYMBOL, amount)));
+        this.inventory = Bukkit.createInventory(this, 27, Component.text(String.format("Gamble session - %s",
+                this.host.getName(), amount)));
+
+        this.bossBar = Bukkit.createBossBar(String.format("Gamble end in %ss - Money pool: %s%s",
+                        this.countdownClock.get(), ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(this.amount)),
+                BarColor.GREEN, BarStyle.SOLID);
+        this.bossBar.setProgress(1.0);
+        this.bossBar.setVisible(true);
 
         this.addPlayer(host);
+
         this.updateCountdownClock(countdownClock.get());
     }
 
     public void addPlayer(Player player) {
         this.players.add(player);
-        this.amount += amount;
+        this.amount += this.originalAmount;
 
         this.updatePlayerBalance(player, -originalAmount);
+
+        this.bossBar.setColor(BarColor.GREEN);
+        this.bossBar.addPlayer(player);
 
         this.refreshInventory();
     }
@@ -99,6 +113,8 @@ public class GambleSessionGUI implements InventoryHolder {
                 }
 
                 updatePlayerBalance(player, this.amount);
+
+                player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1f, 1f);
             } else {
                 player.sendMessage(Component.text("You lost the gamble!", NamedTextColor.RED));
 
@@ -111,6 +127,8 @@ public class GambleSessionGUI implements InventoryHolder {
                 } catch (SQLException e) {
                     // ignore for now
                 }
+
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 1f, 1f);
             }
         }
 
@@ -121,6 +139,8 @@ public class GambleSessionGUI implements InventoryHolder {
             // ignore for now
         }
 
+        this.bossBar.removeAll();
+        this.bossBar.setVisible(false);
         this.inventory.close();
     }
 
@@ -140,9 +160,9 @@ public class GambleSessionGUI implements InventoryHolder {
     }
 
     public void updateCountdownClock(int seconds) {
-        ItemStack clock = new ItemStack(Material.CLOCK, seconds);
-
-        inventory.setItem(26, clock); // bottom-right slot
+        this.bossBar.setTitle(String.format("Gamble end in %ss - Money pool: %s%s",
+                seconds, ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(this.amount)));
+        this.bossBar.setProgress(1.0 - seconds / (double) ServerUtils.GAMBLE_COUNTDOWN);
     }
 
     private void updatePlayerBalance(Player player, double amount) {
