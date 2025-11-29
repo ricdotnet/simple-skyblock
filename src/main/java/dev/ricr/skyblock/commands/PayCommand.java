@@ -78,10 +78,12 @@ public class PayCommand implements CommandExecutor {
             // ignore for now
         }
 
-        player.sendMessage(Component.text(String.format("Paid ₿%s to %s", ServerUtils.formatMoneyValue(amount),
+        player.sendMessage(Component.text(String.format("Paid %s%s to %s", ServerUtils.COIN_SYMBOL,
+                ServerUtils.formatMoneyValue(amount),
                 targetPlayerName), NamedTextColor.GREEN));
-        targetPlayer.sendMessage(Component.text(String.format("You received ₿%s from %s",
-                ServerUtils.formatMoneyValue(amount), player.getName()), NamedTextColor.GREEN));
+        targetPlayer.sendMessage(Component.text(String.format("You received %s%s from %s",
+                ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount), player.getName()),
+                NamedTextColor.GREEN));
 
         return true;
     }

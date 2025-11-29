@@ -3,6 +3,7 @@ package dev.ricr.skyblock.gui;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.shop.ShopItems;
+import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -118,7 +119,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
         if (price == -1) {
             return "Not available";
         } else {
-            return String.format("₿%s", price);
+            return String.format("%s%s", ServerUtils.COIN_SYMBOL, price);
         }
     }
 }

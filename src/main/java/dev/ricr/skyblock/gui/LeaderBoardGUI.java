@@ -82,17 +82,20 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 lore.add(Component.empty());
                 lore.add(Component.text()
                         .content("Balance: ")
-                        .append(Component.text(String.format("₿%s", ServerUtils.formatMoneyValue(balance.getValue())),
+                        .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                                        ServerUtils.formatMoneyValue(balance.getValue())),
                                 NamedTextColor.GOLD))
                         .build());
                 lore.add(Component.text()
                         .content("Bought: ")
-                        .append(Component.text(String.format("₿%s", ServerUtils.formatMoneyValue(totalBought)),
+                        .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                                        ServerUtils.formatMoneyValue(totalBought)),
                                 NamedTextColor.GREEN))
                         .build());
                 lore.add(Component.text()
                         .content("Sold: ")
-                        .append(Component.text(String.format("₿%s", ServerUtils.formatMoneyValue(totalSold)),
+                        .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                                        ServerUtils.formatMoneyValue(totalSold)),
                                 NamedTextColor.BLUE))
                         .build());
                 meta.lore(lore);
@@ -109,17 +112,20 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
             lore.add(Component.empty());
             lore.add(Component.text()
                     .content("Total balances: ")
-                    .append(Component.text(String.format("₿%s", ServerUtils.formatMoneyValue(totalEconomyValue)),
+                    .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                                    ServerUtils.formatMoneyValue(totalEconomyValue)),
                             NamedTextColor.GOLD))
                     .build());
             lore.add(Component.text()
                     .content("Total bought: ")
-                    .append(Component.text(String.format("₿%s", ServerUtils.formatMoneyValue(totalServerBought)),
+                    .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                                    ServerUtils.formatMoneyValue(totalServerBought)),
                             NamedTextColor.GREEN))
                     .build());
             lore.add(Component.text()
                     .content("Total sold: ")
-                    .append(Component.text(String.format("₿%s", ServerUtils.formatMoneyValue(totalServerSold)),
+                    .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                                    ServerUtils.formatMoneyValue(totalServerSold)),
                             NamedTextColor.BLUE))
                     .build());
             meta.lore(lore);
