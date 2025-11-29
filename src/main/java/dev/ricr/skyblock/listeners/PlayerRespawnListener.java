@@ -18,13 +18,19 @@ public class PlayerRespawnListener implements Listener {
 
     private final SimpleSkyblock plugin;
 
-    public PlayerRespawnListener(SimpleSkyblock plugin, IslandGenerator islandGenerator) {
+    public PlayerRespawnListener(SimpleSkyblock plugin) {
         this.plugin = plugin;
     }
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
+
+        this.plugin.getLogger()
+                .info(String.format("Respawning %s in X: %s - Y: %s - Z: %s", player.getName(), player.getLocation()
+                        .getBlockX(), player.getLocation()
+                        .getBlockY(), player.getLocation()
+                        .getBlockZ()));
 
         if (!event.isBedSpawn()) {
             this.plugin.getLogger()
