@@ -104,8 +104,10 @@ public class GambleCommand implements CommandExecutor {
             player.openInventory(gambleSession.getInventory());
 
             this.plugin.getServer()
-                    .sendMessage(Component.text(String.format("%s started a gamble session. Do /gamble %s to join",
-                            player.getName(), player.getName()), NamedTextColor.GREEN));
+                    .sendMessage(Component.text(String.format("%s started a gamble session with %s%s bets. Do /gamble" +
+                                    " %s to join",
+                            ServerUtils.COIN_SYMBOL, amount, player.getName(), player.getName()),
+                            NamedTextColor.GREEN));
 
             this.initiateGambleSessionCountdown(gambleSession);
 
@@ -142,11 +144,11 @@ public class GambleCommand implements CommandExecutor {
                     Balance playerBalance = balanceDao.queryForId(player.getUniqueId()
                             .toString());
 
-                    if (playerBalance.getValue() < gambleSession.getAmount()) {
+                    if (playerBalance.getValue() < gambleSession.getOriginalAmount()) {
                         player.sendMessage(Component.text(String.format("You cannot join a gamble session with less " +
                                                 "than %s%s",
                                         ServerUtils.COIN_SYMBOL,
-                                        ServerUtils.formatMoneyValue(gambleSession.getAmount())),
+                                        ServerUtils.formatMoneyValue(gambleSession.getOriginalAmount())),
                                 NamedTextColor.RED));
                         return true;
                     }

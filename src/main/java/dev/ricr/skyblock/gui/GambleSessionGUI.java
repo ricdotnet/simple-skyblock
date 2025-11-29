@@ -46,7 +46,7 @@ public class GambleSessionGUI implements InventoryHolder {
         this.host = host;
         this.originalAmount = amount;
         this.inventory = Bukkit.createInventory(this, 27, Component.text(String.format("Gamble session - %s",
-                this.host.getName(), amount)));
+                this.host.getName())));
 
         this.bossBar = Bukkit.createBossBar(String.format("Gamble end in %ss - Money pool: %s%s",
                         this.countdownClock.get(), ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(this.amount)),
@@ -116,7 +116,8 @@ public class GambleSessionGUI implements InventoryHolder {
 
                 player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1f, 1f);
             } else {
-                player.sendMessage(Component.text("You lost the gamble!", NamedTextColor.RED));
+                player.sendMessage(Component.text("You lost the gamble \uD83E\uDD40", NamedTextColor.RED));
+                player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()), NamedTextColor.DARK_RED));
 
                 try {
                     Balance balance = balancesDao.queryForId(player.getUniqueId()
