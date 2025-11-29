@@ -47,7 +47,7 @@ public class GambleCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<Balance, String> balanceDao = plugin.databaseManager.getBalancesDao();
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
 
         Double amount = null;
         String host = null;
@@ -120,6 +120,12 @@ public class GambleCommand implements CommandExecutor {
             if (gambleSession == null) {
                 player.sendMessage(Component.text(String.format("No gamble session found for player %s", host),
                         NamedTextColor.RED));
+                return true;
+            }
+
+            if (gambleSession.getPlayers()
+                    .size() == 5) {
+                player.sendMessage(Component.text("The gamble session is full", NamedTextColor.RED));
                 return true;
             }
 
