@@ -30,8 +30,8 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.plugin = plugin;
         this.inventory = Bukkit.createInventory(this, 27, Component.text("Balance leaderboard"));
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
-        Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSaleDao();
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSalesDao();
 
         try {
             List<Balance> balances = balanceDao.queryBuilder()

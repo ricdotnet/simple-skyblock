@@ -49,7 +49,7 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<Balance, String> balanceDao = plugin.databaseManager.getBalanceDao();
+        Dao<Balance, String> balanceDao = plugin.databaseManager.getBalancesDao();
 
         try {
             Balance targetPlayerBalance = balanceDao.queryForId(targetPlayer.getUniqueId()

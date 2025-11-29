@@ -111,8 +111,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 .toString();
         int itemAmount = clicked.getAmount();
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
-        Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSaleDao();
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSalesDao();
         Sale sale = new Sale();
 
         double totalPrice;

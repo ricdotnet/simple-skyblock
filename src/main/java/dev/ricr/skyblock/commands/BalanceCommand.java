@@ -27,7 +27,7 @@ public class BalanceCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
         String playerId = player.getUniqueId()
                 .toString();
 

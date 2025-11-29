@@ -15,9 +15,11 @@ public class DatabaseManager {
     private final SimpleSkyblock plugin;
 
     @Getter
-    private Dao<Balance, String> balanceDao;
+    private Dao<Balance, String> balancesDao;
     @Getter
-    private Dao<Sale, Integer> saleDao;
+    private Dao<Sale, Integer> salesDao;
+    @Getter
+    private Dao<Gamble, Integer> gamblesDao;
 
     public DatabaseManager(SimpleSkyblock plugin) {
         this.plugin = plugin;
@@ -30,11 +32,13 @@ public class DatabaseManager {
         try {
             ConnectionSource connection = new JdbcConnectionSource(databaseUrl);
 
-            this.balanceDao = DaoManager.createDao(connection, Balance.class);
-            this.saleDao = DaoManager.createDao(connection, Sale.class);
+            this.balancesDao = DaoManager.createDao(connection, Balance.class);
+            this.salesDao = DaoManager.createDao(connection, Sale.class);
+            this.gamblesDao = DaoManager.createDao(connection, Gamble.class);
 
             TableUtils.createTableIfNotExists(connection, Balance.class);
             TableUtils.createTableIfNotExists(connection, Sale.class);
+            TableUtils.createTableIfNotExists(connection, Gamble.class);
 
             this.plugin.getLogger().info("Successfully connected to database.");
         } catch (SQLException e) {
