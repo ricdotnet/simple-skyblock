@@ -27,7 +27,7 @@ public class BalanceCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
         String playerId = player.getUniqueId()
                 .toString();
 
@@ -39,7 +39,7 @@ public class BalanceCommand implements CommandExecutor {
             return true;
         }
 
-        player.sendMessage(Component.text(String.format("Your balance is: ₿%s",
+        player.sendMessage(Component.text(String.format("Your balance is: %s%s", ServerUtils.COIN_SYMBOL,
                 ServerUtils.formatMoneyValue(userBalance.getValue())), NamedTextColor.GOLD));
 
         return true;

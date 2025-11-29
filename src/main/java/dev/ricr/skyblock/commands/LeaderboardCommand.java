@@ -32,6 +32,6 @@ public class LeaderboardCommand implements CommandExecutor {
                     .severe("Failed to load leaderboard: " + e.getMessage());
         }
 
-        return false;
+        return true;
     }
 }

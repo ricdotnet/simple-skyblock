@@ -13,6 +13,11 @@ import java.util.logging.Logger;
 
 public class ServerUtils {
     private static final Logger logger = Logger.getLogger("SimpleSkyblock");
+    public static final String COIN_SYMBOL = "₿";
+
+    public static final int GAMBLE_MINIMUM_BALANCE = 100;
+    public static final int GAMBLE_MAXIMUM_BALANCE = 5000;
+    public static final int GAMBLE_COUNTDOWN = 30;
 
     public static FileConfiguration loadConfig(File dataFolder) {
         File serverConfig = new File(dataFolder, "config.yml");

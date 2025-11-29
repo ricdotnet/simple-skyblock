@@ -111,8 +111,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 .toString();
         int itemAmount = clicked.getAmount();
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
-        Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSaleDao();
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSalesDao();
         Sale sale = new Sale();
 
         double totalPrice;
@@ -144,10 +144,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     player.getInventory()
                             .addItem(new ItemStack(material, itemAmount));
 
-                    player.sendMessage(Component.text(String.format("You bought %s %s for ₿%s", itemAmount,
-                                    ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice),
-                            NamedTextColor.GREEN));
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
+                    player.sendMessage(Component.text(String.format("You bought %s %s for %s%s", itemAmount,
+                            ServerUtils.getTextFromComponent(actionableItem.displayName()), ServerUtils.COIN_SYMBOL,
+                            ServerUtils.formatMoneyValue(totalPrice)), NamedTextColor.GREEN));
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
                 } else {
                     player.sendMessage(Component.text("You don't have enough money to buy this item.",
                             NamedTextColor.RED));
@@ -181,9 +181,9 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                         .removeItem(new ItemStack(material, itemAmount));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
 
-                player.sendMessage(Component.text(String.format("You sold %s %s for ₿%s", itemAmount,
-                                ServerUtils.getTextFromComponent(actionableItem.displayName()), totalPrice),
-                        NamedTextColor.GREEN));
+                player.sendMessage(Component.text(String.format("You sold %s %s for %s%s", itemAmount,
+                        ServerUtils.getTextFromComponent(actionableItem.displayName()), ServerUtils.COIN_SYMBOL,
+                        ServerUtils.formatMoneyValue(totalPrice)), NamedTextColor.GREEN));
             } catch (SQLException e) {
                 // ignore for now
             }
@@ -198,12 +198,14 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             saleDao.create(sale);
 
             plugin.getLogger()
-                    .info(String.format("Created sale entry costs %s for %s", totalPrice, player.getName()));
+                    .info(String.format("Created sale entry costs %s%s for %s", ServerUtils.COIN_SYMBOL, totalPrice,
+                            player.getName()));
         } catch (SQLException e) {
             // ignore for now
         }
 
-        player.sendMessage(Component.text(String.format("Your balance is now ₿%s", finalBalance), NamedTextColor.GOLD));
+        player.sendMessage(Component.text(String.format("Your balance is now %s%s", ServerUtils.COIN_SYMBOL,
+                ServerUtils.formatMoneyValue(finalBalance)), NamedTextColor.GOLD));
     }
 
     private ItemStack setOptionMeta(Material material, ItemStack itemStack, double price,
@@ -213,7 +215,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         if (meta != null) {
             meta.displayName(Component.text(transactionType + " " + material.name()));
-            meta.lore(List.of(Component.text("Total: ₿" + price * stackSize)));
+            meta.lore(List.of(Component.text(String.format("Total: %s%s", ServerUtils.COIN_SYMBOL, price * stackSize))));
             meta.itemName(Component.text(transactionType.name()));
             itemStack.setItemMeta(meta);
         }

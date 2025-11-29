@@ -51,7 +51,7 @@ public class PlayerJoinListener implements Listener {
     }
 
     private void addInitialBalance(Player player) {
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalanceDao();
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
 
         try {
             Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
