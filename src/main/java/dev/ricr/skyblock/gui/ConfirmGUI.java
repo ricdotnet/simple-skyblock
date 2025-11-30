@@ -26,6 +26,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.UUID;
 
 public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final SimpleSkyblock plugin;
@@ -180,6 +181,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 if (auctionHouseItem.getOwnerName()
                         .equals(player.getName())) {
                     player.sendMessage(Component.text("You can't buy your own item.", NamedTextColor.RED));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                     return;
                 }
 
@@ -201,8 +203,14 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     this.plugin.databaseManager.getBalancesDao()
                             .update(userBalance);
 
+                    ItemStack itemToGive = actionableItem.clone();
+                    ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
+                            .put(auctionHouseItem.getId(), itemToGive.getItemMeta());
+
+                    itemToGive.setItemMeta(originalMeta);
+
                     player.getInventory()
-                            .addItem(actionableItem);
+                            .addItem(itemToGive);
 
                     this.sendMessageToSeller(auctionHouseItem.getUser()
                             .getUserId());
@@ -210,7 +218,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     AuctionHouseTransaction transaction = new AuctionHouseTransaction();
                     transaction.setUser(userBalance);
                     transaction.setSeller(auctionHouseItem.getUser());
-                    transaction.setItem(ServerUtils.base64FromBytes(actionableItem.serializeAsBytes()));
+                    transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
                     transaction.setPrice(price);
                     this.plugin.databaseManager.getAuctionHouseTransactionsDao()
                             .create(transaction);
@@ -360,7 +368,9 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
     }
 
     private void sendMessageToSeller(String sellerId) {
-        Player seller = Bukkit.getPlayer(sellerId);
+        Player seller = this.plugin.getServer()
+                .getPlayer(UUID.fromString(sellerId));
+
         if (seller != null) {
             seller.sendMessage(Component.text("One of your auction house items sold.", NamedTextColor.GOLD));
             seller.playSound(seller.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);

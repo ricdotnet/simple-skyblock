@@ -16,6 +16,7 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.utils.ServerUtils;
+import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.inventory.ItemStack;
@@ -24,18 +25,24 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AuctionHouseItems {
     private final SimpleSkyblock plugin;
     private final int TOTAL_ITEMS_PER_PAGE = 45;
     private final Dao<AuctionHouse, Integer> auctionHouseDao;
 
+    @Getter
+    private final Map<Integer, ItemMeta> itemOriginalMeta;
+
     private long totalItems;
 
     public AuctionHouseItems(SimpleSkyblock plugin) {
         this.plugin = plugin;
         this.auctionHouseDao = this.plugin.databaseManager.getAuctionHouseDao();
+        this.itemOriginalMeta = new HashMap<>();
     }
 
     public List<ItemStack> getPageOfItems(int page) {
@@ -54,6 +61,16 @@ public class AuctionHouseItems {
 
             for (AuctionHouse auctionHouseItem : auctionHouseItemsList) {
                 ItemStack item = ItemStack.deserializeBytes(ServerUtils.bytesFromBase64(auctionHouseItem.getItem()));
+
+                ItemStack clonedItem = item.clone();
+                ItemMeta originalMeta = clonedItem.getItemMeta();
+                if (originalMeta != null) {
+                    itemOriginalMeta.put(auctionHouseItem.getId(), originalMeta);
+                }
+
+                item.getPersistentDataContainer()
+                        .get(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
+
                 buildAndAddMeta(auctionHouseItem.getId(), item, auctionHouseItem.getOwnerName(),
                         auctionHouseItem.getPrice());
                 pageItems.add(item);
