@@ -219,8 +219,15 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     player.getInventory()
                             .addItem(itemToGive);
 
+                    player.sendMessage(Component.text(String.format("Bought %s %s from %s for %s%s",
+                            itemToGive.getAmount(),
+                            ServerUtils.getTextFromComponent(actionableItem.displayName()),
+                            auctionHouseItem.getOwnerName(), ServerUtils.COIN_SYMBOL,
+                            ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())), NamedTextColor.GREEN));
                     this.sendMessageToSeller(auctionHouseItem.getUser()
-                            .getUserId());
+                                    .getUserId(), player,
+                            ServerUtils.getTextFromComponent(actionableItem.displayName()),
+                            price);
 
                     AuctionHouseTransaction transaction = new AuctionHouseTransaction();
                     transaction.setUser(userBalance);
@@ -374,12 +381,14 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         return itemStack;
     }
 
-    private void sendMessageToSeller(String sellerId) {
+    private void sendMessageToSeller(String sellerId, Player buyer, String itemName, double price) {
         Player seller = this.plugin.getServer()
                 .getPlayer(UUID.fromString(sellerId));
 
         if (seller != null) {
-            seller.sendMessage(Component.text("One of your auction house items sold.", NamedTextColor.GOLD));
+            seller.sendMessage(Component.text(String.format("%s bought your %s from the action house for %s%s",
+                            buyer.getName(), itemName, ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(price)),
+                    NamedTextColor.GOLD));
             seller.playSound(seller.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
         }
     }

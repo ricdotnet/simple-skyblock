@@ -137,6 +137,9 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     .addItem(itemToGive);
 
             this.refreshInventory();
+
+            player.sendMessage(Component.text(String.format("You removed %s from the auction house",
+                    originalMeta.displayName()), NamedTextColor.GREEN));
         } catch (SQLException e) {
             // ignore for now
         }
