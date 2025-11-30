@@ -5,8 +5,10 @@ import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.enums.ShopType;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -100,6 +102,13 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         ItemMeta meta = item.getItemMeta();
         Integer itemId = meta.getPersistentDataContainer()
                 .get(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
+
+        if (player.getInventory()
+                .firstEmpty() == -1) {
+            player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
 
         try {
             AuctionHouse auctionHouse = this.plugin.databaseManager.getAuctionHouseDao()

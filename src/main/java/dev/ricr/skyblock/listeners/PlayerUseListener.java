@@ -47,6 +47,7 @@ public class PlayerUseListener implements Listener {
 
             return;
         }
+
         if (item.getType() == Material.ENDER_EYE) {
             double x = (double) this.serverConfig.get("stronghold_location.x");
             double y = (double) this.serverConfig.get("stronghold_location.y");
