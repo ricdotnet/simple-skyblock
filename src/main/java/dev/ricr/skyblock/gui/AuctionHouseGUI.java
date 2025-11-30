@@ -116,11 +116,16 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 return;
             }
 
+            ItemStack itemToGive = item.clone();
+            ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
+                    .get(itemId);
+            itemToGive.setItemMeta(originalMeta);
+
             this.plugin.databaseManager.getAuctionHouseDao()
                     .delete(auctionHouse);
 
             player.getInventory()
-                    .addItem(item);
+                    .addItem(itemToGive);
 
             this.refreshInventory();
         } catch (SQLException e) {
