@@ -162,6 +162,13 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
+        if (player.getInventory()
+                .firstEmpty() == -1) {
+            player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+
         ItemMeta meta = clicked.getItemMeta();
         String clickedItemName = ServerUtils.getTextFromComponent(meta.displayName());
 
