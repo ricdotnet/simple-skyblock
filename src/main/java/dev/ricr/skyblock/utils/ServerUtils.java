@@ -40,11 +40,22 @@ public class ServerUtils {
     }
 
     public static String getTextFromComponent(Component component) {
-        return PlainTextComponentSerializer.plainText().serialize(component);
+        return PlainTextComponentSerializer.plainText()
+                .serialize(component);
     }
 
     public static double formatMoneyValue(double value) {
         return Math.round(value * 100.00) / 100.00;
+    }
+
+    public static String base64FromBytes(byte[] bytes) {
+        return java.util.Base64.getEncoder()
+                .encodeToString(bytes);
+    }
+
+    public static byte[] bytesFromBase64(String base64) {
+        return java.util.Base64.getDecoder()
+                .decode(base64);
     }
 
 }

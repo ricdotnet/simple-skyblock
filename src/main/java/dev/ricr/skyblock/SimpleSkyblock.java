@@ -1,5 +1,6 @@
 package dev.ricr.skyblock;
 
+import dev.ricr.skyblock.commands.AuctionHouseCommand;
 import dev.ricr.skyblock.commands.BalanceCommand;
 import dev.ricr.skyblock.commands.GambleCommand;
 import dev.ricr.skyblock.commands.LeaderboardCommand;
@@ -14,6 +15,7 @@ import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.PlayerJoinListener;
 import dev.ricr.skyblock.listeners.PlayerRespawnListener;
 import dev.ricr.skyblock.listeners.PlayerUseListener;
+import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.ServerUtils;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -24,6 +26,7 @@ import java.util.Objects;
 
 public class SimpleSkyblock extends JavaPlugin {
     public DatabaseManager databaseManager;
+    public AuctionHouseItems auctionHouseItems;
 
     @Override
     public void onEnable() {
@@ -43,6 +46,10 @@ public class SimpleSkyblock extends JavaPlugin {
 
         // Connect to a simple sqlite database
         this.databaseManager = new DatabaseManager(this);
+
+        // Open an auction house and load its items
+        this.auctionHouseItems = new AuctionHouseItems(this);
+        this.auctionHouseItems.loadAuctionItems();
 
         // We load the server config into memory for fast access
         // Any changes to it, we then trigger a save
@@ -76,6 +83,8 @@ public class SimpleSkyblock extends JavaPlugin {
                 .setExecutor(new LeaderboardCommand(this));
         Objects.requireNonNull(getCommand("gamble"))
                 .setExecutor(new GambleCommand(this));
+        Objects.requireNonNull(getCommand("auctionhouse"))
+                .setExecutor(new AuctionHouseCommand(this));
 
         getLogger().info("SimpleSkyblock has been enabled!");
     }

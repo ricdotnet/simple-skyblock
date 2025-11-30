@@ -29,6 +29,10 @@ commands:
   gamble:
     description: Gamble some money
     usage: /gamble
+  auctionhouse:
+    description: Open the auction house GUI
+    usage: /auctionhouse
+    aliases: [ah]
 
 permissions:
   simpleskyblock.balance:
@@ -48,4 +52,7 @@ permissions:
     default: true
   gamble:
     description: Allows players to gamble money
+    default: true
+  auctionhouse:
+    description: Allows players to open the auction house GUI
     default: true

@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.listeners;
 
+import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.gui.GambleSessionGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
@@ -36,6 +37,7 @@ public class InventoryClickListener implements Listener {
             case ConfirmGUI confirmGUI -> confirmGUI.handleInventoryClick(event, player);
             case LeaderBoardGUI leaderBoardGUI -> leaderBoardGUI.handleInventoryClick(event);
             case GambleSessionGUI gambleSessionGUI -> event.setCancelled(true);
+            case AuctionHouseGUI auctionHouseGUI -> auctionHouseGUI.handleInventoryClick(event, player);
             default -> {/* we ignore default inventories */}
         }
     }

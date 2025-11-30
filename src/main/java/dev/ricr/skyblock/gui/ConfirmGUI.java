@@ -25,9 +25,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
+    private final SimpleSkyblock plugin;
     @Getter
     private final Inventory inventory;
-    private final SimpleSkyblock plugin;
     @Getter
     private final ShopType shopType;
 

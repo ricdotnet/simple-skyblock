@@ -20,6 +20,8 @@ public class DatabaseManager {
     private Dao<Sale, Integer> salesDao;
     @Getter
     private Dao<Gamble, Integer> gamblesDao;
+    @Getter
+    private Dao<AuctionHouse, Integer> auctionHouseDao;
 
     public DatabaseManager(SimpleSkyblock plugin) {
         this.plugin = plugin;
@@ -35,10 +37,12 @@ public class DatabaseManager {
             this.balancesDao = DaoManager.createDao(connection, Balance.class);
             this.salesDao = DaoManager.createDao(connection, Sale.class);
             this.gamblesDao = DaoManager.createDao(connection, Gamble.class);
+            this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouse.class);
 
             TableUtils.createTableIfNotExists(connection, Balance.class);
             TableUtils.createTableIfNotExists(connection, Sale.class);
             TableUtils.createTableIfNotExists(connection, Gamble.class);
+            TableUtils.createTableIfNotExists(connection, AuctionHouse.class);
 
             this.plugin.getLogger().info("Successfully connected to database.");
         } catch (SQLException e) {
