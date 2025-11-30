@@ -12,6 +12,7 @@ import dev.ricr.skyblock.generators.StrongholdGenerator;
 import dev.ricr.skyblock.listeners.ChunkLoadListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.PlayerJoinListener;
+import dev.ricr.skyblock.listeners.PlayerRespawnListener;
 import dev.ricr.skyblock.listeners.PlayerUseListener;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -32,7 +33,8 @@ public class SimpleSkyblock extends JavaPlugin {
             boolean dataFolderGenerated = dataFolder.mkdirs();
             if (!dataFolderGenerated) {
                 getLogger().severe("Could not create data folder!");
-                getServer().getPluginManager().disablePlugin(this);
+                getServer().getPluginManager()
+                        .disablePlugin(this);
                 return;
             }
         }
@@ -50,18 +52,30 @@ public class SimpleSkyblock extends JavaPlugin {
         IslandGenerator islandGenerator = new IslandGenerator(this, serverConfig);
 
         // Register listeners
-        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this, islandGenerator), this);
-        getServer().getPluginManager().registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
-        getServer().getPluginManager().registerEvents(new PlayerUseListener(this, serverConfig), this);
-        getServer().getPluginManager().registerEvents(new InventoryClickListener(this), this);
+        getServer().getPluginManager()
+                .registerEvents(new PlayerJoinListener(this, islandGenerator), this);
+        getServer().getPluginManager()
+                .registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
+        getServer().getPluginManager()
+                .registerEvents(new PlayerUseListener(this, serverConfig), this);
+        getServer().getPluginManager()
+                .registerEvents(new InventoryClickListener(this), this);
+        getServer().getPluginManager()
+                .registerEvents(new PlayerRespawnListener(this), this);
 
         // Register commands
-        Objects.requireNonNull(getCommand("balance")).setExecutor(new BalanceCommand(this));
-        Objects.requireNonNull(getCommand("pay")).setExecutor(new PayCommand(this));
-        Objects.requireNonNull(getCommand("shop")).setExecutor(new ShopCommand(this));
-        Objects.requireNonNull(getCommand("reloadshop")).setExecutor(new ReloadShopCommand(this));
-        Objects.requireNonNull(getCommand("leaderboard")).setExecutor(new LeaderboardCommand(this));
-        Objects.requireNonNull(getCommand("gamble")).setExecutor(new GambleCommand(this));
+        Objects.requireNonNull(getCommand("balance"))
+                .setExecutor(new BalanceCommand(this));
+        Objects.requireNonNull(getCommand("pay"))
+                .setExecutor(new PayCommand(this));
+        Objects.requireNonNull(getCommand("shop"))
+                .setExecutor(new ShopCommand(this));
+        Objects.requireNonNull(getCommand("reloadshop"))
+                .setExecutor(new ReloadShopCommand(this));
+        Objects.requireNonNull(getCommand("leaderboard"))
+                .setExecutor(new LeaderboardCommand(this));
+        Objects.requireNonNull(getCommand("gamble"))
+                .setExecutor(new GambleCommand(this));
 
         getLogger().info("SimpleSkyblock has been enabled!");
     }
