@@ -19,6 +19,8 @@ public class ServerUtils {
     public static final int GAMBLE_MAXIMUM_BALANCE = 5000;
     public static final int GAMBLE_COUNTDOWN = 30;
 
+    public static final int AUCTION_HOUSE_MAX_LISTINGS = 10;
+
     public static FileConfiguration loadConfig(File dataFolder) {
         File serverConfig = new File(dataFolder, "config.yml");
 

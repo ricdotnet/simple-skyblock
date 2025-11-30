@@ -16,13 +16,11 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.utils.ServerUtils;
-import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,48 +29,53 @@ import java.util.List;
 public class AuctionHouseItems {
     private final SimpleSkyblock plugin;
     private final int TOTAL_ITEMS_PER_PAGE = 45;
+    private final Dao<AuctionHouse, Integer> auctionHouseDao;
 
-    private List<ItemStack> auctionItems;
-    private int totalItems;
+    private long totalItems;
 
     public AuctionHouseItems(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.auctionItems = new ArrayList<>();
+        this.auctionHouseDao = this.plugin.databaseManager.getAuctionHouseDao();
     }
 
-    public void loadAuctionItems() {
+    public List<ItemStack> getPageOfItems(int page) {
         this.plugin.getLogger()
                 .info("Loading existing auction items");
 
-        Dao<AuctionHouse, Integer> auctionHouseDao = this.plugin.databaseManager.getAuctionHouseDao();
+        int offset = (page - 1) * TOTAL_ITEMS_PER_PAGE;
+        List<ItemStack> pageItems = new ArrayList<>();
 
         try {
             List<AuctionHouse> auctionHouseItemsList = auctionHouseDao.queryBuilder()
                     .orderBy("id", false)
+                    .limit((long) this.TOTAL_ITEMS_PER_PAGE)
+                    .offset((long) offset)
                     .query();
-            this.totalItems = auctionHouseItemsList.size();
 
             for (AuctionHouse auctionHouseItem : auctionHouseItemsList) {
                 ItemStack item = ItemStack.deserializeBytes(ServerUtils.bytesFromBase64(auctionHouseItem.getItem()));
-
-                buildAndAddMeta(item, auctionHouseItem.getOwnerName(), auctionHouseItem.getPrice());
-
-                auctionItems.add(item);
+                buildAndAddMeta(auctionHouseItem.getId(), item, auctionHouseItem.getOwnerName(),
+                        auctionHouseItem.getPrice());
+                pageItems.add(item);
             }
         } catch (SQLException e) {
             // ignore for now
         }
+
+        return pageItems;
     }
 
-    public void addItem(ItemStack item) {
-        this.auctionItems.addFirst(item);
+    public long getTotalPages() {
+        try {
+            this.totalItems = auctionHouseDao.countOf();
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        return (int) Math.ceil((double) this.totalItems / TOTAL_ITEMS_PER_PAGE);
     }
 
-    public List<ItemStack> getPageOfItems(int page) {
-        return this.auctionItems;
-    }
-
-    public void buildAndAddMeta(ItemStack item, String ownerName, double price) {
+    public void buildAndAddMeta(int itemId, ItemStack item, String ownerName, double price) {
         ItemMeta meta = item.getItemMeta();
         meta.lore(List.of(
                 Component.text("> " + ownerName + " <", NamedTextColor.YELLOW),
@@ -84,6 +87,10 @@ public class AuctionHouseItems {
                                 NamedTextColor.GOLD))
                         .build()
         ));
+
+        meta.getPersistentDataContainer()
+                .set(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER, itemId);
+
         item.setItemMeta(meta);
     }
 

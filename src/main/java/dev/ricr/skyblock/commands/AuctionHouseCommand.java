@@ -5,7 +5,6 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
-import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
@@ -77,6 +76,17 @@ public class AuctionHouseCommand implements CommandExecutor {
             Balance userSelling = balanceDao.queryForId(player.getUniqueId()
                     .toString());
 
+            long playerListingsCount = auctionHouseDao.queryBuilder()
+                    .where()
+                    .eq("user_id", userSelling.getUserId())
+                    .countOf();
+
+            if (playerListingsCount >= ServerUtils.AUCTION_HOUSE_MAX_LISTINGS) {
+                player.sendMessage(Component.text("You cannot place more than 10 auctions",
+                        NamedTextColor.RED));
+                return true;
+            }
+
             AuctionHouse auctionHouse = new AuctionHouse();
             auctionHouse.setUser(userSelling);
             auctionHouse.setOwnerName(player.getName());
@@ -85,13 +95,12 @@ public class AuctionHouseCommand implements CommandExecutor {
 
             auctionHouseDao.create(auctionHouse);
 
+            this.plugin.auctionHouseItems.buildAndAddMeta(auctionHouse.getId(), clonedItem,
+                    player.getName(), price);
+
         } catch (SQLException e) {
             // ignore for now
         }
-
-        this.plugin.auctionHouseItems.buildAndAddMeta(clonedItem,
-                player.getName(), price);
-        this.plugin.auctionHouseItems.addItem(clonedItem);
 
         itemInHand.setAmount(0);
         player.sendMessage(Component.text("Successfully placed an auction for your item", NamedTextColor.GREEN));
