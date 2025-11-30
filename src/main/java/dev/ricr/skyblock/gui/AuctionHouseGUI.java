@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.enums.ShopType;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -11,7 +12,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
@@ -46,6 +50,11 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         if (clicked.getType() == Material.ARROW) {
             this.currentPage = clicked.getAmount();
             this.refreshInventory();
+            return;
+        }
+
+        if (event.isRightClick()) {
+            this.removeFromAuctionHouse(player, clicked);
             return;
         }
 
@@ -85,5 +94,37 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.inventory.clear();
         this.fillInventory();
         this.addPageButtons();
+    }
+
+    private void removeFromAuctionHouse(Player player, ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        Integer itemId = meta.getPersistentDataContainer()
+                .get(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
+
+        try {
+            AuctionHouse auctionHouse = this.plugin.databaseManager.getAuctionHouseDao()
+                    .queryForId(itemId);
+
+            if (auctionHouse == null) {
+                return;
+            }
+
+            if (!auctionHouse.getUser()
+                    .getUserId()
+                    .equals(player.getUniqueId()
+                            .toString())) {
+                return;
+            }
+
+            this.plugin.databaseManager.getAuctionHouseDao()
+                    .delete(auctionHouse);
+
+            player.getInventory()
+                    .addItem(item);
+
+            this.refreshInventory();
+        } catch (SQLException e) {
+            // ignore for now
+        }
     }
 }

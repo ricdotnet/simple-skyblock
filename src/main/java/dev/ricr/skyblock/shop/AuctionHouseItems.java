@@ -72,7 +72,7 @@ public class AuctionHouseItems {
             // ignore for now
         }
 
-        return (int) Math.ceil((double) this.totalItems / TOTAL_ITEMS_PER_PAGE);
+        return (long) Math.max(1, Math.ceil((double) this.totalItems / TOTAL_ITEMS_PER_PAGE));
     }
 
     public void buildAndAddMeta(int itemId, ItemStack item, String ownerName, double price) {
