@@ -13,11 +13,13 @@ import java.util.logging.Logger;
 
 public class ServerUtils {
     private static final Logger logger = Logger.getLogger("SimpleSkyblock");
-    public static final String COIN_SYMBOL = "₿";
+    public static final String COIN_SYMBOL = "$";
 
     public static final int GAMBLE_MINIMUM_BALANCE = 100;
     public static final int GAMBLE_MAXIMUM_BALANCE = 5000;
     public static final int GAMBLE_COUNTDOWN = 30;
+
+    public static final int AUCTION_HOUSE_MAX_LISTINGS = 10;
 
     public static FileConfiguration loadConfig(File dataFolder) {
         File serverConfig = new File(dataFolder, "config.yml");
@@ -40,11 +42,22 @@ public class ServerUtils {
     }
 
     public static String getTextFromComponent(Component component) {
-        return PlainTextComponentSerializer.plainText().serialize(component);
+        return PlainTextComponentSerializer.plainText()
+                .serialize(component);
     }
 
     public static double formatMoneyValue(double value) {
         return Math.round(value * 100.00) / 100.00;
+    }
+
+    public static String base64FromBytes(byte[] bytes) {
+        return java.util.Base64.getEncoder()
+                .encodeToString(bytes);
+    }
+
+    public static byte[] bytesFromBase64(String base64) {
+        return java.util.Base64.getDecoder()
+                .decode(base64);
     }
 
 }
