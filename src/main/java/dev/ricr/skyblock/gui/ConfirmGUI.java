@@ -204,6 +204,9 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     player.getInventory()
                             .addItem(actionableItem);
 
+                    this.sendMessageToSeller(auctionHouseItem.getUser()
+                            .getUserId());
+
                     AuctionHouseTransaction transaction = new AuctionHouseTransaction();
                     transaction.setUser(userBalance);
                     transaction.setSeller(auctionHouseItem.getUser());
@@ -214,6 +217,13 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
                     this.plugin.databaseManager.getAuctionHouseDao()
                             .delete(auctionHouseItem);
+
+                    Balance sellerBalance = this.plugin.databaseManager.getBalancesDao()
+                            .queryForId(auctionHouseItem.getUser()
+                                    .getUserId());
+                    sellerBalance.setValue(sellerBalance.getValue() + price);
+                    this.plugin.databaseManager.getBalancesDao()
+                            .update(sellerBalance);
                 } catch (SQLException e) {
                     // ignore for now
                 }
@@ -347,5 +357,13 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         return itemStack;
+    }
+
+    private void sendMessageToSeller(String sellerId) {
+        Player seller = Bukkit.getPlayer(sellerId);
+        if (seller != null) {
+            seller.sendMessage(Component.text("One of your auction house items sold.", NamedTextColor.GOLD));
+            seller.playSound(seller.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+        }
     }
 }
