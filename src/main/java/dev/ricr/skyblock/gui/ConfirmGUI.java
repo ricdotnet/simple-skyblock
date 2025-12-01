@@ -9,6 +9,7 @@ import dev.ricr.skyblock.database.Sale;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -25,6 +26,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +38,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final ShopType shopType;
     private AuctionHouse auctionHouseItem;
 
-    public ConfirmGUI(SimpleSkyblock plugin, Material item, ShopItems.PricePair pricePair, ShopType shopType) {
+    public ConfirmGUI(SimpleSkyblock plugin, Player player, Material item, ShopItems.PricePair pricePair,
+                      ShopType shopType) {
         this.plugin = plugin;
         this.shopType = shopType;
         this.inventory = Bukkit.createInventory(this, 27, Component.text("Confirm order"));
@@ -74,9 +77,19 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 ItemStack sellFullStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE,
                         item.getMaxStackSize()), pricePair.sellPrice(), TransactionType.Sell);
 
+                int totalInPlayerInventory = PlayerUtils.getAllItemsInInventoryOfItem(player, item);
+
+                ItemStack sellAll = new ItemStack(Material.TNT, 1);
+                ItemMeta sellAllItemMeta = sellAll.getItemMeta();
+                sellAllItemMeta.displayName(Component.text("Sell all " + item.name()));
+                sellAllItemMeta.lore(List.of(Component.text(String.format("Total: %s%s", ServerUtils.COIN_SYMBOL,
+                        pricePair.sellPrice() * totalInPlayerInventory))));
+                sellAll.setItemMeta(sellAllItemMeta);
+
                 inventory.setItem(15, sellSingle);
                 inventory.setItem(16, sellHalfStack);
                 inventory.setItem(17, sellFullStack);
+                inventory.setItem(26, sellAll);
             }
 
             ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);
@@ -147,7 +160,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
     public void handleInventoryClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
         ItemStack clicked = event.getCurrentItem();
-        if (clicked == null || clicked.getType() == Material.AIR || !isGlassPaneOrBarrierBlock(clicked.getType())) {
+        if (clicked == null || clicked.getType() == Material.AIR || !isGlassPaneOrBarrierBlockOrTnt(clicked.getType())) {
             return;
         }
 
@@ -269,6 +282,17 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         int itemAmount = clicked.getAmount();
 
+        // we made TNT be for selling all of 1 item
+        if (clicked.getType() == Material.TNT) {
+            itemAmount = PlayerUtils.getAllItemsInInventoryOfItem(player, material);
+            if (itemAmount == 0) {
+                player.sendMessage(Component.text("You don't have any of that item in your inventory.",
+                        NamedTextColor.RED));
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                return;
+            }
+        }
+
         Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
         Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSalesDao();
         Sale sale = new Sale();
@@ -317,9 +341,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             }
         } else {
             totalPrice = prices.sellPrice() * itemAmount;
+            boolean playerHasItem = player.getInventory()
+                    .contains(material, itemAmount);
 
-            if (!player.getInventory()
-                    .contains(material, itemAmount)) {
+            if (!playerHasItem) {
                 player.sendMessage(Component.text("You don't have enough of that item in your inventory.",
                         NamedTextColor.RED));
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);

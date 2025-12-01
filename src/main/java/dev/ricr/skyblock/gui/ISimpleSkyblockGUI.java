@@ -6,11 +6,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 
 public interface ISimpleSkyblockGUI {
 
-    default void handleInventoryClick(InventoryClickEvent event) {}
-    default void handleInventoryClick(InventoryClickEvent event, Player player) {}
+    default void handleInventoryClick(InventoryClickEvent event) {
+    }
 
-    default boolean isGlassPaneOrBarrierBlock(Material material) {
-        return material == Material.GREEN_STAINED_GLASS_PANE || material == Material.RED_STAINED_GLASS_PANE || material == Material.BARRIER;
+    default void handleInventoryClick(InventoryClickEvent event, Player player) {
+    }
+
+    default boolean isGlassPaneOrBarrierBlockOrTnt(Material material) {
+        return material == Material.GREEN_STAINED_GLASS_PANE || material == Material.RED_STAINED_GLASS_PANE || material == Material.BARRIER || material == Material.TNT;
     }
 
 }

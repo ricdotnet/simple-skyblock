@@ -87,6 +87,7 @@ public class GambleSessionGUI implements InventoryHolder {
                     NamedTextColor.YELLOW));
 
             updatePlayerBalance(hostPlayer, this.originalAmount);
+            this.bossBar.removeAll();
             this.inventory.close();
 
             return;
@@ -117,7 +118,8 @@ public class GambleSessionGUI implements InventoryHolder {
                 player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1f, 1f);
             } else {
                 player.sendMessage(Component.text("You lost the gamble \uD83E\uDD40", NamedTextColor.RED));
-                player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()), NamedTextColor.DARK_RED));
+                player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()),
+                        NamedTextColor.DARK_RED));
 
                 try {
                     Balance balance = balancesDao.queryForId(player.getUniqueId()

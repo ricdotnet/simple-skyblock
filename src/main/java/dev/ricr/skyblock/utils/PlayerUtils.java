@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -51,5 +52,17 @@ public class PlayerUtils {
                 .getWorld(config.getString("world")), config.getDouble("x"),
                 config.getDouble("y"), config.getDouble(
                 "z"));
+    }
+
+    public static int getAllItemsInInventoryOfItem(Player player, Material item) {
+        return Arrays.stream(player.getInventory()
+                        .getContents())
+                .map(itemInInventory -> {
+                    if (itemInInventory != null && itemInInventory.getType() == item) {
+                        return itemInInventory.getAmount();
+                    }
+                    return 0;
+                })
+                .reduce(0, Integer::sum);
     }
 }
