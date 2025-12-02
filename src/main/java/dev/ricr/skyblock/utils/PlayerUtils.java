@@ -65,4 +65,9 @@ public class PlayerUtils {
                 })
                 .reduce(0, Integer::sum);
     }
+
+    public static FileConfiguration getPlayerConfiguration(SimpleSkyblock plugin, UUID playerUniqueId) {
+        File playerFile = new File(plugin.getDataFolder(), playerUniqueId + ".yml");
+        return YamlConfiguration.loadConfiguration(playerFile);
+    }
 }

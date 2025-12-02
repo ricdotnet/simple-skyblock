@@ -23,6 +23,8 @@ public class ServerUtils {
 
     public static final int AUCTION_HOUSE_MAX_LISTINGS = 10;
 
+    public static final int PLAYER_ISLAND_BORDER_RADIUS = 280;
+
     public static NamespacedKey AUCTION_HOUSE_ITEM_ID;
     public static NamespacedKey GUI_BUTTON_TYPE;
 

@@ -7,6 +7,8 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.gui.ConfirmGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,7 +40,12 @@ public class InventoryClickListener implements Listener {
             case LeaderBoardGUI leaderBoardGUI -> leaderBoardGUI.handleInventoryClick(event);
             case GambleSessionGUI gambleSessionGUI -> event.setCancelled(true);
             case AuctionHouseGUI auctionHouseGUI -> auctionHouseGUI.handleInventoryClick(event, player);
-            default -> {/* we ignore default inventories */}
+            default -> {
+                if (!this.plugin.islandManager.canInteractInCurrentIsland(player)) {
+                    player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+                    event.setCancelled(true);
+                }
+            }
         }
     }
 }

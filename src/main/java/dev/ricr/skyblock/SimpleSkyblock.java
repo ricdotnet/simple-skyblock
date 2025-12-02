@@ -3,22 +3,27 @@ package dev.ricr.skyblock;
 import dev.ricr.skyblock.commands.AuctionHouseCommand;
 import dev.ricr.skyblock.commands.BalanceCommand;
 import dev.ricr.skyblock.commands.GambleCommand;
+import dev.ricr.skyblock.commands.HideBorderCommand;
 import dev.ricr.skyblock.commands.LeaderboardCommand;
 import dev.ricr.skyblock.commands.PayCommand;
 import dev.ricr.skyblock.commands.ReloadShopCommand;
 import dev.ricr.skyblock.commands.ShopCommand;
+import dev.ricr.skyblock.commands.ShowBorderCommand;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.generators.StrongholdGenerator;
+import dev.ricr.skyblock.listeners.BlockPlaceEventListener;
 import dev.ricr.skyblock.listeners.ChunkLoadListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
+import dev.ricr.skyblock.listeners.BlockBreakEventListener;
+import dev.ricr.skyblock.listeners.PlayerInteractEntityEventListener;
 import dev.ricr.skyblock.listeners.PlayerJoinListener;
 import dev.ricr.skyblock.listeners.PlayerRespawnListener;
-import dev.ricr.skyblock.listeners.PlayerUseListener;
+import dev.ricr.skyblock.listeners.PlayerInteractEventListener;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
+import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +32,7 @@ import java.util.Objects;
 
 public class SimpleSkyblock extends JavaPlugin {
     public DatabaseManager databaseManager;
+    public IslandManager islandManager;
     public AuctionHouseItems auctionHouseItems;
 
     @Override
@@ -45,8 +51,9 @@ public class SimpleSkyblock extends JavaPlugin {
 
         createDefaultShopConfigAndLoadShopItems();
 
-        // Connect to a simple sqlite database
+        // Open managers
         this.databaseManager = new DatabaseManager(this);
+        this.islandManager = new IslandManager(this);
 
         // Open an auction house class with fast access Dao
         this.auctionHouseItems = new AuctionHouseItems(this);
@@ -64,11 +71,19 @@ public class SimpleSkyblock extends JavaPlugin {
         getServer().getPluginManager()
                 .registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
         getServer().getPluginManager()
-                .registerEvents(new PlayerUseListener(this, serverConfig), this);
-        getServer().getPluginManager()
                 .registerEvents(new InventoryClickListener(this), this);
         getServer().getPluginManager()
                 .registerEvents(new PlayerRespawnListener(this), this);
+
+        // TODO: refactor into single island event listeners class
+        getServer().getPluginManager()
+                .registerEvents(new BlockBreakEventListener(this), this);
+        getServer().getPluginManager()
+                .registerEvents(new BlockPlaceEventListener(this), this);
+        getServer().getPluginManager()
+                .registerEvents(new PlayerInteractEventListener(this, serverConfig), this);
+        getServer().getPluginManager()
+                .registerEvents(new PlayerInteractEntityEventListener(this), this);
 
         // Register commands
         Objects.requireNonNull(getCommand("balance"))
@@ -85,6 +100,10 @@ public class SimpleSkyblock extends JavaPlugin {
                 .setExecutor(new GambleCommand(this));
         Objects.requireNonNull(getCommand("auctionhouse"))
                 .setExecutor(new AuctionHouseCommand(this));
+        Objects.requireNonNull(getCommand("showborder"))
+                .setExecutor(new ShowBorderCommand(this));
+        Objects.requireNonNull(getCommand("hideborder"))
+                .setExecutor(new HideBorderCommand(this));
 
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);
