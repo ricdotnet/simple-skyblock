@@ -32,9 +32,41 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 @AllArgsConstructor
 public class IslandListeners implements Listener {
     private final SimpleSkyblock plugin;
+
+    private static final Set<Material> PROTECTED_BLOCKS = EnumSet.of(
+            Material.OAK_DOOR,
+            Material.BIRCH_DOOR,
+            Material.SPRUCE_DOOR,
+            Material.JUNGLE_DOOR,
+            Material.ACACIA_DOOR,
+            Material.DARK_OAK_DOOR,
+            Material.CRIMSON_DOOR,
+            Material.WARPED_DOOR,
+            Material.OAK_TRAPDOOR,
+            Material.BIRCH_TRAPDOOR,
+            Material.SPRUCE_TRAPDOOR,
+            Material.JUNGLE_TRAPDOOR,
+            Material.ACACIA_TRAPDOOR,
+            Material.DARK_OAK_TRAPDOOR,
+            Material.CRIMSON_TRAPDOOR,
+            Material.WARPED_TRAPDOOR,
+            Material.STONE_BUTTON,
+            Material.OAK_BUTTON,
+            Material.BIRCH_BUTTON,
+            Material.SPRUCE_BUTTON,
+            Material.JUNGLE_BUTTON,
+            Material.ACACIA_BUTTON,
+            Material.DARK_OAK_BUTTON,
+            Material.CRIMSON_BUTTON,
+            Material.WARPED_BUTTON,
+            Material.LEVER
+    );
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
@@ -58,12 +90,21 @@ public class IslandListeners implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getItem() == null) {
+        Player player = event.getPlayer();
+
+        Block clickedBlock = event.getClickedBlock();
+        Material clickedBlockMaterial = clickedBlock == null ? Material.AIR : clickedBlock.getType();
+
+        if (this.plugin.islandManager.shouldStopIslandInteraction(player) && PROTECTED_BLOCKS.contains(clickedBlockMaterial)) {
+            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            event.setCancelled(true);
             return;
         }
 
-        Player player = event.getPlayer();
         ItemStack item = event.getItem();
+        if (item == null) {
+            return;
+        }
         Material material = item.getType();
 
         // Precedence to non-restricted interact events
@@ -123,7 +164,6 @@ public class IslandListeners implements Listener {
         }
 
         if (item.getType() == Material.BUCKET) {
-            Block clickedBlock = event.getClickedBlock();
             if (clickedBlock == null) return;
 
             if (clickedBlock.getType() == Material.OBSIDIAN && event.getAction()
