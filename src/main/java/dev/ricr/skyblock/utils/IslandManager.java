@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.utils;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
@@ -17,6 +18,8 @@ public class IslandManager {
 
     private final SimpleSkyblock plugin;
     private final Map<UUID, Island> islands;
+    @Setter
+    private boolean opOverride = false;
 
     public IslandManager(SimpleSkyblock plugin) {
         this.plugin = plugin;
@@ -67,8 +70,12 @@ public class IslandManager {
         return playerPosX > islandMinX && playerPoxZ > islandMinZ && playerPosX < islandMaxX && playerPoxZ < islandMaxZ;
     }
 
-    public boolean canInteractInCurrentIsland(Player player) {
+    public boolean shouldStopIslandInteraction(Player player) {
         World world = player.getWorld();
-        return !"void_skyblock".equals(world.getName()) || this.isPlayerInOwnIsland(player) || player.isOp();
+        return "void_skyblock".equals(world.getName()) && !this.isPlayerInOwnIsland(player) && !isOpOverride(player);
+    }
+
+    private boolean isOpOverride(Player player) {
+        return player.isOp() && this.opOverride;
     }
 }

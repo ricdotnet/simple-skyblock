@@ -69,7 +69,12 @@ public class PlayerInteractEventListener implements Listener {
             return;
         }
 
-        if (!this.plugin.islandManager.canInteractInCurrentIsland(player)) {
+        if (item.getType() == Material.FIREWORK_ROCKET) {
+            // ignore fireworks
+            return;
+        }
+
+        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Component.text("You cannot do that here",
                     NamedTextColor.RED));
             event.setCancelled(true);

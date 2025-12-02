@@ -38,10 +38,10 @@ public class InventoryClickListener implements Listener {
             case ItemsListGUI itemsListGUI -> itemsListGUI.handleInventoryClick(event, player);
             case ConfirmGUI confirmGUI -> confirmGUI.handleInventoryClick(event, player);
             case LeaderBoardGUI leaderBoardGUI -> leaderBoardGUI.handleInventoryClick(event);
-            case GambleSessionGUI gambleSessionGUI -> event.setCancelled(true);
+            case GambleSessionGUI ignored -> event.setCancelled(true);
             case AuctionHouseGUI auctionHouseGUI -> auctionHouseGUI.handleInventoryClick(event, player);
             default -> {
-                if (!this.plugin.islandManager.canInteractInCurrentIsland(player)) {
+                if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
                     player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
                     event.setCancelled(true);
                 }

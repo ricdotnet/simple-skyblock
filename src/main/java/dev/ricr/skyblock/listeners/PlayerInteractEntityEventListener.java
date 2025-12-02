@@ -19,7 +19,7 @@ public class PlayerInteractEntityEventListener implements Listener {
     public void onEntityInteract(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
 
-        if (!this.plugin.islandManager.canInteractInCurrentIsland(player)) {
+        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Component.text("You cannot do that here",
                     NamedTextColor.RED));
             event.setCancelled(true);
