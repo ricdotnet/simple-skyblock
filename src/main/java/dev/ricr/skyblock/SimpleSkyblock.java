@@ -12,14 +12,11 @@ import dev.ricr.skyblock.commands.ShowBorderCommand;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.generators.StrongholdGenerator;
-import dev.ricr.skyblock.listeners.BlockPlaceEventListener;
 import dev.ricr.skyblock.listeners.ChunkLoadListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
-import dev.ricr.skyblock.listeners.BlockBreakEventListener;
-import dev.ricr.skyblock.listeners.PlayerInteractEntityEventListener;
+import dev.ricr.skyblock.listeners.IslandListeners;
 import dev.ricr.skyblock.listeners.PlayerJoinListener;
 import dev.ricr.skyblock.listeners.PlayerRespawnListener;
-import dev.ricr.skyblock.listeners.PlayerInteractEventListener;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
@@ -31,6 +28,7 @@ import java.io.File;
 import java.util.Objects;
 
 public class SimpleSkyblock extends JavaPlugin {
+    public FileConfiguration serverConfig;
     public DatabaseManager databaseManager;
     public IslandManager islandManager;
     public AuctionHouseItems auctionHouseItems;
@@ -49,6 +47,10 @@ public class SimpleSkyblock extends JavaPlugin {
             }
         }
 
+        // We load the server config into memory for fast access
+        // Any changes to it, we then trigger a save
+        serverConfig = ServerUtils.loadConfig(dataFolder);
+
         createDefaultShopConfigAndLoadShopItems();
 
         // Open managers
@@ -57,10 +59,6 @@ public class SimpleSkyblock extends JavaPlugin {
 
         // Open an auction house class with fast access Dao
         this.auctionHouseItems = new AuctionHouseItems(this);
-
-        // We load the server config into memory for fast access
-        // Any changes to it, we then trigger a save
-        FileConfiguration serverConfig = ServerUtils.loadConfig(dataFolder);
 
         StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this, serverConfig);
         IslandGenerator islandGenerator = new IslandGenerator(this, serverConfig);
@@ -75,15 +73,8 @@ public class SimpleSkyblock extends JavaPlugin {
         getServer().getPluginManager()
                 .registerEvents(new PlayerRespawnListener(this), this);
 
-        // TODO: refactor into single island event listeners class
         getServer().getPluginManager()
-                .registerEvents(new BlockBreakEventListener(this), this);
-        getServer().getPluginManager()
-                .registerEvents(new BlockPlaceEventListener(this), this);
-        getServer().getPluginManager()
-                .registerEvents(new PlayerInteractEventListener(this, serverConfig), this);
-        getServer().getPluginManager()
-                .registerEvents(new PlayerInteractEntityEventListener(this), this);
+                .registerEvents(new IslandListeners(this), this);
 
         // Register commands
         Objects.requireNonNull(getCommand("balance"))
