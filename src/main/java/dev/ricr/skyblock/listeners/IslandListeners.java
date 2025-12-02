@@ -1,7 +1,12 @@
 package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.utils.ServerUtils;
+import dev.ricr.skyblock.gui.AuctionHouseGUI;
+import dev.ricr.skyblock.gui.ConfirmGUI;
+import dev.ricr.skyblock.gui.GambleSessionGUI;
+import dev.ricr.skyblock.gui.ItemsListGUI;
+import dev.ricr.skyblock.gui.LeaderBoardGUI;
+import dev.ricr.skyblock.gui.ShopTypeGUI;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,8 +22,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -131,6 +140,45 @@ public class IslandListeners implements Listener {
             player.sendMessage(Component.text("You cannot do that here",
                     NamedTextColor.RED));
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onInventoryOpen(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
+
+        Inventory inventory = event.getInventory();
+        InventoryType inventoryType = inventory.getType();
+        InventoryHolder inventoryHolder = inventory.getHolder();
+
+        if (inventoryType == InventoryType.PLAYER) {
+            return;
+        }
+
+        switch (inventoryHolder) {
+            case null -> {
+            }
+            case ShopTypeGUI ignored -> {
+            }
+            case ItemsListGUI ignored -> {
+            }
+            case ConfirmGUI ignored -> {
+            }
+            case LeaderBoardGUI ignored -> {
+            }
+            case GambleSessionGUI ignored -> {
+            }
+            case AuctionHouseGUI ignored -> {
+            }
+            default -> {
+                if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
+                    player.sendMessage(Component.text("You cannot do that here",
+                            NamedTextColor.RED));
+                    event.setCancelled(true);
+                }
+            }
         }
     }
 
