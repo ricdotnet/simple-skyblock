@@ -33,7 +33,6 @@ public class IslandListeners implements Listener {
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
-            return;
         }
     }
 
@@ -44,7 +43,6 @@ public class IslandListeners implements Listener {
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
-            return;
         }
     }
 
@@ -122,7 +120,6 @@ public class IslandListeners implements Listener {
                 player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1f, 1f);
             }
 
-            return;
         }
     }
 
@@ -134,7 +131,6 @@ public class IslandListeners implements Listener {
             player.sendMessage(Component.text("You cannot do that here",
                     NamedTextColor.RED));
             event.setCancelled(true);
-            return;
         }
     }
 
