@@ -3,6 +3,7 @@ package dev.ricr.skyblock.gui;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.enums.ShopType;
+import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -31,8 +32,8 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.plugin = plugin;
         this.inventory = Bukkit.createInventory(this, 54, Component.text("Auction house"));
 
-        this.fillInventory();
-        this.addPageButtons();
+        this.loadAuctionHouseItems();
+        this.addPageAndRefreshButtons();
     }
 
     @Override
@@ -50,7 +51,16 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         if (clicked.getType() == Material.ARROW) {
-            this.currentPage = clicked.getAmount();
+            String guiButtonType = clicked.getItemMeta()
+                    .getPersistentDataContainer()
+                    .get(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING);
+
+            if (ServerUtils.AUCTION_NEXT_PAGE.equals(guiButtonType)) {
+                this.currentPage++;
+            } else if (ServerUtils.AUCTION_PREVIOUS_PAGE.equals(guiButtonType)) {
+                this.currentPage--;
+            }
+
             this.refreshInventory();
             return;
         }
@@ -60,11 +70,17 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
+        if (ServerUtils.AUCTION_REFRESH_BUTTON.equals(clicked.getPersistentDataContainer()
+                .get(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING))) {
+            this.refreshInventory();
+            return;
+        }
+
         ConfirmGUI confirmGUI = new ConfirmGUI(this.plugin, clicked, ShopType.AuctionHouse);
         player.openInventory(confirmGUI.getInventory());
     }
 
-    private void fillInventory() {
+    private void loadAuctionHouseItems() {
         List<ItemStack> items = this.plugin.auctionHouseItems.getPageOfItems(this.currentPage);
 
         int slot = 0;
@@ -74,11 +90,31 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
     }
 
-    private void addPageButtons() {
-        ItemStack previousPage = new ItemStack(Material.ARROW, currentPage == 1 ? 1 : currentPage - 1);
-        ItemStack nextPage = new ItemStack(Material.ARROW, currentPage + 1);
-        ItemStack exitButton = new ItemStack(Material.BARRIER, 1);
+    private void addPageAndRefreshButtons() {
+        ItemStack previousPage = new ItemStack(Material.ARROW, 1);
+        ItemStack nextPage = new ItemStack(Material.ARROW, 1);
+        ItemStack refreshButton = new ItemStack(Material.ANVIL);
         long totalPages = this.plugin.auctionHouseItems.getTotalPages();
+
+        ItemMeta nextPageMeta = nextPage.getItemMeta();
+        nextPageMeta.displayName(Component.text("Next page", NamedTextColor.GREEN));
+        nextPageMeta.getPersistentDataContainer()
+                .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING, ServerUtils.AUCTION_NEXT_PAGE);
+        nextPage.setItemMeta(nextPageMeta);
+
+        ItemMeta previousPageMeta = previousPage.getItemMeta();
+        previousPageMeta.displayName(Component.text("Previous page", NamedTextColor.GREEN));
+        previousPageMeta.getPersistentDataContainer()
+                .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING, ServerUtils.AUCTION_PREVIOUS_PAGE);
+        previousPage.setItemMeta(previousPageMeta);
+
+        ItemMeta refreshMeta = refreshButton.getItemMeta();
+        refreshMeta.displayName(Component.text("Auction House", NamedTextColor.GREEN));
+        refreshMeta.lore(List.of(Component.text(String.format("Page %s/%s - Click to refresh", currentPage,
+                totalPages), NamedTextColor.WHITE)));
+        refreshMeta.getPersistentDataContainer()
+                .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING, ServerUtils.AUCTION_REFRESH_BUTTON);
+        refreshButton.setItemMeta(refreshMeta);
 
         if (currentPage == 1) {
             previousPage.setAmount(0);
@@ -88,20 +124,20 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         inventory.setItem(45, previousPage);
-        inventory.setItem(49, exitButton);
+        inventory.setItem(49, refreshButton);
         inventory.setItem(53, nextPage);
     }
 
     private void refreshInventory() {
         this.inventory.clear();
-        this.fillInventory();
-        this.addPageButtons();
+        this.loadAuctionHouseItems();
+        this.addPageAndRefreshButtons();
     }
 
     private void removeFromAuctionHouse(Player player, ItemStack item) {
         ItemMeta meta = item.getItemMeta();
         Integer itemId = meta.getPersistentDataContainer()
-                .get(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
+                .get(ServerUtils.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
 
         if (player.getInventory()
                 .firstEmpty() == -1) {

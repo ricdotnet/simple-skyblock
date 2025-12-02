@@ -69,7 +69,7 @@ public class AuctionHouseItems {
                 }
 
                 item.getPersistentDataContainer()
-                        .get(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
+                        .get(ServerUtils.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
 
                 buildAndAddMeta(auctionHouseItem.getId(), item, auctionHouseItem.getOwnerName(),
                         auctionHouseItem.getPrice());
@@ -106,7 +106,7 @@ public class AuctionHouseItems {
         ));
 
         meta.getPersistentDataContainer()
-                .set(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER, itemId);
+                .set(ServerUtils.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER, itemId);
 
         item.setItemMeta(meta);
     }

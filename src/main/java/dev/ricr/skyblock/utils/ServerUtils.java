@@ -1,7 +1,9 @@
 package dev.ricr.skyblock.utils;
 
+import dev.ricr.skyblock.SimpleSkyblock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -20,6 +22,13 @@ public class ServerUtils {
     public static final int GAMBLE_COUNTDOWN = 30;
 
     public static final int AUCTION_HOUSE_MAX_LISTINGS = 10;
+
+    public static NamespacedKey AUCTION_HOUSE_ITEM_ID;
+    public static NamespacedKey GUI_BUTTON_TYPE;
+
+    public static final String AUCTION_NEXT_PAGE = "auction_next_page";
+    public static final String AUCTION_PREVIOUS_PAGE = "auction_previous_page";
+    public static final String AUCTION_REFRESH_BUTTON = "auction_refresh_button";
 
     public static FileConfiguration loadConfig(File dataFolder) {
         File serverConfig = new File(dataFolder, "config.yml");
@@ -58,6 +67,11 @@ public class ServerUtils {
     public static byte[] bytesFromBase64(String base64) {
         return java.util.Base64.getDecoder()
                 .decode(base64);
+    }
+
+    public static void initiateNamespacedKeys(SimpleSkyblock plugin) {
+        AUCTION_HOUSE_ITEM_ID = new NamespacedKey(plugin, "auction_house_item");
+        GUI_BUTTON_TYPE = new NamespacedKey(plugin, "gui_button_type");
     }
 
 }

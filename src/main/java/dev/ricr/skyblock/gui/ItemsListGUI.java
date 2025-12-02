@@ -102,7 +102,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
-        ConfirmGUI confirmGUI = new ConfirmGUI(this.plugin, material, prices, this.getShopType());
+        ConfirmGUI confirmGUI = new ConfirmGUI(this.plugin, player, material, prices, this.getShopType());
         player.openInventory(confirmGUI.getInventory());
     }
 
