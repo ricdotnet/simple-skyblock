@@ -22,6 +22,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -63,6 +64,7 @@ public class IslandListeners implements Listener {
 
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
+        Material material = item.getType();
 
         // Precedence to non-restricted interact events
         if (item.getType() == Material.ENDER_EYE) {
@@ -109,9 +111,13 @@ public class IslandListeners implements Listener {
             return;
         }
 
+        if (material.isEdible()) {
+            // ignore food
+            return;
+        }
+
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here",
-                    NamedTextColor.RED));
+            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
             return;
         }
@@ -137,8 +143,7 @@ public class IslandListeners implements Listener {
         Player player = event.getPlayer();
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here",
-                    NamedTextColor.RED));
+            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
         }
     }
@@ -174,11 +179,22 @@ public class IslandListeners implements Listener {
             }
             default -> {
                 if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-                    player.sendMessage(Component.text("You cannot do that here",
-                            NamedTextColor.RED));
+                    player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
                     event.setCancelled(true);
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onDamageByEntity(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
+            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            event.setCancelled(true);
         }
     }
 
