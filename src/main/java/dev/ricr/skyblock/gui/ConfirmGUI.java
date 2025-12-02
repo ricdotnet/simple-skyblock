@@ -110,7 +110,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         ItemMeta itemMeta = item.getItemMeta();
         Integer itemId = itemMeta
                 .getPersistentDataContainer()
-                .get(SimpleSkyblock.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
+                .get(ServerUtils.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
 
         if (itemId == null) {
             plugin.getLogger()
@@ -175,13 +175,6 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
-        if (player.getInventory()
-                .firstEmpty() == -1) {
-            player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            return;
-        }
-
         ItemMeta meta = clicked.getItemMeta();
         String clickedItemName = ServerUtils.getTextFromComponent(meta.displayName());
 
@@ -201,6 +194,12 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 if (auctionHouseItem.getOwnerName()
                         .equals(player.getName())) {
                     player.sendMessage(Component.text("You can't buy your own item.", NamedTextColor.RED));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                    return;
+                }
+
+                if (isPlayerInventoryFull(player)) {
+                    player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                     return;
                 }
@@ -311,6 +310,12 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         if (transactionType == TransactionType.Buy) {
+            if (isPlayerInventoryFull(player)) {
+                player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                return;
+            }
+
             totalPrice = prices.buyPrice() * itemAmount;
 
             try {
@@ -416,5 +421,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     NamedTextColor.GOLD));
             seller.playSound(seller.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
         }
+    }
+
+    private boolean isPlayerInventoryFull(Player player) {
+        return player.getInventory()
+                .firstEmpty() == -1;
     }
 }

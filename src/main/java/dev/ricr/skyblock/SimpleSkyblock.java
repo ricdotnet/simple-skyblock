@@ -29,8 +29,6 @@ public class SimpleSkyblock extends JavaPlugin {
     public DatabaseManager databaseManager;
     public AuctionHouseItems auctionHouseItems;
 
-    public static NamespacedKey AUCTION_HOUSE_ITEM_ID;
-
     @Override
     public void onEnable() {
         File dataFolder = getDataFolder();
@@ -89,7 +87,7 @@ public class SimpleSkyblock extends JavaPlugin {
                 .setExecutor(new AuctionHouseCommand(this));
 
         // Initiate static namespaced keys
-        AUCTION_HOUSE_ITEM_ID = new NamespacedKey(this, "auction_house_item");
+        ServerUtils.initiateNamespacedKeys(this);
 
         getLogger().info("SimpleSkyblock has been enabled!");
     }
