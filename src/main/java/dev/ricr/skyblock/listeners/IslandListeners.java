@@ -188,7 +188,7 @@ public class IslandListeners implements Listener {
 
     @EventHandler
     public void onDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof Player player)) {
+        if (!(event.getDamager() instanceof Player player)) {
             return;
         }
 
