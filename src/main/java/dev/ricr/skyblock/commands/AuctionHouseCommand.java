@@ -4,6 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.database.Balance;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
@@ -70,10 +71,10 @@ public class AuctionHouseCommand implements CommandExecutor {
         }
 
         Dao<AuctionHouse, Integer> auctionHouseDao = this.plugin.databaseManager.getAuctionHouseDao();
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
 
         try {
-            Balance userSelling = balanceDao.queryForId(player.getUniqueId()
+            User userSelling = usersDao.queryForId(player.getUniqueId()
                     .toString());
 
             long playerListingsCount = auctionHouseDao.queryBuilder()

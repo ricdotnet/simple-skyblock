@@ -15,10 +15,10 @@ public class AuctionHouseTransaction {
     private int id;
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private Balance user;
+    private User user;
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private Balance seller;
+    private User seller;
 
     @DatabaseField(canBeNull = false)
     private double price;
