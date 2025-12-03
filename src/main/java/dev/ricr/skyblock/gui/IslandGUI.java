@@ -22,11 +22,13 @@ import java.sql.SQLException;
 
 public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final SimpleSkyblock plugin;
+    private final Dao<Island, String> islandDao;
     @Getter
     private final Inventory inventory;
 
     public IslandGUI(SimpleSkyblock plugin, Player player) {
         this.plugin = plugin;
+        this.islandDao = plugin.databaseManager.getIslandsDao();
         this.inventory = Bukkit.createInventory(this, 54, Component.text("Island menu"));
 
         this.openInventory(player);
@@ -49,20 +51,8 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         switch (button) {
             case null -> {
             }
-            case Buttons.IslandPrivacy -> {
-                Dao<Island, String> islandDao = this.plugin.databaseManager.getIslandsDao();
-                try {
-                    Island island = islandDao.queryForId(player.getUniqueId()
-                            .toString());
-                    island.setPrivate(!island.isPrivate());
-                    islandDao.update(island);
-                } catch (SQLException e) {
-                    // ignore for now
-                }
-
-                // refresh only
-                this.openInventory(player);
-            }
+            case Buttons.IslandPrivacy -> this.handleIslandPrivacyClick(player);
+            case Buttons.BorderVisibility -> this.handleBorderVisibilityClick(player);
         }
     }
 
@@ -88,17 +78,26 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
-        boolean islandIsPrivate = userIsland.isPrivate();
+        boolean isIslandPrivate = userIsland.isPrivate();
+        addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
 
-        ItemStack islandPrivacy;
-        if (islandIsPrivate) {
-            islandPrivacy = new ItemStack(Material.GREEN_TERRACOTTA);
-            this.setItemMeta(islandPrivacy, "Island is private", Buttons.IslandPrivacy);
+        boolean isBorderOn = true;
+        addBooleanButton(isBorderOn, 11, Buttons.BorderVisibility, "Border is visible", "Border is hidden");
+
+    }
+
+    private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons label, String nameOn, String nameOff) {
+        ItemStack booleanButton;
+
+        if (isTrue) {
+            booleanButton = new ItemStack(Material.GREEN_TERRACOTTA);
+            this.setItemMeta(booleanButton, nameOn, label);
         } else {
-            islandPrivacy = new ItemStack(Material.RED_TERRACOTTA);
-            this.setItemMeta(islandPrivacy, "Island is public", Buttons.IslandPrivacy);
+            booleanButton = new ItemStack(Material.RED_TERRACOTTA);
+            this.setItemMeta(booleanButton, nameOff, label);
         }
-        inventory.setItem(10, islandPrivacy);
+
+        this.inventory.setItem(inventoryPosition, booleanButton);
     }
 
     private void setItemMeta(ItemStack item, String name, Buttons buttonType) {
@@ -108,5 +107,33 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING,
                         buttonType.getLabel());
         item.setItemMeta(meta);
+    }
+
+    private void handleIslandPrivacyClick(Player player) {
+        try {
+            Island island = this.islandDao.queryForId(player.getUniqueId()
+                    .toString());
+            island.setPrivate(!island.isPrivate());
+            islandDao.update(island);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        // refresh only
+        this.openInventory(player);
+    }
+
+    private void handleBorderVisibilityClick(Player player) {
+        try {
+            Island island = this.islandDao.queryForId(player.getUniqueId()
+                    .toString());
+            island.setBorderVisible(!island.isBorderVisible());
+            islandDao.update(island);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        // refresh only
+        this.openInventory(player);
     }
 }

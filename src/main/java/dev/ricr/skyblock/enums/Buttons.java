@@ -1,7 +1,8 @@
 package dev.ricr.skyblock.enums;
 
 public enum Buttons {
-    IslandPrivacy("island_privacy");
+    IslandPrivacy("island_privacy"),
+    BorderVisibility("border_visibility");
 
     public final String label;
 

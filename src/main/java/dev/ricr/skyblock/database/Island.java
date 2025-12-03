@@ -21,11 +21,14 @@ public class Island {
     private String islandName;
 
     @DatabaseField(canBeNull = false)
-    private boolean isPrivate = false;
-
-    @DatabaseField(canBeNull = false)
     private double positionX;
 
     @DatabaseField(canBeNull = false)
     private double positionZ;
+
+    @DatabaseField(canBeNull = false)
+    private boolean isPrivate = false;
+
+    @DatabaseField(canBeNull = false)
+    private boolean isBorderVisible = false;
 }
