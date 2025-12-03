@@ -81,7 +81,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         boolean isIslandPrivate = userIsland.isPrivate();
         addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
 
-        boolean isBorderOn = true;
+        boolean isBorderOn = userIsland.isBorderVisible();
         addBooleanButton(isBorderOn, 11, Buttons.BorderVisibility, "Border is visible", "Border is hidden");
 
     }
