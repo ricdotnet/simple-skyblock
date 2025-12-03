@@ -2,6 +2,7 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.gui.GambleSessionGUI;
+import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.gui.ConfirmGUI;
@@ -38,6 +39,7 @@ public class InventoryClickListener implements Listener {
             case LeaderBoardGUI leaderBoardGUI -> leaderBoardGUI.handleInventoryClick(event);
             case GambleSessionGUI ignored -> event.setCancelled(true);
             case AuctionHouseGUI auctionHouseGUI -> auctionHouseGUI.handleInventoryClick(event, player);
+            case IslandGUI islandGUI -> islandGUI.handleInventoryClick(event, player);
             default -> {/* */}
         }
     }

@@ -39,6 +39,10 @@ commands:
   hideborder:
     description: Hide the border of a player's island
     usage: /hideborder
+  island:
+    description: Get player's island menu
+    usage: /island
+    aliases: [ is ]
 
 permissions:
   simpleskyblock.balance:
@@ -67,4 +71,7 @@ permissions:
     default: true
   hideborder:
     description: Allows players to hide the border of their island
+    default: true
+  island:
+    description: Allows players to open the island menu
     default: true

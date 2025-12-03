@@ -4,6 +4,7 @@ import dev.ricr.skyblock.commands.AuctionHouseCommand;
 import dev.ricr.skyblock.commands.BalanceCommand;
 import dev.ricr.skyblock.commands.GambleCommand;
 import dev.ricr.skyblock.commands.HideBorderCommand;
+import dev.ricr.skyblock.commands.IslandCommand;
 import dev.ricr.skyblock.commands.LeaderboardCommand;
 import dev.ricr.skyblock.commands.PayCommand;
 import dev.ricr.skyblock.commands.ReloadShopCommand;
@@ -63,7 +64,7 @@ public class SimpleSkyblock extends JavaPlugin {
         StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this, serverConfig);
         IslandGenerator islandGenerator = new IslandGenerator(this, serverConfig);
 
-        // Register listeners
+        // TODO: refactor a bit more
         getServer().getPluginManager()
                 .registerEvents(new PlayerJoinListener(this, islandGenerator), this);
         getServer().getPluginManager()
@@ -72,7 +73,6 @@ public class SimpleSkyblock extends JavaPlugin {
                 .registerEvents(new InventoryClickListener(this), this);
         getServer().getPluginManager()
                 .registerEvents(new PlayerRespawnListener(this), this);
-
         getServer().getPluginManager()
                 .registerEvents(new IslandListeners(this), this);
 
@@ -95,6 +95,8 @@ public class SimpleSkyblock extends JavaPlugin {
                 .setExecutor(new ShowBorderCommand(this));
         Objects.requireNonNull(getCommand("hideborder"))
                 .setExecutor(new HideBorderCommand(this));
+        Objects.requireNonNull(getCommand("island"))
+                .setExecutor(new IslandCommand(this));
 
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);
