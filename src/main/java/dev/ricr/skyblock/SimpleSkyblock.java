@@ -3,13 +3,11 @@ package dev.ricr.skyblock;
 import dev.ricr.skyblock.commands.AuctionHouseCommand;
 import dev.ricr.skyblock.commands.BalanceCommand;
 import dev.ricr.skyblock.commands.GambleCommand;
-import dev.ricr.skyblock.commands.HideBorderCommand;
 import dev.ricr.skyblock.commands.IslandCommand;
 import dev.ricr.skyblock.commands.LeaderboardCommand;
 import dev.ricr.skyblock.commands.PayCommand;
 import dev.ricr.skyblock.commands.ReloadShopCommand;
 import dev.ricr.skyblock.commands.ShopCommand;
-import dev.ricr.skyblock.commands.ShowBorderCommand;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.generators.StrongholdGenerator;
@@ -36,23 +34,13 @@ public class SimpleSkyblock extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        File dataFolder = getDataFolder();
-
-        if (!dataFolder.exists()) {
-            boolean dataFolderGenerated = dataFolder.mkdirs();
-            if (!dataFolderGenerated) {
-                getLogger().severe("Could not create data folder!");
-                getServer().getPluginManager()
-                        .disablePlugin(this);
-                return;
-            }
-        }
+        File dataFolder = this.ensureDataFolderExists();
 
         // We load the server config into memory for fast access
         // Any changes to it, we then trigger a save
-        serverConfig = ServerUtils.loadConfig(dataFolder);
+        this.serverConfig = ServerUtils.loadConfig(dataFolder);
 
-        createDefaultShopConfigAndLoadShopItems();
+        this.createDefaultShopConfigAndLoadShopItems();
 
         // Open managers
         this.databaseManager = new DatabaseManager(this);
@@ -65,54 +53,65 @@ public class SimpleSkyblock extends JavaPlugin {
         IslandGenerator islandGenerator = new IslandGenerator(this, serverConfig);
 
         // TODO: refactor a bit more
-        getServer().getPluginManager()
+        this.getServer().getPluginManager()
                 .registerEvents(new PlayerJoinListener(this, islandGenerator), this);
-        getServer().getPluginManager()
+        this.getServer().getPluginManager()
                 .registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
-        getServer().getPluginManager()
+        this.getServer().getPluginManager()
                 .registerEvents(new InventoryClickListener(this), this);
-        getServer().getPluginManager()
+        this.getServer().getPluginManager()
                 .registerEvents(new PlayerRespawnListener(this), this);
-        getServer().getPluginManager()
+        this.getServer().getPluginManager()
                 .registerEvents(new IslandListeners(this), this);
 
         // Register commands
-        Objects.requireNonNull(getCommand("balance"))
+        Objects.requireNonNull(this.getCommand("balance"))
                 .setExecutor(new BalanceCommand(this));
-        Objects.requireNonNull(getCommand("pay"))
+        Objects.requireNonNull(this.getCommand("pay"))
                 .setExecutor(new PayCommand(this));
-        Objects.requireNonNull(getCommand("shop"))
+        Objects.requireNonNull(this.getCommand("shop"))
                 .setExecutor(new ShopCommand(this));
-        Objects.requireNonNull(getCommand("reloadshop"))
+        Objects.requireNonNull(this.getCommand("reloadshop"))
                 .setExecutor(new ReloadShopCommand(this));
-        Objects.requireNonNull(getCommand("leaderboard"))
+        Objects.requireNonNull(this.getCommand("leaderboard"))
                 .setExecutor(new LeaderboardCommand(this));
-        Objects.requireNonNull(getCommand("gamble"))
+        Objects.requireNonNull(this.getCommand("gamble"))
                 .setExecutor(new GambleCommand(this));
-        Objects.requireNonNull(getCommand("auctionhouse"))
+        Objects.requireNonNull(this.getCommand("auctionhouse"))
                 .setExecutor(new AuctionHouseCommand(this));
-        Objects.requireNonNull(getCommand("showborder"))
-                .setExecutor(new ShowBorderCommand(this));
-        Objects.requireNonNull(getCommand("hideborder"))
-                .setExecutor(new HideBorderCommand(this));
-        Objects.requireNonNull(getCommand("island"))
+        Objects.requireNonNull(this.getCommand("island"))
                 .setExecutor(new IslandCommand(this));
 
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);
 
-        getLogger().info("SimpleSkyblock has been enabled!");
+        this.getLogger().info("SimpleSkyblock has been enabled!");
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("SimpleSkyblock has been disabled!");
+        this.getLogger().info("SimpleSkyblock has been disabled!");
+    }
+
+    private File ensureDataFolderExists() {
+        File dataFolder = this.getDataFolder();
+
+        if (!dataFolder.exists()) {
+            boolean dataFolderGenerated = dataFolder.mkdirs();
+            if (!dataFolderGenerated) {
+                this.getLogger().severe("Could not create data folder!");
+                this.getServer().getPluginManager()
+                        .disablePlugin(this);
+            }
+        }
+
+        return this.getDataFolder();
     }
 
     private void createDefaultShopConfigAndLoadShopItems() {
-        File file = new File(getDataFolder(), "shop.yml");
+        File file = new File(this.getDataFolder(), "shop.yml");
         if (!file.exists()) {
-            saveResource("shop.yml", false);
+            this.saveResource("shop.yml", false);
         }
 
         ShopItems.loadShop(this);

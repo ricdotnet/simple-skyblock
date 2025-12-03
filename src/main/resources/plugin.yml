@@ -33,12 +33,6 @@ commands:
     description: Open the auction house GUI
     usage: /auctionhouse
     aliases: [ ah ]
-  showborder:
-    description: Show the border of a player's island
-    usage: /showborder
-  hideborder:
-    description: Hide the border of a player's island
-    usage: /hideborder
   island:
     description: Get player's island menu
     usage: /island
@@ -65,12 +59,6 @@ permissions:
     default: true
   auctionhouse:
     description: Allows players to open the auction house GUI
-    default: true
-  showborder:
-    description: Allows players to see the border of their island
-    default: true
-  hideborder:
-    description: Allows players to hide the border of their island
     default: true
   island:
     description: Allows players to open the island menu
