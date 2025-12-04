@@ -3,6 +3,7 @@ package dev.ricr.skyblock.utils;
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Island;
+import dev.ricr.skyblock.database.User;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -25,6 +27,17 @@ public class IslandManager {
     public IslandManager(SimpleSkyblock plugin) {
         this.plugin = plugin;
         this.islands = new HashMap<>();
+
+        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
+
+        try {
+            List<User> userList = usersDao.queryForAll();
+            for (User user : userList) {
+                this.addPlayerIsland(UUID.fromString(user.getUserId()));
+            }
+        } catch (SQLException e) {
+            // ignore for now
+        }
     }
 
     public IslandRecord getIslandRecord(UUID playerUniqueId) {
