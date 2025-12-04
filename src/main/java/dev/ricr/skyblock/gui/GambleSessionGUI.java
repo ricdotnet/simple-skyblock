@@ -72,13 +72,6 @@ public class GambleSessionGUI implements InventoryHolder {
         this.refreshInventory();
     }
 
-    // TODO: implement later to allow quit a gamble
-//    public void removePlayer(UUID player) {
-//        this.players.remove(player);
-//        this.amount -= amount;
-//        this.refreshInventory();
-//    }
-
     public void chooseWinner() {
         if (this.players.size() == 1) {
             Player hostPlayer = this.players.iterator()

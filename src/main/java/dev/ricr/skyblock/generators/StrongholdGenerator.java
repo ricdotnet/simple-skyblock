@@ -17,8 +17,6 @@ public class StrongholdGenerator {
     private final FileConfiguration serverConfig;
     @Getter
     private final Vector3d strongholdLocation;
-    private final int MIN = -3500;
-    private final int MAX = 3500;
 
     public StrongholdGenerator(SimpleSkyblock plugin, FileConfiguration serverConfig) {
         this.plugin = plugin;
@@ -71,9 +69,9 @@ public class StrongholdGenerator {
     private double random() {
         Random random = new Random();
         if (random.nextBoolean()) {
-            return this.MIN + random.nextInt(this.MAX - 1000);
+            return ServerUtils.MIN_STRONGHOLD_LOCATION + random.nextInt(ServerUtils.MAX_STRONGHOLD_LOCATION - 1000);
         } else {
-            return 1001 + random.nextInt(this.MAX - 1000);
+            return 1001 + random.nextInt(ServerUtils.MAX_STRONGHOLD_LOCATION - 1000);
         }
     }
 }

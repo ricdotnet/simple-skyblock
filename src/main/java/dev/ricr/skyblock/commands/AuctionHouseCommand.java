@@ -3,7 +3,6 @@ package dev.ricr.skyblock.commands;
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
-import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.utils.ServerUtils;

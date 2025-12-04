@@ -15,6 +15,11 @@ import java.util.logging.Logger;
 
 public class ServerUtils {
     private static final Logger logger = Logger.getLogger("SimpleSkyblock");
+
+    public static final int ISLAND_SPACING = 300;
+    public static final int MIN_STRONGHOLD_LOCATION = -3500;
+    public static final int MAX_STRONGHOLD_LOCATION = 3500;
+
     public static final String COIN_SYMBOL = "$";
 
     public static final int GAMBLE_MINIMUM_BALANCE = 100;

@@ -1,5 +1,8 @@
 package dev.ricr.skyblock.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum Buttons {
     IslandPrivacy("island_privacy"),
     BorderVisibility("border_visibility");
@@ -8,10 +11,6 @@ public enum Buttons {
 
     Buttons(String label) {
         this.label = label;
-    }
-
-    public String getLabel() {
-        return label;
     }
 
     public static Buttons getByLabel(String label) {

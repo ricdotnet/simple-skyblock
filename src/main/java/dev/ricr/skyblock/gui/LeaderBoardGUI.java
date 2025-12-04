@@ -24,14 +24,12 @@ import java.util.UUID;
 public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
     @Getter
     private final Inventory inventory;
-    private final SimpleSkyblock plugin;
 
     public LeaderBoardGUI(SimpleSkyblock plugin) {
-        this.plugin = plugin;
         this.inventory = Bukkit.createInventory(this, 27, Component.text("Balance leaderboard"));
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
-        Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSalesDao();
+        Dao<Balance, String> balanceDao = plugin.databaseManager.getBalancesDao();
+        Dao<Sale, Integer> saleDao = plugin.databaseManager.getSalesDao();
 
         try {
             List<Balance> balances = balanceDao.queryBuilder()

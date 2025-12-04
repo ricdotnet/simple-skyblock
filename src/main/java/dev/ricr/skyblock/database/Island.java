@@ -6,6 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 @DatabaseTable(tableName = "player_islands")
 @NoArgsConstructor
 @Getter
@@ -25,6 +29,9 @@ public class Island {
 
     @DatabaseField(canBeNull = false)
     private double positionZ;
+
+    @DatabaseField
+    private Set<UUID> trustedPlayers = new HashSet<>();
 
     @DatabaseField(canBeNull = false)
     private boolean isPrivate = false;

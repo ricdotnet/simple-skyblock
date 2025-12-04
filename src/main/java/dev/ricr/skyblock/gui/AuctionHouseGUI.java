@@ -26,7 +26,7 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private int currentPage = 1;
 
     @Getter
-    public Inventory inventory;
+    public final Inventory inventory;
 
     public AuctionHouseGUI(SimpleSkyblock plugin) {
         this.plugin = plugin;
