@@ -49,6 +49,11 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
+        if (targetPlayer.getName().equals(player.getName())) {
+            player.sendMessage(Component.text("You cannot pay yourself", NamedTextColor.RED));
+            return true;
+        }
+
         Dao<User, String> usersDao = plugin.databaseManager.getUsersDao();
 
         try {
