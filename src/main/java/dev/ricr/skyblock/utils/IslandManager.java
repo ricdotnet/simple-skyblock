@@ -1,8 +1,10 @@
 package dev.ricr.skyblock.utils;
 
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.ForeignCollection;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Island;
+import dev.ricr.skyblock.database.IslandUserTrustLink;
 import dev.ricr.skyblock.database.User;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class IslandManager {
 
@@ -52,9 +55,14 @@ public class IslandManager {
 
             int islandX = (int) userIsland.getPositionX();
             int islandZ = (int) userIsland.getPositionZ();
-            Set<UUID> trustedPlayers = userIsland.getTrustedPlayers();
+            ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
 
-            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedPlayers));
+            Set<String> trustedUserIds = trustedPlayers.stream().map(
+                    trustedPlayer -> trustedPlayer.getUser()
+                            .getUserId()
+            ).collect(Collectors.toSet());
+
+            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedUserIds));
         } catch (SQLException e) {
             // ignore for now
         }
@@ -103,8 +111,8 @@ public class IslandManager {
             return false;
         }
 
-        for (UUID trustedPlayerUniqueId : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().equals(trustedPlayerUniqueId)) {
+        for (String trustedPlayerUniqueId : islandRecord.trustedPlayers()) {
+            if (player.getUniqueId().toString().equals(trustedPlayerUniqueId)) {
                 isTrustedPlayer = true;
             }
         }

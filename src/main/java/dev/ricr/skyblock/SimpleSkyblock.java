@@ -11,6 +11,7 @@ import dev.ricr.skyblock.commands.ShopCommand;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.generators.StrongholdGenerator;
+import dev.ricr.skyblock.listeners.ChatListener;
 import dev.ricr.skyblock.listeners.ChunkLoadListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
@@ -53,6 +54,8 @@ public class SimpleSkyblock extends JavaPlugin {
         IslandGenerator islandGenerator = new IslandGenerator(this, serverConfig);
 
         // TODO: refactor a bit more
+        this.getServer().getPluginManager()
+                .registerEvents(new ChatListener(), this);
         this.getServer().getPluginManager()
                 .registerEvents(new PlayerJoinListener(this, islandGenerator), this);
         this.getServer().getPluginManager()

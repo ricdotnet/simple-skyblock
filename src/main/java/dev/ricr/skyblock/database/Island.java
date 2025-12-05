@@ -1,14 +1,12 @@
 package dev.ricr.skyblock.database;
 
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 @DatabaseTable(tableName = "player_islands")
 @NoArgsConstructor
@@ -30,8 +28,8 @@ public class Island {
     @DatabaseField(canBeNull = false)
     private double positionZ;
 
-    @DatabaseField
-    private Set<UUID> trustedPlayers = new HashSet<>();
+    @ForeignCollectionField
+    private ForeignCollection<IslandUserTrustLink> trustedPlayers;
 
     @DatabaseField(canBeNull = false)
     private boolean isPrivate = false;

@@ -1,8 +1,11 @@
 package dev.ricr.skyblock.commands;
 
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.ForeignCollection;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Island;
+import dev.ricr.skyblock.database.IslandUserTrustLink;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.IslandGUI;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
@@ -36,6 +39,7 @@ public class IslandCommand implements CommandExecutor {
         }
 
         Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
+        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
 
         // for adding trusted players
         if (args.length == 2 && args[0].equalsIgnoreCase("trust")) {
@@ -47,15 +51,28 @@ public class IslandCommand implements CommandExecutor {
 
             try {
                 Island userIsland = islandsDao.queryForId(player.getUniqueId().toString());
+                User targetUser = usersDao.queryForId(targetPlayer.getUniqueId().toString());
 
-                Set<UUID> trustedPlayers = userIsland.getTrustedPlayers();
-                trustedPlayers.add(targetPlayer.getUniqueId());
+                if (targetUser == null) {
+                    sender.sendMessage(Component.text(String.format("Player %s does not exist in our server database", args[1]), NamedTextColor.RED));
+                    return true;
+                }
+
+                ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
+
+                IslandUserTrustLink islandUserTrustLink = new IslandUserTrustLink();
+                islandUserTrustLink.setIsland(userIsland);
+                islandUserTrustLink.setUser(targetUser);
+
+                trustedPlayers.add(islandUserTrustLink);
                 userIsland.setTrustedPlayers(trustedPlayers);
 
                 islandsDao.update(userIsland);
 
                 // Add to island record live list
-                this.plugin.islandManager.getIslandRecord(player.getUniqueId()).trustedPlayers().add(targetPlayer.getUniqueId());
+                this.plugin.islandManager.getIslandRecord(player.getUniqueId())
+                        .trustedPlayers()
+                        .add(targetPlayer.getUniqueId().toString());
 
                 player.sendMessage(Component.text(String.format("Player %s is now trusted", targetPlayer.getName()), NamedTextColor.GREEN));
             } catch (SQLException e) {

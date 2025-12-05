@@ -46,6 +46,7 @@ public class DatabaseManager {
             this.auctionHouseTransactionsDao = DaoManager.createDao(connection, AuctionHouseTransaction.class);
 
             TableUtils.createTableIfNotExists(connection, Balance.class);
+            TableUtils.createTableIfNotExists(connection, IslandUserTrustLink.class);
             TableUtils.createTableIfNotExists(connection, User.class);
             TableUtils.createTableIfNotExists(connection, Island.class);
             TableUtils.createTableIfNotExists(connection, Sale.class);
