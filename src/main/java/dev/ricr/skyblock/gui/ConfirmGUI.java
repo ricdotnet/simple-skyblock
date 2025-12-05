@@ -4,7 +4,6 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.database.AuctionHouseTransaction;
-import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.Sale;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.enums.ShopType;
@@ -252,12 +251,12 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     this.plugin.databaseManager.getAuctionHouseDao()
                             .delete(auctionHouseItem);
 
-                    Balance sellerBalance = this.plugin.databaseManager.getBalancesDao()
+                    User userSeller = this.plugin.databaseManager.getUsersDao()
                             .queryForId(auctionHouseItem.getUser()
                                     .getUserId());
-                    sellerBalance.setValue(sellerBalance.getValue() + price);
-                    this.plugin.databaseManager.getBalancesDao()
-                            .update(sellerBalance);
+                    userSeller.setBalance(userSeller.getBalance() + price);
+                    this.plugin.databaseManager.getUsersDao()
+                            .update(userSeller);
                 } catch (SQLException e) {
                     // ignore for now
                 }

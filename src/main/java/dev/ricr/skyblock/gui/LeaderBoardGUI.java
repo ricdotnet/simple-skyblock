@@ -2,8 +2,8 @@ package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.Sale;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -28,17 +28,17 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
     public LeaderBoardGUI(SimpleSkyblock plugin) {
         this.inventory = Bukkit.createInventory(this, 27, Component.text("Balance leaderboard"));
 
-        Dao<Balance, String> balanceDao = plugin.databaseManager.getBalancesDao();
+        Dao<User, String> usersDao = plugin.databaseManager.getUsersDao();
         Dao<Sale, Integer> saleDao = plugin.databaseManager.getSalesDao();
 
         try {
-            List<Balance> balances = balanceDao.queryBuilder()
-                    .orderBy("value", false)
+            List<User> users = usersDao.queryBuilder()
+                    .orderBy("balance", false)
                     .query();
             List<Sale> sales = saleDao.queryForAll();
 
-            double totalEconomyValue = balances.stream()
-                    .mapToDouble(Balance::getValue)
+            double totalEconomyValue = users.stream()
+                    .mapToDouble(User::getBalance)
                     .sum();
             double totalServerBought =
                     sales.stream()
@@ -53,8 +53,8 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                             .mapToDouble(Sale::getValue)
                             .sum();
 
-            for (Balance balance : balances) {
-                UUID uuid = UUID.fromString(balance.getUserId());
+            for (User user : users) {
+                UUID uuid = UUID.fromString(user.getUserId());
 
                 double totalBought =
                         sales.stream()
@@ -81,7 +81,7 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 lore.add(Component.text()
                         .content("Balance: ")
                         .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
-                                        ServerUtils.formatMoneyValue(balance.getValue())),
+                                        ServerUtils.formatMoneyValue(user.getBalance())),
                                 NamedTextColor.GOLD))
                         .build());
                 lore.add(Component.text()

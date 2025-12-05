@@ -2,7 +2,7 @@ package dev.ricr.skyblock.commands;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.GambleSessionGUI;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
@@ -47,7 +47,7 @@ public class GambleCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
 
         Double amount = null;
         String host = null;
@@ -75,10 +75,10 @@ public class GambleCommand implements CommandExecutor {
             }
 
             try {
-                Balance playerBalance = balanceDao.queryForId(player.getUniqueId()
+                User user = usersDao.queryForId(player.getUniqueId()
                         .toString());
 
-                if (playerBalance.getValue() < amount) {
+                if (user.getBalance() < amount) {
                     player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble " +
                                     "for %s%s",
                             ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
@@ -141,10 +141,10 @@ public class GambleCommand implements CommandExecutor {
             } else {
 
                 try {
-                    Balance playerBalance = balanceDao.queryForId(player.getUniqueId()
+                    User user = usersDao.queryForId(player.getUniqueId()
                             .toString());
 
-                    if (playerBalance.getValue() < gambleSession.getOriginalAmount()) {
+                    if (user.getBalance() < gambleSession.getOriginalAmount()) {
                         player.sendMessage(Component.text(String.format("You cannot join a gamble session with less " +
                                                 "than %s%s",
                                         ServerUtils.COIN_SYMBOL,

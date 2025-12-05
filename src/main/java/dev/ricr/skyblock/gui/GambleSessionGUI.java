@@ -2,7 +2,6 @@ package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.Gamble;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.enums.GambleType;
@@ -164,11 +163,11 @@ public class GambleSessionGUI implements InventoryHolder {
 
     private void updatePlayerBalance(Player player, double amount) {
         try {
-            Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
-            Balance balance = balanceDao.queryForId(player.getUniqueId()
+            Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
+            User user = usersDao.queryForId(player.getUniqueId()
                     .toString());
-            balance.setValue(balance.getValue() + amount);
-            balanceDao.update(balance);
+            user.setBalance(user.getBalance() + amount);
+            usersDao.update(user);
         } catch (SQLException e) {
             // ignore for now
         }
