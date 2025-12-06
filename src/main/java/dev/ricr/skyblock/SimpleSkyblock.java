@@ -35,13 +35,10 @@ public class SimpleSkyblock extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        File dataFolder = this.ensureDataFolderExists();
+        this.ensureDataFolderExists();
 
-        // We load the server config into memory for fast access
-        // Any changes to it, we then trigger a save
-        this.serverConfig = ServerUtils.loadConfig(dataFolder);
-
-        this.createDefaultShopConfigAndLoadShopItems();
+        this.createAndLoadServerConfig();
+        this.createAndLoadServerShop();
 
         // Open managers
         this.databaseManager = new DatabaseManager(this);
@@ -50,8 +47,8 @@ public class SimpleSkyblock extends JavaPlugin {
         // Open an auction house class with fast access Dao
         this.auctionHouseItems = new AuctionHouseItems(this);
 
-        StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this, serverConfig);
-        IslandGenerator islandGenerator = new IslandGenerator(this, serverConfig);
+        StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this);
+        IslandGenerator islandGenerator = new IslandGenerator(this);
 
         // TODO: refactor a bit more
         this.getServer().getPluginManager()
@@ -96,7 +93,7 @@ public class SimpleSkyblock extends JavaPlugin {
         this.getLogger().info("SimpleSkyblock has been disabled!");
     }
 
-    private File ensureDataFolderExists() {
+    private void ensureDataFolderExists() {
         File dataFolder = this.getDataFolder();
 
         if (!dataFolder.exists()) {
@@ -107,16 +104,15 @@ public class SimpleSkyblock extends JavaPlugin {
                         .disablePlugin(this);
             }
         }
-
-        return this.getDataFolder();
     }
 
-    private void createDefaultShopConfigAndLoadShopItems() {
-        File file = new File(this.getDataFolder(), "shop.yml");
-        if (!file.exists()) {
-            this.saveResource("shop.yml", false);
-        }
+    private void createAndLoadServerConfig() {
+        this.saveDefaultConfig();
+        this.serverConfig = ServerUtils.loadConfig(this);
+    }
 
+    private void createAndLoadServerShop() {
+        this.saveResource("shop.yml", false);
         ShopItems.loadShop(this);
     }
 }

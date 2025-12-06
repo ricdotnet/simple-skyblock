@@ -1,0 +1,7 @@
+# should the server owner want a lobby world to be the spawn
+lobby: true
+# should the server owner want multiple all the islands in a single island
+single_world: false
+next_island:
+  x: -300
+  z: 0

@@ -39,8 +39,8 @@ public class ServerUtils {
     // other GUI
     public static NamespacedKey GUI_BUTTON_TYPE;
 
-    public static FileConfiguration loadConfig(File dataFolder) {
-        File serverConfig = new File(dataFolder, "config.yml");
+    public static FileConfiguration loadConfig(SimpleSkyblock plugin) {
+        File serverConfig = new File(plugin.getDataFolder(), "config.yml");
 
         return YamlConfiguration.loadConfiguration(serverConfig);
     }

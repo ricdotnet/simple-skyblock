@@ -17,13 +17,11 @@ public class IslandGenerator {
 
     @Getter
     private final SimpleSkyblock plugin;
-    private final FileConfiguration serverConfig;
 
     private final File dataFolder;
 
-    public IslandGenerator(SimpleSkyblock plugin, FileConfiguration serverConfig) {
+    public IslandGenerator(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.serverConfig = serverConfig;
         this.dataFolder = plugin.getDataFolder();
     }
 
@@ -55,8 +53,8 @@ public class IslandGenerator {
     public Location generateIsland(Player player) {
         World world = player.getWorld();
 
-        int nextIslandX = this.serverConfig.getInt("next_island.x");
-        int nextIslandZ = this.serverConfig.getInt("next_island.z");
+        int nextIslandX = this.plugin.serverConfig.getInt("next_island.x");
+        int nextIslandZ = this.plugin.serverConfig.getInt("next_island.z");
 
         int islandX = nextIslandX;
         int islandZ = nextIslandZ;
@@ -74,10 +72,10 @@ public class IslandGenerator {
         StructureUtils.placeStructure(this.plugin, islandLocation, CustomStructures.ISLAND);
         saveIslandLocation(player, islandLocation);
 
-        this.serverConfig.set("next_island.x", nextIslandX);
-        this.serverConfig.set("next_island.z", nextIslandZ);
+        this.plugin.serverConfig.set("next_island.x", nextIslandX);
+        this.plugin.serverConfig.set("next_island.z", nextIslandZ);
 
-        ServerUtils.saveConfig(this.serverConfig, this.plugin.getDataFolder());
+        ServerUtils.saveConfig(this.plugin.serverConfig, this.plugin.getDataFolder());
         
         return islandLocation;
     }

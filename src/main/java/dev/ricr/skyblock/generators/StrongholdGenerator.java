@@ -14,20 +14,18 @@ import java.util.Random;
 public class StrongholdGenerator {
 
     private final SimpleSkyblock plugin;
-    private final FileConfiguration serverConfig;
     @Getter
     private final Vector3d strongholdLocation;
 
-    public StrongholdGenerator(SimpleSkyblock plugin, FileConfiguration serverConfig) {
+    public StrongholdGenerator(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.serverConfig = serverConfig;
         this.strongholdLocation = this.randomCoordinates();
 
         saveStrongholdLocation(this.strongholdLocation);
     }
 
     public boolean isStrongholdPlaced() {
-        return this.serverConfig.contains("stronghold_location.placed");
+        return this.plugin.serverConfig.contains("stronghold_location.placed");
     }
 
     public void generateEndPortalFrame(World world) {
@@ -41,21 +39,21 @@ public class StrongholdGenerator {
     }
 
     private void saveStrongholdLocation(Vector3d location) {
-        this.serverConfig.set("stronghold_location.x", location.x);
-        this.serverConfig.set("stronghold_location.y", location.y);
-        this.serverConfig.set("stronghold_location.z", location.z);
+        this.plugin.serverConfig.set("stronghold_location.x", location.x);
+        this.plugin.serverConfig.set("stronghold_location.y", location.y);
+        this.plugin.serverConfig.set("stronghold_location.z", location.z);
 
         try {
-            ServerUtils.saveConfig(this.serverConfig, this.plugin.getDataFolder());
+            ServerUtils.saveConfig(this.plugin.serverConfig, this.plugin.getDataFolder());
         } catch (Exception e) {
             this.plugin.getLogger().severe("Failed to save stronghold location: " + e.getMessage());
         }
     }
 
     private void saveStrongholdPlaced() {
-        this.serverConfig.set("stronghold_location.placed", true);
+        this.plugin.serverConfig.set("stronghold_location.placed", true);
 
-        ServerUtils.saveConfig(this.serverConfig, this.plugin.getDataFolder());
+        ServerUtils.saveConfig(this.plugin.serverConfig, this.plugin.getDataFolder());
     }
 
     private Vector3d randomCoordinates() {
