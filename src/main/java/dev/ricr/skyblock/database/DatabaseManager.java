@@ -12,10 +12,12 @@ import java.io.File;
 import java.sql.SQLException;
 
 public class DatabaseManager {
-    private final SimpleSkyblock plugin;
-
     @Getter
     private Dao<Balance, String> balancesDao;
+    @Getter
+    private Dao<User, String> usersDao;
+    @Getter
+    private Dao<Island, String> islandsDao;
     @Getter
     private Dao<Sale, Integer> salesDao;
     @Getter
@@ -26,33 +28,36 @@ public class DatabaseManager {
     private Dao<AuctionHouseTransaction, Integer> auctionHouseTransactionsDao;
 
     public DatabaseManager(SimpleSkyblock plugin) {
-        this.plugin = plugin;
-
-        File dataFolder = this.plugin.getDataFolder();
+        File dataFolder = plugin.getDataFolder();
         String databaseUrl = String.format("jdbc:sqlite:%s/%s", dataFolder.getAbsolutePath(), "database.sql");
 
-        this.plugin.getLogger()
+        plugin.getLogger()
                 .info("Connecting to database in " + databaseUrl);
 
         try {
             ConnectionSource connection = new JdbcConnectionSource(databaseUrl);
 
             this.balancesDao = DaoManager.createDao(connection, Balance.class);
+            this.usersDao = DaoManager.createDao(connection, User.class);
+            this.islandsDao = DaoManager.createDao(connection, Island.class);
             this.salesDao = DaoManager.createDao(connection, Sale.class);
             this.gamblesDao = DaoManager.createDao(connection, Gamble.class);
             this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouse.class);
             this.auctionHouseTransactionsDao = DaoManager.createDao(connection, AuctionHouseTransaction.class);
 
             TableUtils.createTableIfNotExists(connection, Balance.class);
+            TableUtils.createTableIfNotExists(connection, IslandUserTrustLink.class);
+            TableUtils.createTableIfNotExists(connection, User.class);
+            TableUtils.createTableIfNotExists(connection, Island.class);
             TableUtils.createTableIfNotExists(connection, Sale.class);
             TableUtils.createTableIfNotExists(connection, Gamble.class);
             TableUtils.createTableIfNotExists(connection, AuctionHouse.class);
             TableUtils.createTableIfNotExists(connection, AuctionHouseTransaction.class);
 
-            this.plugin.getLogger()
+            plugin.getLogger()
                     .info("Successfully connected to database.");
         } catch (SQLException e) {
-            this.plugin.getLogger()
+            plugin.getLogger()
                     .severe("Failed to connect to database: " + e.getMessage());
         }
     }

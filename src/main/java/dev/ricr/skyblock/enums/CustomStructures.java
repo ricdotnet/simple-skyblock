@@ -1,5 +1,8 @@
 package dev.ricr.skyblock.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum CustomStructures {
     ISLAND("skyblock_island.nbt"),
     STRONGHOLD("stronghold.nbt");
@@ -10,7 +13,4 @@ public enum CustomStructures {
         this.label = label;
     }
 
-    public String getLabel() {
-        return label;
-    }
 }

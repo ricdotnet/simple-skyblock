@@ -20,7 +20,6 @@ public class IslandGenerator {
     private final FileConfiguration serverConfig;
 
     private final File dataFolder;
-    private final int ISLAND_SPACING = 300; // Distance between islands
 
     public IslandGenerator(SimpleSkyblock plugin, FileConfiguration serverConfig) {
         this.plugin = plugin;
@@ -64,7 +63,7 @@ public class IslandGenerator {
         int islandY = 64; // Standard sea level
 
         if (nextIslandX == nextIslandZ && nextIslandX >= 0) {
-            nextIslandX = -nextIslandX - ISLAND_SPACING;
+            nextIslandX = -nextIslandX - ServerUtils.ISLAND_SPACING;
         } else if (nextIslandX == -nextIslandZ) {
             nextIslandX = -nextIslandX;
         } else {

@@ -26,7 +26,7 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private int currentPage = 1;
 
     @Getter
-    public Inventory inventory;
+    public final Inventory inventory;
 
     public AuctionHouseGUI(SimpleSkyblock plugin) {
         this.plugin = plugin;
@@ -175,7 +175,7 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
             this.refreshInventory();
 
             player.sendMessage(Component.text(String.format("You removed %s from the auction house",
-                    originalMeta.displayName()), NamedTextColor.GREEN));
+                    ServerUtils.getTextFromComponent(itemToGive.displayName())), NamedTextColor.GREEN));
         } catch (SQLException e) {
             // ignore for now
         }

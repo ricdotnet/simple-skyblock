@@ -3,8 +3,12 @@ package dev.ricr.skyblock.listeners;
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Balance;
+import dev.ricr.skyblock.database.Island;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.generators.IslandGenerator;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,19 +30,19 @@ public class PlayerJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        this.addInitialBalance(player);
-
         if (!islandGenerator.hasIsland(player)) {
             Location islandLocation = islandGenerator.generateIsland(player);
             Location playerSpawnLocation = islandLocation.clone();
             playerSpawnLocation.add(2.5, 8, 4.5);
             playerSpawnLocation.setYaw(180);
 
-            player.getServer().getScheduler().runTaskLater(
-                islandGenerator.getPlugin(),
-                () -> player.teleport(playerSpawnLocation),
-                20L
-            );
+            player.getServer()
+                    .getScheduler()
+                    .runTaskLater(
+                            islandGenerator.getPlugin(),
+                            () -> player.teleport(playerSpawnLocation),
+                            20L
+                    );
 
             player.setRespawnLocation(playerSpawnLocation, true);
             player.sendMessage("§aWelcome! Your skyblock island has been generated!");
@@ -48,19 +52,106 @@ public class PlayerJoinListener implements Listener {
 
             player.sendMessage("§aWelcome back!");
         }
+
+        this.initializeUserTable(player);
+        this.initializeIslandTable(player);
+
+        // Add player to island list
+        this.plugin.islandManager.addPlayerIsland(player.getUniqueId());
     }
 
+    private void initializeUserTable(Player player) {
+        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
+        // get balance to migrate
+        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+
+        String playerUniqueId = player.getUniqueId()
+                .toString();
+
+        try {
+            User user = userDao.queryForId(playerUniqueId);
+
+            if (user != null) {
+                this.plugin.getLogger()
+                        .info(String.format("Player %s already joined before. Skipping initialization of user record.",
+                                player.getName()));
+                return;
+            }
+
+            Balance userBalance = balanceDao.queryForId(playerUniqueId);
+
+            user = new User();
+            user.setUserId(player.getUniqueId()
+                    .toString());
+            user.setUsername(player.getName());
+
+            if (userBalance == null) {
+                user.setBalance(100.0d);
+            } else {
+                user.setBalance(userBalance.getValue());
+            }
+
+            userDao.create(user);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+    }
+
+    private void initializeIslandTable(Player player) {
+        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
+        Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
+
+        FileConfiguration playerConfig = PlayerUtils.getPlayerConfiguration(this.plugin, player.getUniqueId());
+
+        String playerUniqueId = player.getUniqueId()
+                .toString();
+
+        try {
+            User user = userDao.queryForId(playerUniqueId);
+            if (user == null) {
+                return;
+            }
+            Island island = islandsDao.queryForId(user.getUserId());
+            if (island != null) {
+                this.plugin.getLogger()
+                        .info(String.format("Player %s already joined before. Skipping initialization of island " +
+                                        "record.",
+                                player.getName()));
+                return;
+            }
+
+            Double x = (Double) playerConfig.get("x");
+            Double z = (Double) playerConfig.get("z");
+
+            assert x != null;
+            assert z != null;
+
+            island = new Island();
+            island.setId(user.getUserId());
+            island.setUser(user);
+            island.setPositionX(x);
+            island.setPositionZ(z);
+            islandsDao.create(island);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+    }
+
+    @Deprecated(forRemoval = true)
     private void addInitialBalance(Player player) {
         Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
 
         try {
-            Balance userBalance = balanceDao.queryForId(player.getUniqueId().toString());
+            Balance userBalance = balanceDao.queryForId(player.getUniqueId()
+                    .toString());
 
             if (userBalance == null) {
-                this.plugin.getLogger().info("Creating balance for player " + player.getName());
+                this.plugin.getLogger()
+                        .info("Creating balance for player " + player.getName());
 
                 userBalance = new Balance();
-                userBalance.setUserId(player.getUniqueId().toString());
+                userBalance.setUserId(player.getUniqueId()
+                        .toString());
                 userBalance.setValue(100.0d);
                 balanceDao.create(userBalance);
             }

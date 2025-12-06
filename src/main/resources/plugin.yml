@@ -1,5 +1,5 @@
 name: SimpleSkyblock
-version: '0.0.5'
+version: '0.0.6'
 main: dev.ricr.skyblock.SimpleSkyblock
 api-version: '1.21'
 author: ricdotnet
@@ -10,7 +10,7 @@ commands:
     description: Get your economy balance
     usage: /balance
     permission: simpleskyblock.balance
-    aliases: [bal]
+    aliases: [ bal ]
   pay:
     description: Pay or give money to another player
     usage: /pay
@@ -25,14 +25,18 @@ commands:
   leaderboard:
     description: View the leaderboard
     usage: /leaderboard
-    aliases: [baltop]
+    aliases: [ baltop ]
   gamble:
     description: Gamble some money
     usage: /gamble
   auctionhouse:
     description: Open the auction house GUI
     usage: /auctionhouse
-    aliases: [ah]
+    aliases: [ ah ]
+  island:
+    description: Get player's island menu
+    usage: /island
+    aliases: [ is ]
 
 permissions:
   simpleskyblock.balance:
@@ -55,4 +59,7 @@ permissions:
     default: true
   auctionhouse:
     description: Allows players to open the auction house GUI
+    default: true
+  island:
+    description: Allows players to open the island menu
     default: true

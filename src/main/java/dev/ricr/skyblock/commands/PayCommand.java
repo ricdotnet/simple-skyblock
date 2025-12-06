@@ -2,7 +2,7 @@ package dev.ricr.skyblock.commands;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
@@ -49,30 +49,35 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<Balance, String> balanceDao = plugin.databaseManager.getBalancesDao();
+        if (targetPlayer.getName().equals(player.getName())) {
+            player.sendMessage(Component.text("You cannot pay yourself", NamedTextColor.RED));
+            return true;
+        }
+
+        Dao<User, String> usersDao = plugin.databaseManager.getUsersDao();
 
         try {
-            Balance targetPlayerBalance = balanceDao.queryForId(targetPlayer.getUniqueId()
+            User targetUser = usersDao.queryForId(targetPlayer.getUniqueId()
                     .toString());
 
             if (player.isOp()) {
-                targetPlayerBalance.setValue(targetPlayerBalance.getValue() + amount);
-                balanceDao.update(targetPlayerBalance);
+                targetUser.setBalance(targetUser.getBalance() + amount);
+                usersDao.update(targetUser);
             } else {
-                Balance senderBalance = balanceDao.queryForId(player.getUniqueId()
+                User userSender = usersDao.queryForId(player.getUniqueId()
                         .toString());
 
-                if (senderBalance.getValue() >= amount) {
-                    senderBalance.setValue(senderBalance.getValue() - amount);
-                    targetPlayerBalance.setValue(targetPlayerBalance.getValue() + amount);
+                if (userSender.getBalance() >= amount) {
+                    userSender.setBalance(userSender.getBalance() - amount);
+                    targetUser.setBalance(targetUser.getBalance() + amount);
                 } else {
                     player.sendMessage(Component.text("You don't have enough money to pay that amount",
                             NamedTextColor.RED));
                     return true;
                 }
 
-                balanceDao.update(senderBalance);
-                balanceDao.update(targetPlayerBalance);
+                usersDao.update(userSender);
+                usersDao.update(targetUser);
             }
         } catch (SQLException e) {
             // ignore for now

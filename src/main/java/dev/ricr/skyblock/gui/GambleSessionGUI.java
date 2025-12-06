@@ -2,8 +2,8 @@ package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.Gamble;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.enums.GambleType;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
@@ -71,13 +71,6 @@ public class GambleSessionGUI implements InventoryHolder {
         this.refreshInventory();
     }
 
-    // TODO: implement later to allow quit a gamble
-//    public void removePlayer(UUID player) {
-//        this.players.remove(player);
-//        this.amount -= amount;
-//        this.refreshInventory();
-//    }
-
     public void chooseWinner() {
         if (this.players.size() == 1) {
             Player hostPlayer = this.players.iterator()
@@ -96,7 +89,7 @@ public class GambleSessionGUI implements InventoryHolder {
         int randomIndex = new Random().nextInt(players.size());
         Player winner = players.toArray(Player[]::new)[randomIndex];
 
-        Dao<Balance, String> balancesDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
         Gamble gamble = new Gamble();
 
         for (Player player : players) {
@@ -104,9 +97,9 @@ public class GambleSessionGUI implements InventoryHolder {
                 player.sendMessage(Component.text("You won the gamble!", NamedTextColor.GREEN));
 
                 try {
-                    Balance balance = balancesDao.queryForId(player.getUniqueId()
+                    User user = usersDao.queryForId(player.getUniqueId()
                             .toString());
-                    gamble.setUser(balance);
+                    gamble.setUser(user);
                     gamble.setAmount(this.amount);
                     gamble.setType(GambleType.Won.toString());
                 } catch (SQLException e) {
@@ -122,9 +115,9 @@ public class GambleSessionGUI implements InventoryHolder {
                         NamedTextColor.DARK_RED));
 
                 try {
-                    Balance balance = balancesDao.queryForId(player.getUniqueId()
+                    User user = usersDao.queryForId(player.getUniqueId()
                             .toString());
-                    gamble.setUser(balance);
+                    gamble.setUser(user);
                     gamble.setAmount(this.originalAmount);
                     gamble.setType(GambleType.Lost.toString());
                 } catch (SQLException e) {
@@ -170,11 +163,11 @@ public class GambleSessionGUI implements InventoryHolder {
 
     private void updatePlayerBalance(Player player, double amount) {
         try {
-            Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
-            Balance balance = balanceDao.queryForId(player.getUniqueId()
+            Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
+            User user = usersDao.queryForId(player.getUniqueId()
                     .toString());
-            balance.setValue(balance.getValue() + amount);
-            balanceDao.update(balance);
+            user.setBalance(user.getBalance() + amount);
+            usersDao.update(user);
         } catch (SQLException e) {
             // ignore for now
         }

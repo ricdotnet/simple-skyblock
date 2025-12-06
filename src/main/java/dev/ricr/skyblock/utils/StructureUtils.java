@@ -28,6 +28,7 @@ public class StructureUtils {
 
             // Create a temporary file to store the structure
             File tempStructureFile = new File(plugin.getDataFolder(), String.format("temp_%s", customStructure.getLabel()));
+            // noinspection ResultOfMethodCallIgnored
             tempStructureFile.getParentFile().mkdirs();
 
             // Copy the structure from resources to temp file
@@ -53,6 +54,7 @@ public class StructureUtils {
             );
 
             // Clean up temp file
+            // noinspection ResultOfMethodCallIgnored
             tempStructureFile.delete();
 
         } catch (IOException e) {

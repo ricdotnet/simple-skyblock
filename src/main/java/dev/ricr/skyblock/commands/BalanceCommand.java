@@ -2,7 +2,7 @@ package dev.ricr.skyblock.commands;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
@@ -27,20 +27,20 @@ public class BalanceCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
         String playerId = player.getUniqueId()
                 .toString();
 
-        Balance userBalance;
+        User user;
         try {
-            userBalance = balanceDao.queryForId(playerId);
+            user = usersDao.queryForId(playerId);
         } catch (SQLException e) {
             // ignore for now
             return true;
         }
 
         player.sendMessage(Component.text(String.format("Your balance is: %s%s", ServerUtils.COIN_SYMBOL,
-                ServerUtils.formatMoneyValue(userBalance.getValue())), NamedTextColor.GOLD));
+                ServerUtils.formatMoneyValue(user.getBalance())), NamedTextColor.GOLD));
 
         return true;
     }

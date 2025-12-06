@@ -14,13 +14,12 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Logger;
 
 public class PlayerUtils {
-    static Logger logger = Logger.getLogger("SimpleSkyblock");
+    static final Logger logger = Logger.getLogger("SimpleSkyblock");
 
     public static ItemStack getPlayerHead(UUID playerUniqueId, String... name) {
         logger.info("Getting player head for " + playerUniqueId);
@@ -49,7 +48,7 @@ public class PlayerUtils {
         FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
 
         return new Location(plugin.getServer()
-                .getWorld(config.getString("world")), config.getDouble("x"),
+                .getWorld(Objects.requireNonNull(config.getString("world"))), config.getDouble("x"),
                 config.getDouble("y"), config.getDouble(
                 "z"));
     }
@@ -64,5 +63,10 @@ public class PlayerUtils {
                     return 0;
                 })
                 .reduce(0, Integer::sum);
+    }
+
+    public static FileConfiguration getPlayerConfiguration(SimpleSkyblock plugin, UUID playerUniqueId) {
+        File playerFile = new File(plugin.getDataFolder(), playerUniqueId + ".yml");
+        return YamlConfiguration.loadConfiguration(playerFile);
     }
 }

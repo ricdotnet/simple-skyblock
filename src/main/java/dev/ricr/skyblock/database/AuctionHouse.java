@@ -15,7 +15,7 @@ public class AuctionHouse {
     private int id;
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private Balance user;
+    private User user;
 
     @DatabaseField(columnName = "owner_name", canBeNull = false)
     private String ownerName;

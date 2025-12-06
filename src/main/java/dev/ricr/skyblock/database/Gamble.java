@@ -15,7 +15,7 @@ public class Gamble {
     private int id;
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private Balance user;
+    private User user;
 
     @DatabaseField(canBeNull = false)
     private double amount;

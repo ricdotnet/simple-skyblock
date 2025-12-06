@@ -4,8 +4,8 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouse;
 import dev.ricr.skyblock.database.AuctionHouseTransaction;
-import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.Sale;
+import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
@@ -26,7 +26,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -207,20 +206,20 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 double price = auctionHouseItem.getPrice();
 
                 try {
-                    Balance userBalance = this.plugin.databaseManager.getBalancesDao()
+                    User user = this.plugin.databaseManager.getUsersDao()
                             .queryForId(player.getUniqueId()
                                     .toString());
 
-                    if (userBalance.getValue() < price) {
+                    if (user.getBalance() < price) {
                         player.sendMessage(Component.text("You don't have enough money to buy this item.",
                                 NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                         return;
                     }
 
-                    userBalance.setValue(userBalance.getValue() - price);
-                    this.plugin.databaseManager.getBalancesDao()
-                            .update(userBalance);
+                    user.setBalance(user.getBalance() - price);
+                    this.plugin.databaseManager.getUsersDao()
+                            .update(user);
 
                     ItemStack itemToGive = actionableItem.clone();
                     ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
@@ -242,7 +241,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                             price);
 
                     AuctionHouseTransaction transaction = new AuctionHouseTransaction();
-                    transaction.setUser(userBalance);
+                    transaction.setUser(user);
                     transaction.setSeller(auctionHouseItem.getUser());
                     transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
                     transaction.setPrice(price);
@@ -252,12 +251,12 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     this.plugin.databaseManager.getAuctionHouseDao()
                             .delete(auctionHouseItem);
 
-                    Balance sellerBalance = this.plugin.databaseManager.getBalancesDao()
+                    User userSeller = this.plugin.databaseManager.getUsersDao()
                             .queryForId(auctionHouseItem.getUser()
                                     .getUserId());
-                    sellerBalance.setValue(sellerBalance.getValue() + price);
-                    this.plugin.databaseManager.getBalancesDao()
-                            .update(sellerBalance);
+                    userSeller.setBalance(userSeller.getBalance() + price);
+                    this.plugin.databaseManager.getUsersDao()
+                            .update(userSeller);
                 } catch (SQLException e) {
                     // ignore for now
                 }
@@ -292,7 +291,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             }
         }
 
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
+        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
         Dao<Sale, Integer> saleDao = this.plugin.databaseManager.getSalesDao();
         Sale sale = new Sale();
 
@@ -319,14 +318,14 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             totalPrice = prices.buyPrice() * itemAmount;
 
             try {
-                Balance userBalance = balanceDao.queryForId(player.getUniqueId()
+                User user = usersDao.queryForId(player.getUniqueId()
                         .toString());
 
-                if (userBalance.getValue() >= totalPrice) {
-                    finalBalance = userBalance.getValue() - totalPrice;
-                    userBalance.setValue(finalBalance);
-                    balanceDao.update(userBalance);
-                    sale.setUser(userBalance);
+                if (user.getBalance() >= totalPrice) {
+                    finalBalance = user.getBalance() - totalPrice;
+                    user.setBalance(finalBalance);
+                    usersDao.update(user);
+                    sale.setUser(user);
 
                     player.getInventory()
                             .addItem(new ItemStack(material, itemAmount));
@@ -357,13 +356,13 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             }
 
             try {
-                Balance userBalance = balanceDao.queryForId(player.getUniqueId()
+                User user = usersDao.queryForId(player.getUniqueId()
                         .toString());
 
-                finalBalance = userBalance.getValue() + totalPrice;
-                userBalance.setValue(finalBalance);
-                balanceDao.update(userBalance);
-                sale.setUser(userBalance);
+                finalBalance = user.getBalance() + totalPrice;
+                user.setBalance(finalBalance);
+                usersDao.update(user);
+                sale.setUser(user);
 
                 player.getInventory()
                         .removeItem(new ItemStack(material, itemAmount));

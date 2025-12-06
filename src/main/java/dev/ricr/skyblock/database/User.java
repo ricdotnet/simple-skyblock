@@ -6,16 +6,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// We will be migrating to using the user table instead
-@Deprecated
-@DatabaseTable(tableName = "balance")
+@DatabaseTable(tableName = "users")
 @NoArgsConstructor
 @Getter
 @Setter
-public class Balance {
+public class User {
     @DatabaseField(id = true)
     private String userId;
 
+    @DatabaseField(unique = true)
+    private String username;
+
     @DatabaseField(defaultValue = "0.0")
-    private double value;
+    private double balance;
 }
