@@ -3,5 +3,5 @@ lobby: true
 # should the server owner want multiple all the islands in a single island
 single_world: false
 next_island:
-  x: -300
+  x: 0
   z: 0

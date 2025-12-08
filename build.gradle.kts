@@ -32,7 +32,7 @@ dependencies {
 }
 
 group = "dev.ricr.skyblock"
-version = "0.0.6"
+version = "0.0.7-SNAPSHOT"
 description = "SimpleSkyblock"
 java.sourceCompatibility = JavaVersion.VERSION_21
 

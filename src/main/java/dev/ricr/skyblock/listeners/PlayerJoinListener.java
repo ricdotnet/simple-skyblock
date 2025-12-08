@@ -7,6 +7,8 @@ import dev.ricr.skyblock.database.Island;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.utils.PlayerUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -30,34 +32,35 @@ public class PlayerJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        if (!islandGenerator.hasIsland(player)) {
-            Location islandLocation = islandGenerator.generateIsland(player);
-            Location playerSpawnLocation = islandLocation.clone();
-            playerSpawnLocation.add(2.5, 8, 4.5);
-            playerSpawnLocation.setYaw(180);
+        player.sendMessage(Component.text("Welcome to SimpleSkyblock!", NamedTextColor.GREEN));
 
-            player.getServer()
-                    .getScheduler()
-                    .runTaskLater(
-                            islandGenerator.getPlugin(),
-                            () -> player.teleport(playerSpawnLocation),
-                            20L
-                    );
-
-            player.setRespawnLocation(playerSpawnLocation, true);
-            player.sendMessage("§aWelcome! Your skyblock island has been generated!");
-        } else {
-            Location playerLastLocation = player.getLocation();
-            player.teleport(playerLastLocation);
-
-            player.sendMessage("§aWelcome back!");
-        }
+//        if (!islandGenerator.hasIsland(player)) {
+//            Location islandLocation = islandGenerator.generateIsland(player.getWorld(), player);
+//            Location playerSpawnLocation = islandLocation.clone();
+//            playerSpawnLocation.add(2.5, 8, 4.5);
+//            playerSpawnLocation.setYaw(180);
+//
+//            player.getServer()
+//                    .getScheduler()
+//                    .runTaskLater(
+//                            islandGenerator.getPlugin(),
+//                            () -> player.teleport(playerSpawnLocation),
+//                            20L
+//                    );
+//
+//            player.setRespawnLocation(playerSpawnLocation, true);
+//            player.sendMessage("§aWelcome! Your skyblock island has been generated!");
+//        } else {
+//            Location playerLastLocation = player.getLocation();
+//            player.teleport(playerLastLocation);
+//
+//            player.sendMessage("§aWelcome back!");
+//        }
 
         this.initializeUserTable(player);
-        this.initializeIslandTable(player);
 
         // Add player to island list
-        this.plugin.islandManager.addPlayerIsland(player.getUniqueId());
+//        this.plugin.islandManager.addPlayerIsland(player.getUniqueId());
     }
 
     private void initializeUserTable(Player player) {
@@ -92,46 +95,6 @@ public class PlayerJoinListener implements Listener {
             }
 
             userDao.create(user);
-        } catch (SQLException e) {
-            // ignore for now
-        }
-    }
-
-    private void initializeIslandTable(Player player) {
-        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
-        Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
-
-        FileConfiguration playerConfig = PlayerUtils.getPlayerConfiguration(this.plugin, player.getUniqueId());
-
-        String playerUniqueId = player.getUniqueId()
-                .toString();
-
-        try {
-            User user = userDao.queryForId(playerUniqueId);
-            if (user == null) {
-                return;
-            }
-            Island island = islandsDao.queryForId(user.getUserId());
-            if (island != null) {
-                this.plugin.getLogger()
-                        .info(String.format("Player %s already joined before. Skipping initialization of island " +
-                                        "record.",
-                                player.getName()));
-                return;
-            }
-
-            Double x = (Double) playerConfig.get("x");
-            Double z = (Double) playerConfig.get("z");
-
-            assert x != null;
-            assert z != null;
-
-            island = new Island();
-            island.setId(user.getUserId());
-            island.setUser(user);
-            island.setPositionX(x);
-            island.setPositionZ(z);
-            islandsDao.create(island);
         } catch (SQLException e) {
             // ignore for now
         }

@@ -50,32 +50,32 @@ public class IslandGenerator {
         );
     }
 
-    public Location generateIsland(Player player) {
-        World world = player.getWorld();
+    public Location generateIsland(World world, Player player) {
+//        World world = player.getWorld();
 
-        int nextIslandX = this.plugin.serverConfig.getInt("next_island.x");
-        int nextIslandZ = this.plugin.serverConfig.getInt("next_island.z");
+//        int nextIslandX = this.plugin.serverConfig.getInt("next_island.x");
+//        int nextIslandZ = this.plugin.serverConfig.getInt("next_island.z");
+//
+//        int islandX = nextIslandX;
+//        int islandZ = nextIslandZ;
+//        int islandY = 64; // Standard sea level
+//
+//        if (nextIslandX == nextIslandZ && nextIslandX >= 0) {
+//            nextIslandX = -nextIslandX - ServerUtils.ISLAND_SPACING;
+//        } else if (nextIslandX == -nextIslandZ) {
+//            nextIslandX = -nextIslandX;
+//        } else {
+//            nextIslandZ = -nextIslandX;
+//        }
 
-        int islandX = nextIslandX;
-        int islandZ = nextIslandZ;
-        int islandY = 64; // Standard sea level
-
-        if (nextIslandX == nextIslandZ && nextIslandX >= 0) {
-            nextIslandX = -nextIslandX - ServerUtils.ISLAND_SPACING;
-        } else if (nextIslandX == -nextIslandZ) {
-            nextIslandX = -nextIslandX;
-        } else {
-            nextIslandZ = -nextIslandX;
-        }
-
-        Location islandLocation = new Location(world, islandX, islandY, islandZ);
+        Location islandLocation = new Location(world, -1.5, 57, -1.5);
         StructureUtils.placeStructure(this.plugin, islandLocation, CustomStructures.ISLAND);
         saveIslandLocation(player, islandLocation);
 
-        this.plugin.serverConfig.set("next_island.x", nextIslandX);
-        this.plugin.serverConfig.set("next_island.z", nextIslandZ);
-
-        ServerUtils.saveConfig(this.plugin.serverConfig, this.plugin.getDataFolder());
+//        this.plugin.serverConfig.set("next_island.x", nextIslandX);
+//        this.plugin.serverConfig.set("next_island.z", nextIslandZ);
+//
+//        ServerUtils.saveConfig(this.plugin.serverConfig, this.plugin.getDataFolder());
         
         return islandLocation;
     }

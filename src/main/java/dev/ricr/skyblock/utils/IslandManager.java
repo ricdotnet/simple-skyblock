@@ -53,6 +53,10 @@ public class IslandManager {
         try {
             Island userIsland = islandsDao.queryForId(playerUniqueId.toString());
 
+            if (userIsland == null) {
+                return;
+            }
+
             int islandX = (int) userIsland.getPositionX();
             int islandZ = (int) userIsland.getPositionZ();
             ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
@@ -121,6 +125,7 @@ public class IslandManager {
             return false;
         }
 
+        // TODO: void_skyblock is no more
         return "void_skyblock".equals(world.getName()) && !this.isPlayerInOwnIsland(player) && !isOpOverride(player);
     }
 
