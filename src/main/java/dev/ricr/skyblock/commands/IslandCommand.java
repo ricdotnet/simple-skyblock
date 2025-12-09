@@ -253,11 +253,6 @@ public class IslandCommand {
         }
 
         Player targetPlayer = players.getFirst();
-        if (targetPlayer == null) {
-            sender.sendMessage(Component.text(String.format("Player %s is not online", targetPlayer.getName()), NamedTextColor.RED));
-            return Command.SINGLE_SUCCESS;
-        }
-
         if (targetPlayer.getUniqueId().equals(player.getUniqueId())) {
             sender.sendMessage(Component.text("You cannot trust yourself", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
