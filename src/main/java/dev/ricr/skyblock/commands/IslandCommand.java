@@ -7,7 +7,6 @@ import dev.ricr.skyblock.database.Island;
 import dev.ricr.skyblock.database.IslandUserTrustLink;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.IslandGUI;
-import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -25,9 +24,17 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
-@AllArgsConstructor
 public class IslandCommand implements CommandExecutor {
     private final SimpleSkyblock plugin;
+
+    private final Dao<User, String> usersDao;
+    private final Dao<Island, String> islandsDao;
+
+    public IslandCommand(SimpleSkyblock plugin) {
+        this.plugin = plugin;
+        this.usersDao = plugin.databaseManager.getUsersDao();
+        this.islandsDao = plugin.databaseManager.getIslandsDao();
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
@@ -45,7 +52,19 @@ public class IslandCommand implements CommandExecutor {
         Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
         Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
 
-        // for adding trusted players
+        if (args.length == 1 && args[0].equalsIgnoreCase("tp")) {
+            if (!this.playerIslandRecordExists(player)) {
+                player.sendMessage(Component.text("You do not have an island to teleport to", NamedTextColor.RED));
+                return true;
+            }
+
+            World islandWorld = this.loadOrCreateIslandWorld(player);
+
+            // TODO: replace with real coordinates set by the owner
+            player.teleport(new Location(islandWorld, 0.5, 64, 2.5, 180, 0));
+            return true;
+        }
+
         if (args.length == 2 && args[0].equalsIgnoreCase("trust")) {
             Player targetPlayer = Bukkit.getPlayer(args[1]);
             if (targetPlayer == null) {
@@ -96,6 +115,11 @@ public class IslandCommand implements CommandExecutor {
     }
 
     private void createPlayerIslandWorld(Player player) {
+        if (this.playerIslandRecordExists(player)) {
+            player.sendMessage(Component.text("You already have an island, delete it before creating a new one", NamedTextColor.RED));
+            return;
+        }
+
         String islandName = String.format("islands/%s", player.getUniqueId());
 
         WorldCreator worldCreator = new WorldCreator(islandName);
@@ -126,15 +150,12 @@ public class IslandCommand implements CommandExecutor {
         String playerUniqueId = player.getUniqueId()
                 .toString();
 
-        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
-        Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
-
         try {
-            User user = userDao.queryForId(playerUniqueId);
+            User user = this.usersDao.queryForId(playerUniqueId);
             if (user == null) {
                 return;
             }
-            Island island = islandsDao.queryForId(user.getUserId());
+            Island island = this.islandsDao.queryForId(user.getUserId());
             if (island != null) {
                 this.plugin.getLogger()
                         .info(String.format("Player %s already has an island and tried creating another one",
@@ -150,20 +171,19 @@ public class IslandCommand implements CommandExecutor {
             island.setPositionX(0.0d);
             island.setPositionZ(0.0d);
 
-            islandsDao.create(island);
+            this.islandsDao.create(island);
         } catch (SQLException e) {
             // ignore for now
         }
     }
 
     private void deletePlayerIslandWorld(Player player) {
-        String islandName = String.format("islands/%s", player.getUniqueId());
-
-        World islandWorld = Bukkit.getWorld(islandName);
-        if (islandWorld == null) {
+        if (!this.playerIslandRecordExists(player)) {
             player.sendMessage(Component.text("Unable to delete your island because it does not exist", NamedTextColor.RED));
             return;
         }
+
+        World islandWorld = this.loadOrCreateIslandWorld(player);
 
         World lobbyWorld = Bukkit.getWorld("lobby");
         assert lobbyWorld != null;
@@ -188,10 +208,8 @@ public class IslandCommand implements CommandExecutor {
         String playerUniqueId = player.getUniqueId()
                 .toString();
 
-        Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
-
         try {
-            Island island = islandsDao.queryForId(playerUniqueId);
+            Island island = this.islandsDao.queryForId(playerUniqueId);
             if (island == null) {
                 this.plugin.getLogger()
                         .info(String.format("Player %s does not have an island database record to delete",
@@ -199,9 +217,30 @@ public class IslandCommand implements CommandExecutor {
                 return;
             }
 
-            islandsDao.delete(island);
+            this.islandsDao.delete(island);
         } catch (SQLException e) {
             // ignore for now
         }
+    }
+
+    private boolean playerIslandRecordExists(Player player) {
+        try {
+            Island playerIsland = this.islandsDao.queryForId(player.getUniqueId().toString());
+            return playerIsland != null;
+        } catch (SQLException e) {
+            // ignore for now
+            return false;
+        }
+    }
+
+    private World loadOrCreateIslandWorld(Player player) {
+        String islandName = String.format("islands/%s", player.getUniqueId());
+
+        World islandWorld = Bukkit.getWorld(islandName);
+        if (islandWorld == null) {
+            islandWorld = WorldCreator.name(islandName).createWorld();
+        }
+
+        return islandWorld;
     }
 }
