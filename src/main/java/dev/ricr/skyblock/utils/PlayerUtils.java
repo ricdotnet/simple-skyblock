@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -68,5 +69,41 @@ public class PlayerUtils {
     public static FileConfiguration getPlayerConfiguration(SimpleSkyblock plugin, UUID playerUniqueId) {
         File playerFile = new File(plugin.getDataFolder(), playerUniqueId + ".yml");
         return YamlConfiguration.loadConfiguration(playerFile);
+    }
+
+    public static void savePlayerConfiguration(FileConfiguration playerConfig, File playerConfigFile) {
+        try {
+            playerConfig.save(playerConfigFile);
+        } catch (Exception e) {
+            logger.severe("Failed to save config: " + e.getMessage());
+        }
+    }
+
+    public static void saveTpLocation(SimpleSkyblock plugin, Player player, Location location, String tpType) {
+        var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, player.getUniqueId());
+
+        playerConfig.set(String.format("tp.%s.x", tpType), location.getX());
+        playerConfig.set(String.format("tp.%s.y", tpType), location.getY());
+        playerConfig.set(String.format("tp.%s.z", tpType), location.getZ());
+        playerConfig.set(String.format("tp.%s.yaw", tpType), location.getYaw());
+        playerConfig.set(String.format("tp.%s.pitch", tpType), location.getPitch());
+
+        var playerConfigFile = new File(plugin.getDataFolder(), String.format("%s.yml", player.getUniqueId()));
+        PlayerUtils.savePlayerConfiguration(playerConfig, playerConfigFile);
+    }
+
+    public static Location getTpLocation(SimpleSkyblock plugin, Player player, String tpType) {
+        var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, player.getUniqueId());
+
+        double x = NumberUtils.objectToDouble(playerConfig.get(String.format("tp.%s.x", tpType)));
+        double y = NumberUtils.objectToDouble(playerConfig.get(String.format("tp.%s.y", tpType)));
+        double z = NumberUtils.objectToDouble(playerConfig.get(String.format("tp.%s.z", tpType)));
+        float yaw = NumberUtils.objectToFloat(playerConfig.get(String.format("tp.%s.yaw", tpType)));
+        float pitch = NumberUtils.objectToFloat(playerConfig.get(String.format("tp.%s.pitch", tpType)));
+
+        // TODO: this is not ideal here
+        World world = ServerUtils.loadOrCreateWorld(player);
+
+        return new Location(world, x, y, z, yaw, pitch);
     }
 }

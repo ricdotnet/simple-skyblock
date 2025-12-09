@@ -1,7 +1,6 @@
 package dev.ricr.skyblock.commands;
 
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.ForeignCollection;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -11,6 +10,8 @@ import dev.ricr.skyblock.database.Island;
 import dev.ricr.skyblock.database.IslandUserTrustLink;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.IslandGUI;
+import dev.ricr.skyblock.utils.PlayerUtils;
+import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -20,16 +21,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.WorldCreator;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
 public class IslandCommand {
     private final SimpleSkyblock plugin;
@@ -61,7 +58,10 @@ public class IslandCommand {
                 .executes(this::openIslandGUI)
                 .then(Commands.literal("create").executes(this::createPlayerIslandWorld))
                 .then(Commands.literal("delete").executes(this::deletePlayerIslandWorld))
-                .then(Commands.literal("tp").executes(this::teleportPlayerToOwnIsland))
+                .then(Commands.literal("tp")
+                        .executes(this::teleportPlayerToOwnIsland)
+                        .then(Commands.literal("set").executes(this::setIslandTeleportPosition))
+                )
                 .then(Commands.literal("trust").then(
                                 Commands.argument("player", ArgumentTypes.player())
                                         .executes(this::trustPlayerToOwnIsland)
@@ -71,7 +71,7 @@ public class IslandCommand {
     }
 
     private int openIslandGUI(CommandContext<CommandSourceStack> ctx) {
-        CommandSender sender = ctx.getSource().getSender();
+        var sender = ctx.getSource().getSender();
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be executed by players");
@@ -83,14 +83,14 @@ public class IslandCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        IslandGUI islandGUI = new IslandGUI(this.plugin, player);
+        var islandGUI = new IslandGUI(this.plugin, player);
         player.openInventory(islandGUI.getInventory());
 
         return Command.SINGLE_SUCCESS;
     }
 
     private int createPlayerIslandWorld(CommandContext<CommandSourceStack> ctx) {
-        CommandSender sender = ctx.getSource().getSender();
+        var sender = ctx.getSource().getSender();
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be executed by players");
@@ -102,26 +102,28 @@ public class IslandCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        String islandName = String.format("islands/%s", player.getUniqueId());
+        var islandName = String.format("islands/%s", player.getUniqueId());
 
-        WorldCreator worldCreator = new WorldCreator(islandName);
+        var worldCreator = new WorldCreator(islandName);
         worldCreator.generator("SimpleSkyblock");
         // TODO: generate custom seed #
 
-        World newIsland = Bukkit.createWorld(worldCreator);
+        var newIsland = Bukkit.createWorld(worldCreator);
 
         if (newIsland == null) {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
         } else {
             newIsland.save();
 
-            Location newLocation = this.plugin.islandGenerator.generateIsland(newIsland, player);
+            var newLocation = this.plugin.islandGenerator.generateIsland(newIsland, player);
             this.createIslandDatabaseRecord(player);
 
             newLocation.setY(64);
             newLocation.setX(0.5);
             newLocation.setZ(2.5);
             newLocation.setYaw(180);
+
+            PlayerUtils.saveTpLocation(this.plugin, player, newLocation, "owner");
 
             player.teleport(newLocation);
             player.sendMessage(Component.text("Welcome to your new island", NamedTextColor.GREEN));
@@ -131,15 +133,14 @@ public class IslandCommand {
     }
 
     private void createIslandDatabaseRecord(Player player) {
-        String playerUniqueId = player.getUniqueId()
-                .toString();
+        var playerUniqueId = player.getUniqueId().toString();
 
         try {
-            User user = this.usersDao.queryForId(playerUniqueId);
+            var user = this.usersDao.queryForId(playerUniqueId);
             if (user == null) {
                 return;
             }
-            Island island = this.islandsDao.queryForId(user.getUserId());
+            var island = this.islandsDao.queryForId(user.getUserId());
             if (island != null) {
                 this.plugin.getLogger()
                         .info(String.format("Player %s already has an island and tried creating another one",
@@ -162,7 +163,7 @@ public class IslandCommand {
     }
 
     private int deletePlayerIslandWorld(CommandContext<CommandSourceStack> ctx) {
-        CommandSender sender = ctx.getSource().getSender();
+        var sender = ctx.getSource().getSender();
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be executed by players");
@@ -174,15 +175,17 @@ public class IslandCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        World islandWorld = this.loadOrCreateIslandWorld(player);
+        var islandWorld = ServerUtils.loadOrCreateWorld(player);
+        var currentWorld = player.getWorld();
 
-        World lobbyWorld = Bukkit.getWorld("lobby");
-        assert lobbyWorld != null;
-        player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
+        if (!currentWorld.getName().equals("lobby")) {
+            var lobbyWorld = Bukkit.getWorld("lobby");
+            player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
+        }
 
         Bukkit.unloadWorld(islandWorld, false);
 
-        File islandWorldFolder = islandWorld.getWorldFolder();
+        var islandWorldFolder = islandWorld.getWorldFolder();
         try {
             FileUtils.deleteDirectory(islandWorldFolder);
         } catch (IOException e) {
@@ -192,17 +195,18 @@ public class IslandCommand {
         }
 
         this.deleteIslandDatabaseRecord(player);
+
+        player.getInventory().clear();
         player.sendMessage(Component.text("Successfully deleted your island", NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
     }
 
     private void deleteIslandDatabaseRecord(Player player) {
-        String playerUniqueId = player.getUniqueId()
-                .toString();
+        var playerUniqueId = player.getUniqueId().toString();
 
         try {
-            Island island = this.islandsDao.queryForId(playerUniqueId);
+            var island = this.islandsDao.queryForId(playerUniqueId);
             if (island == null) {
                 this.plugin.getLogger()
                         .info(String.format("Player %s does not have an island database record to delete",
@@ -217,7 +221,7 @@ public class IslandCommand {
     }
 
     private int teleportPlayerToOwnIsland(CommandContext<CommandSourceStack> ctx) {
-        CommandSender sender = ctx.getSource().getSender();
+        var sender = ctx.getSource().getSender();
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be executed by players");
@@ -229,16 +233,14 @@ public class IslandCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        World islandWorld = this.loadOrCreateIslandWorld(player);
-
-        // TODO: replace with real coordinates set by the owner
-        player.teleport(new Location(islandWorld, 0.5, 64, 2.5, 180, 0));
+        var islandLocation = PlayerUtils.getTpLocation(this.plugin, player, "owner");
+        player.teleport(islandLocation);
 
         return Command.SINGLE_SUCCESS;
     }
 
     private int trustPlayerToOwnIsland(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        CommandSender sender = ctx.getSource().getSender();
+        var sender = ctx.getSource().getSender();
 
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be executed by players");
@@ -246,30 +248,30 @@ public class IslandCommand {
         }
 
         var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-        List<Player> players = resolver.resolve(ctx.getSource());
+        var players = resolver.resolve(ctx.getSource());
         if (players.isEmpty()) {
             sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }
 
-        Player targetPlayer = players.getFirst();
+        var targetPlayer = players.getFirst();
         if (targetPlayer.getUniqueId().equals(player.getUniqueId())) {
             sender.sendMessage(Component.text("You cannot trust yourself", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }
 
         try {
-            Island userIsland = islandsDao.queryForId(player.getUniqueId().toString());
-            User targetUser = usersDao.queryForId(targetPlayer.getUniqueId().toString());
+            var userIsland = islandsDao.queryForId(player.getUniqueId().toString());
+            var targetUser = usersDao.queryForId(targetPlayer.getUniqueId().toString());
 
             if (targetUser == null) {
                 sender.sendMessage(Component.text(String.format("Player %s does not exist in our server database", targetPlayer.getName()), NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
 
-            ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
+            var trustedPlayers = userIsland.getTrustedPlayers();
 
-            IslandUserTrustLink islandUserTrustLink = new IslandUserTrustLink();
+            var islandUserTrustLink = new IslandUserTrustLink();
             islandUserTrustLink.setIsland(userIsland);
             islandUserTrustLink.setUser(targetUser);
 
@@ -291,24 +293,33 @@ public class IslandCommand {
         return Command.SINGLE_SUCCESS;
     }
 
+    private int setIslandTeleportPosition(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("This command can only be executed by players");
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var currentWorld = player.getWorld();
+        if (!currentWorld.getName().contains(player.getUniqueId().toString())) {
+            player.sendMessage(Component.text("You need to be in your own island to set your teleport position", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var location = player.getLocation();
+        PlayerUtils.saveTpLocation(this.plugin, player, location, "owner");
+
+        return Command.SINGLE_SUCCESS;
+    }
+
     private boolean playerIslandRecordExists(Player player) {
         try {
-            Island playerIsland = this.islandsDao.queryForId(player.getUniqueId().toString());
+            var playerIsland = this.islandsDao.queryForId(player.getUniqueId().toString());
             return playerIsland != null;
         } catch (SQLException e) {
             // ignore for now
             return false;
         }
-    }
-
-    private World loadOrCreateIslandWorld(Player player) {
-        String islandName = String.format("islands/%s", player.getUniqueId());
-
-        World islandWorld = Bukkit.getWorld(islandName);
-        if (islandWorld == null) {
-            islandWorld = WorldCreator.name(islandName).createWorld();
-        }
-
-        return islandWorld;
     }
 }

@@ -3,9 +3,13 @@ package dev.ricr.skyblock.utils;
 import dev.ricr.skyblock.SimpleSkyblock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
@@ -83,4 +87,14 @@ public class ServerUtils {
         GUI_BUTTON_TYPE = new NamespacedKey(plugin, "gui_button_type");
     }
 
+    public static World loadOrCreateWorld(Player player) {
+        String islandName = String.format("islands/%s", player.getUniqueId());
+
+        World islandWorld = Bukkit.getWorld(islandName);
+        if (islandWorld == null) {
+            islandWorld = WorldCreator.name(islandName).createWorld();
+        }
+
+        return islandWorld;
+    }
 }
