@@ -2,7 +2,6 @@ package dev.ricr.skyblock.generators;
 
 import dev.ricr.skyblock.enums.CustomStructures;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
 import lombok.Getter;
 import org.bukkit.*;

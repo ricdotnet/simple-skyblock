@@ -6,7 +6,6 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.utils.StructureUtils;
 import lombok.Getter;
 import org.bukkit.*;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.joml.Vector3d;
 
 import java.util.Random;

@@ -11,9 +11,7 @@ import dev.ricr.skyblock.commands.ReloadShopCommand;
 import dev.ricr.skyblock.commands.ShopCommand;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
-import dev.ricr.skyblock.generators.StrongholdGenerator;
 import dev.ricr.skyblock.listeners.ChatListener;
-import dev.ricr.skyblock.listeners.ChunkLoadListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
 import dev.ricr.skyblock.listeners.PlayerJoinListener;
@@ -52,7 +50,8 @@ public class SimpleSkyblock extends JavaPlugin {
         // Open an auction house class with fast access Dao
         this.auctionHouseItems = new AuctionHouseItems(this);
 
-        StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this);
+        // For a multi island setup we dont need strnoghold generator
+//        StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this);
         this.islandGenerator = new IslandGenerator(this);
 
         // TODO: refactor a bit more
@@ -60,8 +59,8 @@ public class SimpleSkyblock extends JavaPlugin {
                 .registerEvents(new ChatListener(), this);
         this.getServer().getPluginManager()
                 .registerEvents(new PlayerJoinListener(this, this.islandGenerator), this);
-        this.getServer().getPluginManager()
-                .registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
+//        this.getServer().getPluginManager()
+//                .registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
         this.getServer().getPluginManager()
                 .registerEvents(new InventoryClickListener(this), this);
         this.getServer().getPluginManager()
