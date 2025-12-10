@@ -1,5 +1,7 @@
 package dev.ricr.skyblock.utils;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class NumberUtils {
     public static double objectToDouble(Object value) {
         if (value instanceof Number) {
@@ -19,5 +21,9 @@ public class NumberUtils {
             return Float.parseFloat((String) value);
         }
         return Float.NaN;
+    }
+
+    public static long newSeed() {
+        return ThreadLocalRandom.current().nextLong();
     }
 }

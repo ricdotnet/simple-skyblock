@@ -11,20 +11,14 @@ import lombok.Getter;
 import java.io.File;
 import java.sql.SQLException;
 
+@Getter
 public class DatabaseManager {
-    @Getter
     private Dao<Balance, String> balancesDao;
-    @Getter
     private Dao<User, String> usersDao;
-    @Getter
     private Dao<Island, String> islandsDao;
-    @Getter
     private Dao<Sale, Integer> salesDao;
-    @Getter
     private Dao<Gamble, Integer> gamblesDao;
-    @Getter
     private Dao<AuctionHouse, Integer> auctionHouseDao;
-    @Getter
     private Dao<AuctionHouseTransaction, Integer> auctionHouseTransactionsDao;
 
     public DatabaseManager(SimpleSkyblock plugin) {

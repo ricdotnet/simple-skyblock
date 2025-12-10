@@ -87,12 +87,21 @@ public class ServerUtils {
         GUI_BUTTON_TYPE = new NamespacedKey(plugin, "gui_button_type");
     }
 
-    public static World loadOrCreateWorld(Player player) {
-        String islandName = String.format("islands/%s", player.getUniqueId());
+    public static World loadOrCreateWorld(Player player, World.Environment environment, Long seed) {
+        var suffix = player.getUniqueId() + (environment == World.Environment.NETHER ? "_nether" : "");
+        var islandName = String.format("islands/%s", suffix);
 
-        World islandWorld = Bukkit.getWorld(islandName);
+        var islandWorld = Bukkit.getWorld(islandName);
         if (islandWorld == null) {
-            islandWorld = WorldCreator.name(islandName).createWorld();
+            var worldCreator = new WorldCreator(islandName);
+            if (environment != null) {
+                worldCreator.environment(environment);
+            }
+            if (seed != null) {
+                worldCreator.seed(seed);
+            }
+            worldCreator.generator("SimpleSkyblock");
+            islandWorld = worldCreator.createWorld();
         }
 
         return islandWorld;

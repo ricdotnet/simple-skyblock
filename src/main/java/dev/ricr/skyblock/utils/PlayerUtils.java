@@ -102,8 +102,8 @@ public class PlayerUtils {
         float pitch = NumberUtils.objectToFloat(playerConfig.get("tp.pitch"));
 
         // TODO: this is not ideal here
-        World world = ServerUtils.loadOrCreateWorld(player);
+        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
 
-        return new Location(world, x, y, z, yaw, pitch);
+        return new Location(islandWorld, x, y, z, yaw, pitch);
     }
 }

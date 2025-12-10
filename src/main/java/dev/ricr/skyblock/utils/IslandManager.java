@@ -8,7 +8,6 @@ import dev.ricr.skyblock.database.IslandUserTrustLink;
 import dev.ricr.skyblock.database.User;
 import lombok.Setter;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 
@@ -85,29 +84,19 @@ public class IslandManager {
         player.setWorldBorder(null);
     }
 
-    public boolean isPlayerInOwnIsland(Player player) {
-        int playerPosX = player.getLocation()
-                .getBlockX();
-        int playerPoxZ = player.getLocation()
-                .getBlockZ();
-        int islandX = this.islands.get(player.getUniqueId())
-                .x();
-        int islandZ = this.islands.get(player.getUniqueId())
-                .z();
-
-        int islandMinX = islandX - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-        int islandMaxX = islandX + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-        int islandMinZ = islandZ - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-        int islandMaxZ = islandZ + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-
-        return playerPosX > islandMinX && playerPoxZ > islandMinZ && playerPosX < islandMaxX && playerPoxZ < islandMaxZ;
+    public boolean isPlayerInOwnIsland(Player player, String worldName) {
+        return player.getUniqueId().toString().contains(worldName);
     }
 
     public boolean shouldStopIslandInteraction(Player player) {
-        World world = player.getWorld();
-        boolean isTrustedPlayer = false;
+        var world = player.getWorld();
+        var isTrustedPlayer = false;
 
-        IslandRecord islandRecord = findCurrentIslandByPlayerPosition(player);
+        if (world.getName().equals("lobby")) {
+            return true;
+        }
+
+        var islandRecord = this.findCurrentIslandRecord(world.getName());
 
         // TODO: check this actually makes sense
         if (islandRecord == null) {
@@ -125,25 +114,16 @@ public class IslandManager {
             return false;
         }
 
-        // TODO: void_skyblock is no more
-        return "void_skyblock".equals(world.getName()) && !this.isPlayerInOwnIsland(player) && !isOpOverride(player);
+        return !this.isPlayerInOwnIsland(player, world.getName()) && !isOpOverride(player);
     }
 
     private boolean isOpOverride(Player player) {
         return player.isOp() && this.opOverride;
     }
 
-    private IslandRecord findCurrentIslandByPlayerPosition(Player player) {
-        int playerPosX = player.getLocation().getBlockX();
-        int playerPosZ = player.getLocation().getBlockZ();
-
+    private IslandRecord findCurrentIslandRecord(String worldName) {
         for (IslandRecord islandRecord : this.islands.values()) {
-            int islandMinX = islandRecord.x() - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-            int islandMaxX = islandRecord.x() + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-            int islandMinZ = islandRecord.z() - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-            int islandMaxZ = islandRecord.z() + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-
-            if (playerPosX >= islandMinX && playerPosX <= islandMaxX && playerPosZ >= islandMinZ && playerPosZ <= islandMaxZ) {
+            if (islandRecord.owner().toString().contains(worldName)) {
                 return islandRecord;
             }
         }

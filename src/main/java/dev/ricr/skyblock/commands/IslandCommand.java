@@ -10,6 +10,7 @@ import dev.ricr.skyblock.database.Island;
 import dev.ricr.skyblock.database.IslandUserTrustLink;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.IslandGUI;
+import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -22,7 +23,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.WorldCreator;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -48,6 +49,7 @@ public class IslandCommand {
 
                     commands.registrar().register(island);
                     commands.registrar().register(Commands.literal("is")
+                            .executes(this::teleportPlayerToOwnIsland)
                             .redirect(island)
                             .build()
                     );
@@ -56,7 +58,8 @@ public class IslandCommand {
 
     private LiteralCommandNode<CommandSourceStack> command() {
         return Commands.literal("island")
-                .executes(this::openIslandGUI)
+                .executes(this::teleportPlayerToOwnIsland)
+                .then(Commands.literal("menu").executes(this::openIslandGUI))
                 .then(Commands.literal("create").executes(this::createPlayerIslandWorld))
                 .then(Commands.literal("delete").executes(this::deletePlayerIslandWorld))
                 .then(Commands.literal("tp")
@@ -108,13 +111,8 @@ public class IslandCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        var islandName = String.format("islands/%s", player.getUniqueId());
-
-        var worldCreator = new WorldCreator(islandName);
-        worldCreator.generator("SimpleSkyblock");
-        // TODO: generate custom seed #
-
-        var newIsland = Bukkit.createWorld(worldCreator);
+        var seed = NumberUtils.newSeed();
+        var newIsland = ServerUtils.loadOrCreateWorld(player, World.Environment.NORMAL, seed);
 
         if (newIsland == null) {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
@@ -122,7 +120,7 @@ public class IslandCommand {
             newIsland.save();
 
             var newLocation = this.plugin.islandGenerator.generateIsland(newIsland, player);
-            this.createIslandDatabaseRecord(player);
+            this.createIslandDatabaseRecord(player, seed);
 
             newLocation.setY(64);
             newLocation.setX(0.5);
@@ -138,7 +136,7 @@ public class IslandCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private void createIslandDatabaseRecord(Player player) {
+    private void createIslandDatabaseRecord(Player player, long seed) {
         var playerUniqueId = player.getUniqueId().toString();
 
         try {
@@ -157,6 +155,7 @@ public class IslandCommand {
             island = new Island();
             island.setId(user.getUserId());
             island.setUser(user);
+            island.setSeed(seed);
 
             // Using multiple island worlds means we always start at 0 64 0
             island.setPositionX(0.0d);
@@ -181,7 +180,7 @@ public class IslandCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player);
+        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
         var currentWorld = player.getWorld();
 
         if (!currentWorld.getName().equals("lobby")) {

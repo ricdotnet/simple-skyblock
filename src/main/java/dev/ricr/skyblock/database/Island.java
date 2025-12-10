@@ -36,4 +36,13 @@ public class Island {
 
     @DatabaseField(canBeNull = false)
     private boolean isBorderVisible = false;
+
+    @DatabaseField(canBeNull = false)
+    private int islandRadius = 100;
+
+    @DatabaseField(canBeNull = false)
+    private boolean hasNether = false;
+
+    @DatabaseField(canBeNull = false)
+    private long seed;
 }
