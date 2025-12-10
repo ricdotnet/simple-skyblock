@@ -18,6 +18,7 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -65,6 +66,11 @@ public class IslandCommand {
                 .then(Commands.literal("trust").then(
                                 Commands.argument("player", ArgumentTypes.player())
                                         .executes(this::trustPlayerToOwnIsland)
+                        )
+                )
+                .then(Commands.literal("visit").then(
+                                Commands.argument("player", ArgumentTypes.player())
+                                        .executes(this::visitPlayerIsland)
                         )
                 )
                 .build();
@@ -123,7 +129,7 @@ public class IslandCommand {
             newLocation.setZ(2.5);
             newLocation.setYaw(180);
 
-            PlayerUtils.saveTpLocation(this.plugin, player, newLocation, "owner");
+            PlayerUtils.saveTpLocation(this.plugin, player, newLocation);
 
             player.teleport(newLocation);
             player.sendMessage(Component.text("Welcome to your new island", NamedTextColor.GREEN));
@@ -233,7 +239,7 @@ public class IslandCommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        var islandLocation = PlayerUtils.getTpLocation(this.plugin, player, "owner");
+        var islandLocation = PlayerUtils.getTpLocation(this.plugin, player);
         player.teleport(islandLocation);
 
         return Command.SINGLE_SUCCESS;
@@ -308,7 +314,39 @@ public class IslandCommand {
         }
 
         var location = player.getLocation();
-        PlayerUtils.saveTpLocation(this.plugin, player, location, "owner");
+        PlayerUtils.saveTpLocation(this.plugin, player, location);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int visitPlayerIsland(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
+
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("This command can only be executed by players");
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var senderName = player.getName();
+
+        var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+        var players = resolver.resolve(ctx.getSource());
+        if (players.isEmpty()) {
+            sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        // TODO: check I cannot visit my own island
+        var targetPlayer = players.getFirst();
+        var base = Component.text(String.format("%s", senderName), NamedTextColor.GOLD);
+        var reason = Component.text("wants to visit your island,", NamedTextColor.GREEN);
+        var clickable = Component.text("click here to accept", NamedTextColor.AQUA)
+                .clickEvent(ClickEvent.callback(audience -> {
+                    var locationToTp = PlayerUtils.getTpLocation(plugin, targetPlayer);
+                    player.teleport(locationToTp);
+                }));
+
+        targetPlayer.sendMessage(base.appendSpace().append(reason).appendSpace().append(clickable));
 
         return Command.SINGLE_SUCCESS;
     }

@@ -79,27 +79,27 @@ public class PlayerUtils {
         }
     }
 
-    public static void saveTpLocation(SimpleSkyblock plugin, Player player, Location location, String tpType) {
+    public static void saveTpLocation(SimpleSkyblock plugin, Player player, Location location) {
         var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, player.getUniqueId());
 
-        playerConfig.set(String.format("tp.%s.x", tpType), location.getX());
-        playerConfig.set(String.format("tp.%s.y", tpType), location.getY());
-        playerConfig.set(String.format("tp.%s.z", tpType), location.getZ());
-        playerConfig.set(String.format("tp.%s.yaw", tpType), location.getYaw());
-        playerConfig.set(String.format("tp.%s.pitch", tpType), location.getPitch());
+        playerConfig.set("tp.x", location.getX());
+        playerConfig.set("tp.y", location.getY());
+        playerConfig.set("tp.z", location.getZ());
+        playerConfig.set("tp.yaw", location.getYaw());
+        playerConfig.set("tp.pitch", location.getPitch());
 
         var playerConfigFile = new File(plugin.getDataFolder(), String.format("%s.yml", player.getUniqueId()));
         PlayerUtils.savePlayerConfiguration(playerConfig, playerConfigFile);
     }
 
-    public static Location getTpLocation(SimpleSkyblock plugin, Player player, String tpType) {
+    public static Location getTpLocation(SimpleSkyblock plugin, Player player) {
         var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, player.getUniqueId());
 
-        double x = NumberUtils.objectToDouble(playerConfig.get(String.format("tp.%s.x", tpType)));
-        double y = NumberUtils.objectToDouble(playerConfig.get(String.format("tp.%s.y", tpType)));
-        double z = NumberUtils.objectToDouble(playerConfig.get(String.format("tp.%s.z", tpType)));
-        float yaw = NumberUtils.objectToFloat(playerConfig.get(String.format("tp.%s.yaw", tpType)));
-        float pitch = NumberUtils.objectToFloat(playerConfig.get(String.format("tp.%s.pitch", tpType)));
+        double x = NumberUtils.objectToDouble(playerConfig.get("tp.x"));
+        double y = NumberUtils.objectToDouble(playerConfig.get("tp.y"));
+        double z = NumberUtils.objectToDouble(playerConfig.get("tp.z"));
+        float yaw = NumberUtils.objectToFloat(playerConfig.get("tp.yaw"));
+        float pitch = NumberUtils.objectToFloat(playerConfig.get("tp.pitch"));
 
         // TODO: this is not ideal here
         World world = ServerUtils.loadOrCreateWorld(player);
