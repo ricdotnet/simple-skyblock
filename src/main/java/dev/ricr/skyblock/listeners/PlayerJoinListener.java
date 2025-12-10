@@ -7,6 +7,8 @@ import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,7 +28,8 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+        var player = event.getPlayer();
+        var lobbyWorld = Bukkit.getWorld("lobby");
 
         player.sendMessage(Component.text("Welcome to SimpleSkyblock!", NamedTextColor.GREEN));
 
@@ -54,9 +57,10 @@ public class PlayerJoinListener implements Listener {
 //        }
 
         this.initializeUserTable(player);
+        this.plugin.islandManager.addPlayerIsland(player.getUniqueId());
 
-        // Add player to island list
-//        this.plugin.islandManager.addPlayerIsland(player.getUniqueId());
+        // always start in the lobby / spawn world
+        player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
     }
 
     private void initializeUserTable(Player player) {
