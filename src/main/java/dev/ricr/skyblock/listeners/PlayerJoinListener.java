@@ -2,7 +2,6 @@ package dev.ricr.skyblock.listeners;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import net.kyori.adventure.text.Component;
@@ -65,8 +64,6 @@ public class PlayerJoinListener implements Listener {
 
     private void initializeUserTable(Player player) {
         Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
-        // get balance to migrate
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
 
         String playerUniqueId = player.getUniqueId()
                 .toString();
@@ -81,43 +78,13 @@ public class PlayerJoinListener implements Listener {
                 return;
             }
 
-            Balance userBalance = balanceDao.queryForId(playerUniqueId);
-
             user = new User();
             user.setUserId(player.getUniqueId()
                     .toString());
             user.setUsername(player.getName());
-
-            if (userBalance == null) {
-                user.setBalance(100.0d);
-            } else {
-                user.setBalance(userBalance.getValue());
-            }
+            user.setBalance(100.0d);
 
             userDao.create(user);
-        } catch (SQLException e) {
-            // ignore for now
-        }
-    }
-
-    @Deprecated(forRemoval = true)
-    private void addInitialBalance(Player player) {
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
-
-        try {
-            Balance userBalance = balanceDao.queryForId(player.getUniqueId()
-                    .toString());
-
-            if (userBalance == null) {
-                this.plugin.getLogger()
-                        .info("Creating balance for player " + player.getName());
-
-                userBalance = new Balance();
-                userBalance.setUserId(player.getUniqueId()
-                        .toString());
-                userBalance.setValue(100.0d);
-                balanceDao.create(userBalance);
-            }
         } catch (SQLException e) {
             // ignore for now
         }

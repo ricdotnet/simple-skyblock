@@ -37,7 +37,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;

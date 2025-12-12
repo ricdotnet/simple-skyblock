@@ -13,7 +13,6 @@ import java.sql.SQLException;
 
 @Getter
 public class DatabaseManager {
-    private Dao<Balance, String> balancesDao;
     private Dao<User, String> usersDao;
     private Dao<Island, String> islandsDao;
     private Dao<Sale, Integer> salesDao;
@@ -31,7 +30,6 @@ public class DatabaseManager {
         try {
             ConnectionSource connection = new JdbcConnectionSource(databaseUrl);
 
-            this.balancesDao = DaoManager.createDao(connection, Balance.class);
             this.usersDao = DaoManager.createDao(connection, User.class);
             this.islandsDao = DaoManager.createDao(connection, Island.class);
             this.salesDao = DaoManager.createDao(connection, Sale.class);
@@ -39,7 +37,6 @@ public class DatabaseManager {
             this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouse.class);
             this.auctionHouseTransactionsDao = DaoManager.createDao(connection, AuctionHouseTransaction.class);
 
-            TableUtils.createTableIfNotExists(connection, Balance.class);
             TableUtils.createTableIfNotExists(connection, IslandUserTrustLink.class);
             TableUtils.createTableIfNotExists(connection, User.class);
             TableUtils.createTableIfNotExists(connection, Island.class);
