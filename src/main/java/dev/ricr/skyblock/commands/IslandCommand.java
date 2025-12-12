@@ -24,6 +24,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -80,12 +81,7 @@ public class IslandCommand {
     }
 
     private int openIslandGUI(CommandContext<CommandSourceStack> ctx) {
-        var sender = ctx.getSource().getSender();
-
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return Command.SINGLE_SUCCESS;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
         if (!this.playerIslandRecordExists(player)) {
             player.sendMessage(Component.text("You do not have an island", NamedTextColor.RED));
@@ -99,12 +95,7 @@ public class IslandCommand {
     }
 
     private int createPlayerIslandWorld(CommandContext<CommandSourceStack> ctx) {
-        var sender = ctx.getSource().getSender();
-
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return Command.SINGLE_SUCCESS;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
         if (this.playerIslandRecordExists(player)) {
             player.sendMessage(Component.text("You already have an island, delete it before creating a new one", NamedTextColor.RED));
@@ -168,12 +159,7 @@ public class IslandCommand {
     }
 
     private int deletePlayerIslandWorld(CommandContext<CommandSourceStack> ctx) {
-        var sender = ctx.getSource().getSender();
-
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return Command.SINGLE_SUCCESS;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
         if (!this.playerIslandRecordExists(player)) {
             player.sendMessage(Component.text("Unable to delete your island because it does not exist", NamedTextColor.RED));
@@ -226,12 +212,7 @@ public class IslandCommand {
     }
 
     private int teleportPlayerToOwnIsland(CommandContext<CommandSourceStack> ctx) {
-        var sender = ctx.getSource().getSender();
-
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return Command.SINGLE_SUCCESS;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
         if (!this.playerIslandRecordExists(player)) {
             player.sendMessage(Component.text("You do not have an island to teleport to", NamedTextColor.RED));
@@ -246,20 +227,13 @@ public class IslandCommand {
 
     private int trustPlayerToOwnIsland(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
+        var targetPlayer = this.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
             return Command.SINGLE_SUCCESS;
         }
 
-        var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-        var players = resolver.resolve(ctx.getSource());
-        if (players.isEmpty()) {
-            sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
-            return Command.SINGLE_SUCCESS;
-        }
-
-        var targetPlayer = players.getFirst();
         if (targetPlayer.getUniqueId().equals(player.getUniqueId())) {
             sender.sendMessage(Component.text("You cannot trust yourself", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
@@ -299,12 +273,7 @@ public class IslandCommand {
     }
 
     private int setIslandTeleportPosition(CommandContext<CommandSourceStack> ctx) {
-        var sender = ctx.getSource().getSender();
-
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return Command.SINGLE_SUCCESS;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
         var currentWorld = player.getWorld();
         if (!currentWorld.getName().contains(player.getUniqueId().toString())) {
@@ -320,23 +289,15 @@ public class IslandCommand {
 
     private int visitPlayerIsland(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         var sender = ctx.getSource().getSender();
-
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return Command.SINGLE_SUCCESS;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
         var senderName = player.getName();
 
-        var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-        var players = resolver.resolve(ctx.getSource());
-        if (players.isEmpty()) {
-            sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
+        var targetPlayer = this.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
             return Command.SINGLE_SUCCESS;
         }
 
-        // TODO: check I cannot visit my own island
-        var targetPlayer = players.getFirst();
         var base = Component.text(String.format("%s", senderName), NamedTextColor.GOLD);
         var reason = Component.text("wants to visit your island,", NamedTextColor.GREEN);
         var clickable = Component.text("click here to accept", NamedTextColor.AQUA)
@@ -358,5 +319,16 @@ public class IslandCommand {
             // ignore for now
             return false;
         }
+    }
+
+    private Player resolvePlayerFromCommandArgument(CommandSender sender, CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+        var players = resolver.resolve(ctx.getSource());
+        if (players.isEmpty()) {
+            sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
+            return null;
+        }
+
+        return players.getFirst();
     }
 }

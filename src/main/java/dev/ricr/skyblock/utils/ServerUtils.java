@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.utils;
 
+import com.mojang.brigadier.Command;
 import dev.ricr.skyblock.SimpleSkyblock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -7,6 +8,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.command.CommandException;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -105,5 +108,13 @@ public class ServerUtils {
         }
 
         return islandWorld;
+    }
+
+    public static Player ensureCommandSenderIsPlayer(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            throw new CommandException("This command can only be executed by players");
+        }
+
+        return player;
     }
 }
