@@ -71,26 +71,12 @@ public class IslandManager {
         }
     }
 
-    public void showPlayerBorder(Player player) {
-        WorldBorder playerBorder = Bukkit.createWorldBorder();
-        playerBorder.setCenter(this.islands.get(player.getUniqueId())
-                .x(), this.islands.get(player.getUniqueId())
-                .z());
-        playerBorder.setSize(280);
-        player.setWorldBorder(playerBorder);
-    }
-
-    public void hidePlayerBorder(Player player) {
-        player.setWorldBorder(null);
-    }
-
     public boolean isPlayerInOwnIsland(Player player, String worldName) {
         return player.getUniqueId().toString().contains(worldName);
     }
 
     public boolean shouldStopIslandInteraction(Player player) {
         var world = player.getWorld();
-        var isTrustedPlayer = false;
 
         if (world.getName().equals("lobby")) {
             return true;
@@ -106,12 +92,38 @@ public class IslandManager {
 
         for (String trustedPlayerUniqueId : islandRecord.trustedPlayers()) {
             if (player.getUniqueId().toString().equals(trustedPlayerUniqueId)) {
-                isTrustedPlayer = true;
+                return false;
             }
         }
 
-        if (isTrustedPlayer) {
-            return false;
+        return !this.isPlayerInOwnIsland(player, world.getName()) && !isOpOverride(player);
+    }
+
+    public boolean shouldStopNetherTeleport(Player player) {
+        var world = player.getWorld();
+
+        if (world.getName().equals("lobby")) {
+            return true;
+        }
+
+        var islandRecord = this.findCurrentIslandRecord(world.getName());
+        if (islandRecord == null) {
+            return true;
+        }
+
+        for (String trustedPlayerUniqueId : islandRecord.trustedPlayers()) {
+            if (player.getUniqueId().toString().equals(trustedPlayerUniqueId)) {
+                return false;
+            }
+        }
+
+        try {
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            if (island.isPrivate() || !island.isAllowNetherVisit()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            // ignore for now
         }
 
         return !this.isPlayerInOwnIsland(player, world.getName()) && !isOpOverride(player);

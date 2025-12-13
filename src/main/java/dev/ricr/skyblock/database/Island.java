@@ -41,5 +41,8 @@ public class Island {
     private boolean hasNether = false;
 
     @DatabaseField(canBeNull = false)
+    private boolean allowNetherTeleport = false;
+
+    @DatabaseField(canBeNull = false)
     private long seed;
 }

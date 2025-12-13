@@ -247,10 +247,20 @@ public class IslandListeners implements Listener {
     @EventHandler
     public void onPortal(PlayerPortalEvent event) {
         var from = event.getFrom().getWorld();
+        var to = event.getTo().getWorld();
         var player = event.getPlayer();
 
         // we want to block all portal interactions
         event.setCancelled(true);
+
+        if (to.getEnvironment() == World.Environment.THE_END) {
+            player.sendMessage(Component.text("The End", NamedTextColor.DARK_PURPLE)
+                    .appendSpace()
+                    .append(Component.text("is not supported yet", NamedTextColor.RED))
+            );
+            return;
+        }
+
         if (!from.getName().startsWith("islands/") || from.getEnvironment() != World.Environment.NORMAL || this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Component.text("You cannot go through portals here", NamedTextColor.RED));
             return;

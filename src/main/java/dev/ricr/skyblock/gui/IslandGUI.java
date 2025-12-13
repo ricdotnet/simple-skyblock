@@ -49,7 +49,8 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case null -> {
             }
             case Buttons.IslandPrivacy -> this.handleIslandPrivacyClick(player);
-            case Buttons.ShowIslandSeed -> this.handleShowIslandSeedClick(player);
+            case Buttons.IslandAllowNetherTeleport -> this.handleAllowNetherTeleportClick(player);
+            case Buttons.IslandShowSeed -> this.handleShowIslandSeedClick(player);
         }
     }
 
@@ -78,10 +79,13 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var isIslandPrivate = userIsland.isPrivate();
         this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
 
+        var isIslandAllowNetherTeleport = userIsland.isAllowNetherTeleport();
+        this.addBooleanButton(isIslandAllowNetherTeleport, 10, Buttons.IslandAllowNetherTeleport, "Disable Nether teleport", "Allow Nether teleport");
+
         var seedButton = new ItemStack(Material.FILLED_MAP);
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
 
-        this.setItemMeta(seedButton, String.format("Show seed: %s%s", ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.ShowIslandSeed);
+        this.setItemMeta(seedButton, String.format("Show seed: %s%s", ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
         this.inventory.setItem(11, seedButton);
     }
 
@@ -112,6 +116,19 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         try {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             island.setPrivate(!island.isPrivate());
+            this.plugin.databaseManager.getIslandsDao().update(island);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        // refresh only
+        this.openInventory(player);
+    }
+
+    private void handleAllowNetherTeleportClick(Player player) {
+        try {
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            island.setAllowNetherTeleport(!island.isAllowNetherTeleport());
             this.plugin.databaseManager.getIslandsDao().update(island);
         } catch (SQLException e) {
             // ignore for now
