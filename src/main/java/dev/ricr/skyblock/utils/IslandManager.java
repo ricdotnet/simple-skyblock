@@ -6,9 +6,8 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Island;
 import dev.ricr.skyblock.database.IslandUserTrustLink;
 import dev.ricr.skyblock.database.User;
+import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Bukkit;
-import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
@@ -24,6 +23,7 @@ public class IslandManager {
     private final SimpleSkyblock plugin;
     private final Map<UUID, IslandRecord> islands;
     @Setter
+    @Getter
     private boolean opOverride = false;
 
     public IslandManager(SimpleSkyblock plugin) {
@@ -78,6 +78,10 @@ public class IslandManager {
     public boolean shouldStopIslandInteraction(Player player) {
         var world = player.getWorld();
 
+        if (isOpOverride(player)) {
+            return false;
+        }
+
         if (world.getName().equals("lobby")) {
             return true;
         }
@@ -96,11 +100,15 @@ public class IslandManager {
             }
         }
 
-        return !this.isPlayerInOwnIsland(player, world.getName()) && !isOpOverride(player);
+        return !this.isPlayerInOwnIsland(player, world.getName());
     }
 
     public boolean shouldStopNetherTeleport(Player player) {
         var world = player.getWorld();
+
+        if (isOpOverride(player)) {
+            return false;
+        }
 
         if (world.getName().equals("lobby")) {
             return true;
@@ -126,7 +134,7 @@ public class IslandManager {
             // ignore for now
         }
 
-        return !this.isPlayerInOwnIsland(player, world.getName()) && !isOpOverride(player);
+        return !this.isPlayerInOwnIsland(player, world.getName());
     }
 
     private boolean isOpOverride(Player player) {

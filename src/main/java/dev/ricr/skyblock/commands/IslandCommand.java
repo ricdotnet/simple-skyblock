@@ -129,6 +129,7 @@ public class IslandCommand implements ICommand {
             newLocation.setYaw(180);
 
             PlayerUtils.saveTpLocation(this.plugin, player, newLocation);
+            newIslandWorld.setSpawnLocation(newLocation);
 
             player.teleport(newLocation);
             player.sendMessage(Component.text("Welcome to your new island", NamedTextColor.GREEN));
@@ -240,6 +241,7 @@ public class IslandCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
+        // TODO: check if this would have the same behaviour as using world.getSpawnLocation()
         var islandLocation = PlayerUtils.getTpLocation(this.plugin, player);
         player.teleport(islandLocation);
 
@@ -304,6 +306,9 @@ public class IslandCommand implements ICommand {
 
         var location = player.getLocation();
         PlayerUtils.saveTpLocation(this.plugin, player, location);
+
+        // set the new tp location for when the player uses /is or /island
+        currentWorld.setSpawnLocation(location);
 
         return Command.SINGLE_SUCCESS;
     }

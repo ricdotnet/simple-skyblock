@@ -2,12 +2,7 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.CustomStructures;
-import dev.ricr.skyblock.gui.AuctionHouseGUI;
-import dev.ricr.skyblock.gui.ConfirmGUI;
-import dev.ricr.skyblock.gui.GambleSessionGUI;
-import dev.ricr.skyblock.gui.ItemsListGUI;
-import dev.ricr.skyblock.gui.LeaderBoardGUI;
-import dev.ricr.skyblock.gui.ShopTypeGUI;
+import dev.ricr.skyblock.gui.*;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
 import lombok.AllArgsConstructor;
@@ -222,6 +217,8 @@ public class IslandListeners implements Listener {
             case GambleSessionGUI ignored -> {
             }
             case AuctionHouseGUI ignored -> {
+            }
+            case IslandGUI ignored -> {
             }
             default -> {
                 if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {

@@ -2,6 +2,8 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.utils.PlayerUtils;
+import dev.ricr.skyblock.utils.ServerUtils;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,18 +21,15 @@ public class PlayerRespawnListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
 
-        this.plugin.getLogger()
-                .info(String.format("Respawning %s in X: %s - Y: %s - Z: %s", player.getName(), player.getLocation()
-                        .getBlockX(), player.getLocation()
-                        .getBlockY(), player.getLocation()
-                        .getBlockZ()));
-
         if (!event.isBedSpawn()) {
             this.plugin.getLogger()
-                    .info(String.format("Resetting spawn for %s", player.getName()));
+                    .info(String.format("Player %s does not have a bed, sending to lobby", player.getName()));
 
-            event.setRespawnLocation(PlayerUtils.getPlayerIslandLocation(this.plugin, event.getPlayer()));
+            // TODO: get player set tp and teleport there maybe
+            var lobbyWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+            player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
         }
+
     }
 }
 

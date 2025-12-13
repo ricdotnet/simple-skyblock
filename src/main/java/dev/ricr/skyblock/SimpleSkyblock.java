@@ -1,27 +1,19 @@
 package dev.ricr.skyblock;
 
-import dev.ricr.skyblock.commands.AuctionHouseCommand;
-import dev.ricr.skyblock.commands.BalanceCommand;
-import dev.ricr.skyblock.commands.GambleCommand;
-import dev.ricr.skyblock.commands.IslandCommand;
-import dev.ricr.skyblock.commands.LeaderboardCommand;
-import dev.ricr.skyblock.commands.LobbyCommand;
-import dev.ricr.skyblock.commands.PayCommand;
-import dev.ricr.skyblock.commands.ReloadShopCommand;
-import dev.ricr.skyblock.commands.ShopCommand;
+import dev.ricr.skyblock.commands.*;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
-import dev.ricr.skyblock.listeners.ChatListener;
-import dev.ricr.skyblock.listeners.InventoryClickListener;
-import dev.ricr.skyblock.listeners.IslandListeners;
-import dev.ricr.skyblock.listeners.PlayerJoinListener;
-import dev.ricr.skyblock.listeners.PlayerRespawnListener;
+import dev.ricr.skyblock.listeners.*;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -54,6 +46,8 @@ public class SimpleSkyblock extends JavaPlugin {
 
         // TODO: refactor a bit more
         this.getServer().getPluginManager()
+                .registerEvents(new ServerLoadListener(this), this);
+        this.getServer().getPluginManager()
                 .registerEvents(new ChatListener(), this);
         this.getServer().getPluginManager()
                 .registerEvents(new PlayerJoinListener(this), this);
@@ -65,6 +59,7 @@ public class SimpleSkyblock extends JavaPlugin {
                 .registerEvents(new IslandListeners(this), this);
 
         // Register commands
+        new AdminCommand(this).register();
         new IslandCommand(this).register();
         new GambleCommand(this).register();
 
@@ -74,8 +69,6 @@ public class SimpleSkyblock extends JavaPlugin {
                 .setExecutor(new BalanceCommand(this));
         Objects.requireNonNull(this.getCommand("shop"))
                 .setExecutor(new ShopCommand(this));
-        Objects.requireNonNull(this.getCommand("reloadshop"))
-                .setExecutor(new ReloadShopCommand(this));
         Objects.requireNonNull(this.getCommand("leaderboard"))
                 .setExecutor(new LeaderboardCommand(this));
 
@@ -93,6 +86,7 @@ public class SimpleSkyblock extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        ServerUtils.cleanUpTextDisplays(this);
         this.getLogger().info("SimpleSkyblock has been disabled!");
     }
 

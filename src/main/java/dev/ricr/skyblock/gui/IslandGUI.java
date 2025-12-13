@@ -80,13 +80,13 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
 
         var isIslandAllowNetherTeleport = userIsland.isAllowNetherTeleport();
-        this.addBooleanButton(isIslandAllowNetherTeleport, 10, Buttons.IslandAllowNetherTeleport, "Disable Nether teleport", "Allow Nether teleport");
+        this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Disable Nether teleport", "Allow Nether teleport");
 
         var seedButton = new ItemStack(Material.FILLED_MAP);
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
 
         this.setItemMeta(seedButton, String.format("Show seed: %s%s", ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
-        this.inventory.setItem(11, seedButton);
+        this.inventory.setItem(12, seedButton);
     }
 
     private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons label, String nameOn, String nameOff) {

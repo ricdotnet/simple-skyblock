@@ -1,5 +1,6 @@
 # should the server owner want a lobby world to be the initial spawning world
 lobby: true
+end_portal_price: 100000
 island:
   starting_border_radius: 60
   show_seed_price: 25000

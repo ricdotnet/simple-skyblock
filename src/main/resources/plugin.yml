@@ -11,10 +11,6 @@ commands:
     description: Go back to the lobby
     usage: /lobby
     aliases: [ spawn ]
-  island:
-    description: Get player's island menu
-    usage: /island
-    aliases: [ is ]
   balance:
     description: Get your economy balance
     usage: /balance
@@ -25,27 +21,18 @@ commands:
   shop:
     description: Open the shop GUI
     usage: /shop
-  reloadshop:
-    description: Reload the shop config
-    usage: /reloadshop
   leaderboard:
     description: View the leaderboard
     usage: /leaderboard
     aliases: [ baltop ]
-  gamble:
-    description: Gamble some money
-    usage: /gamble
   auctionhouse:
     description: Open the auction house GUI
     usage: /auctionhouse
     aliases: [ ah ]
 
 permissions:
-  simpleskyblock.lobby:
+  lobby:
     description: Teleports players back to the lobby or server spawn
-    default: true
-  island:
-    description: Allows players to open the island menu
     default: true
   balance:
     description: Allows players to check their economy balance
@@ -56,14 +43,8 @@ permissions:
   shop:
     description: Allows players to open the shop GUI
     default: true
-  reloadshop:
-    description: Allows admins to reload the shop config
-    default: op
   leaderboard:
     description: Allows players to view the balance leaderboard
-    default: true
-  gamble:
-    description: Allows players to gamble money
     default: true
   auctionhouse:
     description: Allows players to open the auction house GUI
