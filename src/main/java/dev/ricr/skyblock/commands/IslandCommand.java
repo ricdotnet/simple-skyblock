@@ -31,7 +31,7 @@ import org.codehaus.plexus.util.FileUtils;
 import java.io.IOException;
 import java.sql.SQLException;
 
-public class IslandCommand {
+public class IslandCommand implements ICommand {
     private final SimpleSkyblock plugin;
 
     private final Dao<User, String> usersDao;
