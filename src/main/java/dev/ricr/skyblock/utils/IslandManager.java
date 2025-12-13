@@ -119,7 +119,7 @@ public class IslandManager {
 
         try {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
-            if (island.isPrivate() || !island.isAllowNetherVisit()) {
+            if (island.isPrivate() || !island.isAllowNetherTeleport()) {
                 return true;
             }
         } catch (SQLException e) {

@@ -261,7 +261,7 @@ public class IslandListeners implements Listener {
             return;
         }
 
-        if (!from.getName().startsWith("islands/") || from.getEnvironment() != World.Environment.NORMAL || this.plugin.islandManager.shouldStopIslandInteraction(player)) {
+        if (!from.getName().startsWith("islands/") || from.getEnvironment() != World.Environment.NORMAL || this.plugin.islandManager.shouldStopNetherTeleport(player)) {
             player.sendMessage(Component.text("You cannot go through portals here", NamedTextColor.RED));
             return;
         }
