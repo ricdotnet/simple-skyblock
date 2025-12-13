@@ -1,13 +1,12 @@
 package dev.ricr.skyblock.gui;
 
-import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Island;
-import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.enums.Buttons;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -22,13 +21,11 @@ import java.sql.SQLException;
 
 public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final SimpleSkyblock plugin;
-    private final Dao<Island, String> islandDao;
     @Getter
     private final Inventory inventory;
 
     public IslandGUI(SimpleSkyblock plugin, Player player) {
         this.plugin = plugin;
-        this.islandDao = plugin.databaseManager.getIslandsDao();
         this.inventory = Bukkit.createInventory(this, 54, Component.text("Island menu"));
 
         this.openInventory(player);
@@ -52,21 +49,21 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case null -> {
             }
             case Buttons.IslandPrivacy -> this.handleIslandPrivacyClick(player);
-            case Buttons.BorderVisibility -> this.handleBorderVisibilityClick(player);
+            case Buttons.ShowIslandSeed -> this.handleShowIslandSeedClick(player);
         }
     }
 
     private void openInventory(Player player) {
-        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
-        Dao<Island, String> islandDao = this.plugin.databaseManager.getIslandsDao();
+        var userDao = this.plugin.databaseManager.getUsersDao();
+        var islandDao = this.plugin.databaseManager.getIslandsDao();
 
-        String playerUniqueId = player.getUniqueId()
+        var playerUniqueId = player.getUniqueId()
                 .toString();
 
         Island userIsland = null;
 
         try {
-            User user = userDao.queryForId(playerUniqueId);
+            var user = userDao.queryForId(playerUniqueId);
             userIsland = islandDao.queryForId(user.getUserId());
         } catch (SQLException e) {
             // ignore for now
@@ -78,12 +75,14 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
-        boolean isIslandPrivate = userIsland.isPrivate();
-        addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
+        var isIslandPrivate = userIsland.isPrivate();
+        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
 
-        boolean isBorderOn = userIsland.isBorderVisible();
-        addBooleanButton(isBorderOn, 11, Buttons.BorderVisibility, "Border is visible", "Border is hidden");
+        var seedButton = new ItemStack(Material.FILLED_MAP);
+        var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
 
+        this.setItemMeta(seedButton, String.format("Show seed: %s%s", ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.ShowIslandSeed);
+        this.inventory.setItem(11, seedButton);
     }
 
     private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons label, String nameOn, String nameOff) {
@@ -111,10 +110,9 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     private void handleIslandPrivacyClick(Player player) {
         try {
-            Island island = this.islandDao.queryForId(player.getUniqueId()
-                    .toString());
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             island.setPrivate(!island.isPrivate());
-            islandDao.update(island);
+            this.plugin.databaseManager.getIslandsDao().update(island);
         } catch (SQLException e) {
             // ignore for now
         }
@@ -123,17 +121,25 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.openInventory(player);
     }
 
-    private void handleBorderVisibilityClick(Player player) {
+    private void handleShowIslandSeedClick(Player player) {
         try {
-            Island island = this.islandDao.queryForId(player.getUniqueId()
-                    .toString());
-            island.setBorderVisible(!island.isBorderVisible());
-            islandDao.update(island);
+            var user = this.plugin.databaseManager.getUsersDao().queryForId(player.getUniqueId().toString());
+            var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
+
+            if (user.getBalance() < showSeedPrice) {
+                player.sendMessage(Component.text("You don't have enough money to show the seed", NamedTextColor.RED));
+                return;
+            }
+
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            var seed = island.getSeed();
+
+            user.setBalance(user.getBalance() - showSeedPrice);
+            this.plugin.databaseManager.getUsersDao().update(user);
+
+            player.sendMessage(Component.text("Seed:").appendSpace().append(Component.text(seed, NamedTextColor.GREEN)));
         } catch (SQLException e) {
             // ignore for now
         }
-
-        // refresh only
-        this.openInventory(player);
     }
 }

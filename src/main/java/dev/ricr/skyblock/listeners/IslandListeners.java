@@ -262,12 +262,12 @@ public class IslandListeners implements Listener {
             var netherWorld = ServerUtils.loadOrCreateWorld(event.getPlayer(), World.Environment.NETHER, seed);
 
             if (!island.isHasNether()) {
-                StructureUtils.placeStructure(this.plugin, new Location(netherWorld, 0, 64, 0), CustomStructures.NETHER_ISLAND);
+                StructureUtils.placeStructure(this.plugin, new Location(netherWorld, -4, 61, -4), CustomStructures.NETHER_ISLAND);
                 island.setHasNether(true);
                 this.plugin.databaseManager.getIslandsDao().update(island);
             }
 
-            player.teleport(new Location(netherWorld, 0.5, 70, 2.5));
+            player.teleport(new Location(netherWorld, 0.5, 64, 0.5, 180f, 0f));
         } catch (SQLException e) {
             // ignore for now
             player.sendMessage(Component.text("Something went wrong when trying to go to the Nether", NamedTextColor.RED));

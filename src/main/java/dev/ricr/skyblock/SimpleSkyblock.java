@@ -50,17 +50,13 @@ public class SimpleSkyblock extends JavaPlugin {
         // Open an auction house class with fast access Dao
         this.auctionHouseItems = new AuctionHouseItems(this);
 
-        // For a multi island setup we dont need strnoghold generator
-//        StrongholdGenerator strongholdGenerator = new StrongholdGenerator(this);
         this.islandGenerator = new IslandGenerator(this);
 
         // TODO: refactor a bit more
         this.getServer().getPluginManager()
                 .registerEvents(new ChatListener(), this);
         this.getServer().getPluginManager()
-                .registerEvents(new PlayerJoinListener(this, this.islandGenerator), this);
-//        this.getServer().getPluginManager()
-//                .registerEvents(new ChunkLoadListener(this, strongholdGenerator), this);
+                .registerEvents(new PlayerJoinListener(this), this);
         this.getServer().getPluginManager()
                 .registerEvents(new InventoryClickListener(this), this);
         this.getServer().getPluginManager()

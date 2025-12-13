@@ -90,6 +90,17 @@ public class ServerUtils {
         GUI_BUTTON_TYPE = new NamespacedKey(plugin, "gui_button_type");
     }
 
+    public static World loadOrCreateLobby() {
+        var lobbyWorld = Bukkit.getWorld("lobby");
+        if (lobbyWorld == null) {
+            var lobbyWorldCreator = new WorldCreator("lobby");
+            lobbyWorldCreator.generator("SimpleSkyblock");
+            lobbyWorld = lobbyWorldCreator.createWorld();
+        }
+
+        return lobbyWorld;
+    }
+
     public static World loadOrCreateWorld(Player player, World.Environment environment, Long seed) {
         var suffix = player.getUniqueId() + (environment == World.Environment.NETHER ? "_nether" : "");
         var islandName = String.format("islands/%s", suffix);

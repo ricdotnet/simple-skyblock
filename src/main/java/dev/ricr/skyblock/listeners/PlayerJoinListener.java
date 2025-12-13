@@ -4,6 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.generators.IslandGenerator;
+import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -18,42 +19,23 @@ import java.sql.SQLException;
 public class PlayerJoinListener implements Listener {
 
     private final SimpleSkyblock plugin;
-    private final IslandGenerator islandGenerator;
 
-    public PlayerJoinListener(SimpleSkyblock plugin, IslandGenerator islandGenerator) {
+    public PlayerJoinListener(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.islandGenerator = islandGenerator;
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();
-        var lobbyWorld = Bukkit.getWorld("lobby");
 
+        var isUsingLobbyWorld = this.plugin.serverConfig.getBoolean("lobby", true);
+        if (!isUsingLobbyWorld) {
+            // TODO: implement island creation on join
+            return;
+        }
+
+        var lobbyWorld = ServerUtils.loadOrCreateLobby();
         player.sendMessage(Component.text("Welcome to SimpleSkyblock!", NamedTextColor.GREEN));
-
-//        if (!islandGenerator.hasIsland(player)) {
-//            Location islandLocation = islandGenerator.generateIsland(player.getWorld(), player);
-//            Location playerSpawnLocation = islandLocation.clone();
-//            playerSpawnLocation.add(2.5, 8, 4.5);
-//            playerSpawnLocation.setYaw(180);
-//
-//            player.getServer()
-//                    .getScheduler()
-//                    .runTaskLater(
-//                            islandGenerator.getPlugin(),
-//                            () -> player.teleport(playerSpawnLocation),
-//                            20L
-//                    );
-//
-//            player.setRespawnLocation(playerSpawnLocation, true);
-//            player.sendMessage("§aWelcome! Your skyblock island has been generated!");
-//        } else {
-//            Location playerLastLocation = player.getLocation();
-//            player.teleport(playerLastLocation);
-//
-//            player.sendMessage("§aWelcome back!");
-//        }
 
         this.initializeUserTable(player);
         this.plugin.islandManager.addPlayerIsland(player.getUniqueId());

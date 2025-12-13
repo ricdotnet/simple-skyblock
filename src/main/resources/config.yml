@@ -1,7 +1,5 @@
-# should the server owner want a lobby world to be the spawn
+# should the server owner want a lobby world to be the initial spawning world
 lobby: true
-# should the server owner want multiple all the islands in a single island
-single_world: false
-next_island:
-  x: 0
-  z: 0
+island:
+  starting_border_radius: 60
+  show_seed_price: 25000

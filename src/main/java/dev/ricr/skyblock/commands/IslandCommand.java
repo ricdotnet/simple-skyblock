@@ -97,25 +97,35 @@ public class IslandCommand {
     private int createPlayerIslandWorld(CommandContext<CommandSourceStack> ctx) {
         var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
+        var isUsingServerLobby = this.plugin.serverConfig.getBoolean("lobby", true);
+        if (!isUsingServerLobby) {
+            player.sendMessage(Component.text("Invalid command", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
         if (this.playerIslandRecordExists(player)) {
             player.sendMessage(Component.text("You already have an island, delete it before creating a new one", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }
 
         var seed = NumberUtils.newSeed();
-        var newIsland = ServerUtils.loadOrCreateWorld(player, World.Environment.NORMAL, seed);
+        var newIslandWorld = ServerUtils.loadOrCreateWorld(player, World.Environment.NORMAL, seed);
 
-        if (newIsland == null) {
+        if (newIslandWorld == null) {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
         } else {
-            newIsland.save();
+            var radius = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
 
-            var newLocation = this.plugin.islandGenerator.generateIsland(newIsland, player);
-            this.createIslandDatabaseRecord(player, seed);
+            newIslandWorld.getWorldBorder().setSize(radius * 2 + 1);
+            newIslandWorld.getWorldBorder().setCenter(new Location(newIslandWorld, 0.5, 64, 0.5));
+            newIslandWorld.save();
+
+            var newLocation = this.plugin.islandGenerator.generateIsland(newIslandWorld, player);
+            this.createIslandDatabaseRecord(player, seed, radius);
 
             newLocation.setY(64);
             newLocation.setX(0.5);
-            newLocation.setZ(2.5);
+            newLocation.setZ(0.5);
             newLocation.setYaw(180);
 
             PlayerUtils.saveTpLocation(this.plugin, player, newLocation);
@@ -127,7 +137,7 @@ public class IslandCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private void createIslandDatabaseRecord(Player player, long seed) {
+    private void createIslandDatabaseRecord(Player player, long seed, int borderRadius) {
         var playerUniqueId = player.getUniqueId().toString();
 
         try {
@@ -147,6 +157,7 @@ public class IslandCommand {
             island.setId(user.getUserId());
             island.setUser(user);
             island.setSeed(seed);
+            island.setIslandRadius(borderRadius);
 
             // Using multiple island worlds means we always start at 0 64 0
             island.setPositionX(0.0d);
@@ -161,12 +172,19 @@ public class IslandCommand {
     private int deletePlayerIslandWorld(CommandContext<CommandSourceStack> ctx) {
         var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
+        var isUsingServerLobby = this.plugin.serverConfig.getBoolean("lobby", true);
+        if (!isUsingServerLobby) {
+            player.sendMessage(Component.text("Invalid command", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
         if (!this.playerIslandRecordExists(player)) {
             player.sendMessage(Component.text("Unable to delete your island because it does not exist", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }
 
         var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+        var islandNetherWorld = ServerUtils.loadOrCreateWorld(player, World.Environment.NETHER, null);
         var currentWorld = player.getWorld();
 
         if (!currentWorld.getName().equals("lobby")) {
@@ -175,10 +193,13 @@ public class IslandCommand {
         }
 
         Bukkit.unloadWorld(islandWorld, false);
+        Bukkit.unloadWorld(islandNetherWorld, false);
 
         var islandWorldFolder = islandWorld.getWorldFolder();
+        var islandNetherWorldFolder = islandNetherWorld.getWorldFolder();
         try {
             FileUtils.deleteDirectory(islandWorldFolder);
+            FileUtils.deleteDirectory(islandNetherWorldFolder);
         } catch (IOException e) {
             // ignore for now
             player.sendMessage(Component.text("Unable to delete your island", NamedTextColor.RED));
@@ -305,6 +326,24 @@ public class IslandCommand {
                     var locationToTp = PlayerUtils.getTpLocation(plugin, targetPlayer);
                     player.teleport(locationToTp);
                 }));
+
+        try {
+            var userIsland = islandsDao.queryForId(player.getUniqueId().toString());
+            if (userIsland == null) {
+                sender.sendMessage(Component.text(String.format("%s", targetPlayer), NamedTextColor.GOLD)
+                        .appendSpace()
+                        .append(Component.text("does not have an island", NamedTextColor.RED)));
+                return Command.SINGLE_SUCCESS;
+            }
+
+            if (userIsland.isPrivate()) {
+                sender.sendMessage(Component.text(String.format("%s's", targetPlayer), NamedTextColor.GOLD)
+                        .append(Component.text("island is private and you cannot visit", NamedTextColor.RED)));
+                return Command.SINGLE_SUCCESS;
+            }
+        } catch (SQLException e) {
+            // ignore for now
+        }
 
         targetPlayer.sendMessage(base.appendSpace().append(reason).appendSpace().append(clickable));
 

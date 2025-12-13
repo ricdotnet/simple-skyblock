@@ -35,10 +35,7 @@ public class Island {
     private boolean isPrivate = false;
 
     @DatabaseField(canBeNull = false)
-    private boolean isBorderVisible = false;
-
-    @DatabaseField(canBeNull = false)
-    private int islandRadius = 100;
+    private int islandRadius;
 
     @DatabaseField(canBeNull = false)
     private boolean hasNether = false;
