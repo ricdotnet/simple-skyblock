@@ -14,6 +14,11 @@ public class VoidWorldGenerator extends ChunkGenerator {
     }
 
     @Override
+    public boolean shouldGenerateStructures() {
+        return true;
+    }
+
+    @Override
     public Location getFixedSpawnLocation(@NotNull World world, @NotNull Random random) {
         return new Location(world, 0, 64, 0);
     }

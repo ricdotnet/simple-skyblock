@@ -81,7 +81,7 @@ public class IslandManager {
     public boolean shouldStopIslandInteraction(Player player) {
         var world = player.getWorld();
 
-        if (isOpOverride(player)) {
+        if (isOpOverride(player) || this.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 
@@ -109,7 +109,7 @@ public class IslandManager {
     public boolean shouldStopNetherTeleport(Player player) {
         var world = player.getWorld();
 
-        if (isOpOverride(player)) {
+        if (isOpOverride(player) || this.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 
