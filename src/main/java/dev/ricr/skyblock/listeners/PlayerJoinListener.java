@@ -2,6 +2,7 @@ package dev.ricr.skyblock.listeners;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -47,26 +48,29 @@ public class PlayerJoinListener implements Listener {
     private void initializeUserTable(Player player) {
         Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
 
-        String playerUniqueId = player.getUniqueId()
-                .toString();
+        var playerUniqueId = player.getUniqueId();
 
         try {
-            User user = userDao.queryForId(playerUniqueId);
+            var playerRecord = userDao.queryForId(playerUniqueId.toString());
 
-            if (user != null) {
+            if (playerRecord != null) {
                 this.plugin.getLogger()
                         .info(String.format("Player %s already joined before. Skipping initialization of user record.",
                                 player.getName()));
+
+                this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerRecord);
                 return;
             }
 
-            user = new User();
-            user.setUserId(player.getUniqueId()
-                    .toString());
-            user.setUsername(player.getName());
-            user.setBalance(100.0d);
+            playerRecord = new User();
+            playerRecord.setUserId(playerUniqueId.toString());
+            playerRecord.setUsername(player.getName());
+            playerRecord.setBalance(100.0d);
 
-            userDao.create(user);
+            this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerRecord);
+
+            var userCreateOrUpdate = new DatabaseChange.UserCreateOrUpdate(playerRecord);
+            this.plugin.databaseChangesAccumulator.add(userCreateOrUpdate);
         } catch (SQLException e) {
             // ignore for now
         }

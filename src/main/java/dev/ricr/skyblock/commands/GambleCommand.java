@@ -71,20 +71,16 @@ public class GambleCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        try {
-            var hostUser = this.plugin.databaseManager.getUsersDao().queryForId(player.getUniqueId().toString());
-            if (hostUser == null) {
-                // somehow we broke the game
-                return Command.SINGLE_SUCCESS;
-            }
+        var hostUser = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        if (hostUser == null) {
+            // somehow we broke the game
+            return Command.SINGLE_SUCCESS;
+        }
 
-            if (hostUser.getBalance() < amount) {
-                player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble for %s%s",
-                        ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
-                return Command.SINGLE_SUCCESS;
-            }
-        } catch (SQLException e) {
-            // ignore for now
+        if (hostUser.getBalance() < amount) {
+            player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble for %s%s",
+                    ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
         }
 
         var gambleSession = new GambleSessionGUI(this.plugin, player, amount);

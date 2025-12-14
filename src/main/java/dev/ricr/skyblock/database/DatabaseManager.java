@@ -100,8 +100,8 @@ public class DatabaseManager {
 
     private void applyChange(DatabaseChange change) throws SQLException {
         switch (change) {
-            case DatabaseChange.UserBalanceDelta balanceDelta -> {
-            }
+            case DatabaseChange.UserCreateOrUpdate(User player) -> this.usersDao.createOrUpdate(player);
+            case DatabaseChange.GambleRecordAdd(Gamble gamble) -> this.gamblesDao.create(gamble);
             case DatabaseChange.AuctionHouseItemAdd auctionHouseItemAdd -> {
             }
             case DatabaseChange.TrustedPlayerAdd(Island userIsland, User targetUser) -> {

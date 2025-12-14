@@ -25,6 +25,7 @@ public class SimpleSkyblock extends JavaPlugin {
     public AuctionHouseItems auctionHouseItems;
     public IslandGenerator islandGenerator;
     public DatabaseChangesAccumulator databaseChangesAccumulator;
+    public OnlinePlayers onlinePlayers;
 
     @Override
     public void onEnable() {
@@ -32,8 +33,11 @@ public class SimpleSkyblock extends JavaPlugin {
         this.createAndLoadServerConfig();
         this.createAndLoadServerShop();
 
+        // Simple online players cache to help with batching User related db operations
+        this.onlinePlayers = new OnlinePlayers();
+
         // Open managers
-        this.databaseChangesAccumulator = new DatabaseChangesAccumulator();
+        this.databaseChangesAccumulator = new DatabaseChangesAccumulator(this);
 
         this.databaseManager = new DatabaseManager(this, this.databaseChangesAccumulator);
         this.islandManager = new IslandManager(this);

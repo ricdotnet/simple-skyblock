@@ -2,6 +2,8 @@ package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.Gamble;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.enums.GambleType;
@@ -89,22 +91,16 @@ public class GambleSessionGUI implements InventoryHolder {
         int randomIndex = new Random().nextInt(players.size());
         Player winner = players.toArray(Player[]::new)[randomIndex];
 
-        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
-        Gamble gamble = new Gamble();
-
         for (Player player : players) {
+            var gamble = new Gamble();
+            var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+
             if (player.getUniqueId() == winner.getUniqueId()) {
                 player.sendMessage(Component.text("You won the gamble!", NamedTextColor.GREEN));
 
-                try {
-                    User user = usersDao.queryForId(player.getUniqueId()
-                            .toString());
-                    gamble.setUser(user);
-                    gamble.setAmount(this.amount);
-                    gamble.setType(GambleType.Won.toString());
-                } catch (SQLException e) {
-                    // ignore for now
-                }
+                gamble.setUser(playerRecord);
+                gamble.setAmount(this.amount);
+                gamble.setType(GambleType.Won.toString());
 
                 updatePlayerBalance(player, this.amount);
 
@@ -114,25 +110,15 @@ public class GambleSessionGUI implements InventoryHolder {
                 player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()),
                         NamedTextColor.DARK_RED));
 
-                try {
-                    User user = usersDao.queryForId(player.getUniqueId()
-                            .toString());
-                    gamble.setUser(user);
-                    gamble.setAmount(this.originalAmount);
-                    gamble.setType(GambleType.Lost.toString());
-                } catch (SQLException e) {
-                    // ignore for now
-                }
+                gamble.setUser(playerRecord);
+                gamble.setAmount(this.originalAmount);
+                gamble.setType(GambleType.Lost.toString());
 
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 1f, 1f);
             }
-        }
 
-        try {
-            Dao<Gamble, Integer> gamblesDao = this.plugin.databaseManager.getGamblesDao();
-            gamblesDao.create(gamble);
-        } catch (SQLException e) {
-            // ignore for now
+            var gambleRecordAdd = new DatabaseChange.GambleRecordAdd(gamble);
+            this.plugin.databaseChangesAccumulator.add(gambleRecordAdd);
         }
 
         this.bossBar.removeAll();
@@ -162,14 +148,10 @@ public class GambleSessionGUI implements InventoryHolder {
     }
 
     private void updatePlayerBalance(Player player, double amount) {
-        try {
-            Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
-            User user = usersDao.queryForId(player.getUniqueId()
-                    .toString());
-            user.setBalance(user.getBalance() + amount);
-            usersDao.update(user);
-        } catch (SQLException e) {
-            // ignore for now
-        }
+        User hostUser = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        hostUser.setBalance(hostUser.getBalance() + amount);
+
+        var userCreateOrUpdate = new DatabaseChange.UserCreateOrUpdate(hostUser);
+        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdate);
     }
 }

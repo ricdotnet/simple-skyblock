@@ -2,6 +2,7 @@ package dev.ricr.skyblock.commands;
 
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,20 +19,10 @@ public class LeaderboardCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
                              @NotNull String[] strings) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return true;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+        player.sendMessage(Component.text("Loading balance leaderboard. This may take a moment", NamedTextColor.YELLOW));
 
-        try {
-            LeaderBoardGUI leaderBoardGUI = new LeaderBoardGUI(this.plugin);
-            player.openInventory(leaderBoardGUI.getInventory());
-        } catch (NullPointerException e) {
-            player.sendMessage(Component.text("Failed to load leaderboard", NamedTextColor.RED));
-            this.plugin.getLogger()
-                    .severe("Failed to load leaderboard: " + e.getMessage());
-        }
-
+        new LeaderBoardGUI(this.plugin, player);
         return true;
     }
 }

@@ -22,25 +22,12 @@ public class BalanceCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
                              String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return true;
-        }
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
-        String playerId = player.getUniqueId()
-                .toString();
-
-        User user;
-        try {
-            user = usersDao.queryForId(playerId);
-        } catch (SQLException e) {
-            // ignore for now
-            return true;
-        }
+        var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
         player.sendMessage(Component.text(String.format("Your balance is: %s%s", ServerUtils.COIN_SYMBOL,
-                ServerUtils.formatMoneyValue(user.getBalance())), NamedTextColor.GOLD));
+                ServerUtils.formatMoneyValue(playerRecord.getBalance())), NamedTextColor.GOLD));
 
         return true;
     }

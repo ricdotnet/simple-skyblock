@@ -64,7 +64,7 @@ public class IslandManager {
             ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
 
             List<Tuple<String, String>> trustedUserIds = trustedPlayers.stream().map(
-                    trustedPlayer -> new Tuple(trustedPlayer.getUser()
+                    trustedPlayer -> new Tuple<>(trustedPlayer.getUser()
                             .getUserId(), trustedPlayer.getUser().getUsername())
             ).collect(ArrayList::new, List::add, List::addAll);
 
@@ -93,7 +93,7 @@ public class IslandManager {
 
         // TODO: check this actually makes sense
         if (islandRecord == null) {
-            // would mean the current island or place has no owner so we move on
+            // would mean the current island or place has no owner, so we move on
             return false;
         }
 
