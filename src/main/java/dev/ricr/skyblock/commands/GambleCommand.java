@@ -14,6 +14,7 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -87,11 +88,25 @@ public class GambleCommand implements ICommand {
         gambleSessions.put(player.getUniqueId(), gambleSession);
 
         player.openInventory(gambleSession.getInventory());
-        var globalMessage = Component.text(String.format("%s started a gamble session with %s%s bets. Do /gamble %s to join",
-                        player.getName(), ServerUtils.COIN_SYMBOL, amount, player.getName()),
-                NamedTextColor.GREEN);
+        var globalMessage = Component.text(String.format("%s", player.getName()), NamedTextColor.GOLD)
+                .appendSpace()
+                .append(Component.text(String.format("started a gamble session with %s%s bets.",
+                                ServerUtils.COIN_SYMBOL, amount),
+                        NamedTextColor.GREEN))
+                .appendNewline()
+                .append(Component.text("Type /gamble join <name> to join.", NamedTextColor.GREEN))
+                .appendSpace()
+                .append(Component.text("Or click here to join", NamedTextColor.AQUA)
+                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/gamble join " + player.getName()))
+                );
 
-        this.plugin.getServer().broadcast(globalMessage);
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (onlinePlayer.getUniqueId() == player.getUniqueId()) {
+                continue;
+            }
+            onlinePlayer.sendMessage(globalMessage);
+        }
+
         this.initiateGambleSessionCountdown(gambleSession);
 
         return Command.SINGLE_SUCCESS;
