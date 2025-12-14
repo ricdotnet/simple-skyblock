@@ -1,10 +1,23 @@
 package dev.ricr.skyblock;
 
-import dev.ricr.skyblock.commands.*;
+import dev.ricr.skyblock.commands.AdminCommand;
+import dev.ricr.skyblock.commands.AuctionHouseCommand;
+import dev.ricr.skyblock.commands.BalanceCommand;
+import dev.ricr.skyblock.commands.GambleCommand;
+import dev.ricr.skyblock.commands.IslandCommand;
+import dev.ricr.skyblock.commands.LeaderboardCommand;
+import dev.ricr.skyblock.commands.LobbyCommand;
+import dev.ricr.skyblock.commands.PayCommand;
+import dev.ricr.skyblock.commands.ShopCommand;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
-import dev.ricr.skyblock.listeners.*;
+import dev.ricr.skyblock.listeners.ChatListener;
+import dev.ricr.skyblock.listeners.InventoryClickListener;
+import dev.ricr.skyblock.listeners.IslandListeners;
+import dev.ricr.skyblock.listeners.PlayerJoinListener;
+import dev.ricr.skyblock.listeners.PlayerRespawnListener;
+import dev.ricr.skyblock.listeners.ServerLoadListener;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
@@ -16,6 +29,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.Objects;
 
 public class SimpleSkyblock extends JavaPlugin {
@@ -91,6 +105,14 @@ public class SimpleSkyblock extends JavaPlugin {
     @Override
     public void onDisable() {
         ServerUtils.cleanUpTextDisplays(this);
+
+        try {
+            this.databaseManager.commitImmediately();
+        } catch (SQLException e) {
+            this.getLogger().severe("Failed to commit changes to database on shutdown:");
+            this.getLogger().severe(e.getMessage());
+        }
+
         this.getLogger().info("SimpleSkyblock has been disabled!");
     }
 

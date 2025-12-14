@@ -2,6 +2,7 @@ package dev.ricr.skyblock.commands;
 
 import com.j256.ormlite.dao.Dao;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -69,6 +70,11 @@ public class IslandCommand implements ICommand {
                         .executes(this::teleportPlayerToOwnIsland)
                         .then(Commands.literal("set").executes(this::setIslandTeleportPosition))
                 )
+                .then(Commands.literal("expand").then(
+                                Commands.argument("blocks", IntegerArgumentType.integer(1, 10))
+                                        .executes(this::expandIsland)
+                        )
+                )
                 .then(Commands.literal("kick").executes(this::kickPlayersFromIsland))
                 .then(Commands.literal("trust").then(
                                 Commands.argument("player", ArgumentTypes.player())
@@ -122,14 +128,17 @@ public class IslandCommand implements ICommand {
         if (newIslandWorld == null) {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
         } else {
-            var radius = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
+            var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
-            newIslandWorld.getWorldBorder().setSize(radius * 2 + 1);
+            var radius = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
+            var radiusWithOldExpansion = radius + playerRecord.getExpansionSize();
+
+            newIslandWorld.getWorldBorder().setSize(radiusWithOldExpansion * 2 + 1);
             newIslandWorld.getWorldBorder().setCenter(new Location(newIslandWorld, 0.5, 64, 0.5));
             newIslandWorld.save();
 
             var newLocation = this.plugin.islandGenerator.generateIsland(newIslandWorld, player);
-            this.createIslandDatabaseRecord(player, seed, radius);
+            this.createIslandDatabaseRecord(player, seed);
 
             newLocation.setY(64);
             newLocation.setX(0.5);
@@ -146,7 +155,7 @@ public class IslandCommand implements ICommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private void createIslandDatabaseRecord(Player player, long seed, int borderRadius) {
+    private void createIslandDatabaseRecord(Player player, long seed) {
         var playerUniqueId = player.getUniqueId().toString();
 
         try {
@@ -166,7 +175,6 @@ public class IslandCommand implements ICommand {
             island.setId(user.getUserId());
             island.setUser(user);
             island.setSeed(seed);
-            island.setIslandRadius(borderRadius);
 
             // Using multiple island worlds means we always start at 0 64 0
             island.setPositionX(0.0d);
@@ -196,8 +204,14 @@ public class IslandCommand implements ICommand {
         var islandNetherWorld = ServerUtils.loadOrCreateWorld(player, World.Environment.NETHER, null);
         var currentWorld = player.getWorld();
 
-        var currentPlayersInIslandWorld = islandWorld.getPlayers();
-        var currentPlayersInIslandNetherWorld = islandNetherWorld.getPlayers();
+        var currentPlayersInIslandWorld = islandWorld.getPlayers()
+                .stream()
+                .filter(p -> !p.getUniqueId().equals(player.getUniqueId()))
+                .toList();
+        var currentPlayersInIslandNetherWorld = islandNetherWorld.getPlayers()
+                .stream()
+                .filter(p -> !p.getUniqueId().equals(player.getUniqueId()))
+                .toList();
 
         if (!currentPlayersInIslandWorld.isEmpty() || !currentPlayersInIslandNetherWorld.isEmpty()) {
             player.sendMessage(Component.text("Unable to delete your island because there are players in it", NamedTextColor.RED)
@@ -410,6 +424,44 @@ public class IslandCommand implements ICommand {
         }
 
         targetPlayer.sendMessage(base.appendSpace().append(reason).appendSpace().append(clickable));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int expandIsland(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+        if (islandWorld == null) {
+            player.sendMessage(Component.text("You do not have an island to expand", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var blocksToExpand = ctx.getArgument("blocks", Integer.class);
+        var worldBlocksToExpand = blocksToExpand * 2; // * 2 because otherwise we will expand half a block in all directions
+        var priceToExpandPerBlock = this.plugin.serverConfig.getInt("island.expand_price", 10000);
+        var totalPriceToExpand = blocksToExpand * priceToExpandPerBlock;
+
+        var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        if (playerRecord.getBalance() < totalPriceToExpand) {
+            player.sendMessage(Component.text(String.format("You do not have enough money to expand your island by %d blocks", blocksToExpand),
+                    NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var worldBorder = islandWorld.getWorldBorder();
+        worldBorder.setSize(worldBorder.getSize() + worldBlocksToExpand);
+        worldBorder.setCenter(worldBorder.getCenter());
+        islandWorld.save();
+
+        playerRecord.setBalance(playerRecord.getBalance() - totalPriceToExpand);
+        playerRecord.setExpansionSize(playerRecord.getExpansionSize() + blocksToExpand); // for keeping track, we keep the original number of blocks
+
+        var userCreateOrUpdate = new DatabaseChange.UserCreateOrUpdate(playerRecord);
+        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdate);
+
+        player.sendMessage(Component.text(String.format("Your island has been expanded by %d blocks", blocksToExpand), NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
     }

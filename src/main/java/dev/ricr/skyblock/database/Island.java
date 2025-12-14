@@ -35,9 +35,6 @@ public class Island {
     private boolean isPrivate = false;
 
     @DatabaseField(canBeNull = false)
-    private int islandRadius;
-
-    @DatabaseField(canBeNull = false)
     private boolean hasNether = false;
 
     @DatabaseField(canBeNull = false)

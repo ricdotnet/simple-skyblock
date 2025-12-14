@@ -4,21 +4,19 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.User;
-import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.sql.SQLException;
 
 public class PlayerJoinListener implements Listener {
-
     private final SimpleSkyblock plugin;
 
     public PlayerJoinListener(SimpleSkyblock plugin) {
@@ -43,6 +41,13 @@ public class PlayerJoinListener implements Listener {
 
         // always start in the lobby / spawn world
         player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        var player = event.getPlayer();
+
+        this.plugin.onlinePlayers.removePlayer(player.getUniqueId());
     }
 
     private void initializeUserTable(Player player) {

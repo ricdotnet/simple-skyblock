@@ -19,4 +19,8 @@ public class User {
 
     @DatabaseField(defaultValue = "0.0")
     private double balance;
+
+    // We should keep track of this here for keeping how big a player's island was in case they decide to delete it and recreate
+    @DatabaseField
+    private int expansionSize = 0;
 }

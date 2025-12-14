@@ -98,6 +98,17 @@ public class DatabaseManager {
         }, 20L, 20L * 5); // 20 ticks per second * 5 seconds
     }
 
+    public void commitImmediately() throws SQLException {
+        var changes = this.accumulator.drain();
+        if (changes.isEmpty()) {
+            return;
+        }
+
+        for (DatabaseChange change : changes) {
+            this.applyChange(change);
+        }
+    }
+
     private void applyChange(DatabaseChange change) throws SQLException {
         switch (change) {
             case DatabaseChange.UserCreateOrUpdate(User player) -> this.usersDao.createOrUpdate(player);
