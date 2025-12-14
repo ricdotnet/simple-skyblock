@@ -102,8 +102,13 @@ public class DatabaseManager {
         switch (change) {
             case DatabaseChange.UserCreateOrUpdate(User player) -> this.usersDao.createOrUpdate(player);
             case DatabaseChange.GambleRecordAdd(Gamble gamble) -> this.gamblesDao.create(gamble);
-            case DatabaseChange.AuctionHouseItemAdd auctionHouseItemAdd -> {
-            }
+            case DatabaseChange.SaleRecordAdd(Sale sale) -> this.salesDao.create(sale);
+            case DatabaseChange.AuctionHouseItemAdd(AuctionHouse auctionHouse) ->
+                    this.auctionHouseDao.create(auctionHouse);
+            case DatabaseChange.AuctionHouseItemRemove(AuctionHouse auctionHouse) ->
+                    this.auctionHouseDao.delete(auctionHouse);
+            case DatabaseChange.AuctionHouseTransactionAdd(AuctionHouseTransaction auctionHouseTransaction) ->
+                    this.auctionHouseTransactionsDao.create(auctionHouseTransaction);
             case DatabaseChange.TrustedPlayerAdd(Island userIsland, User targetUser) -> {
                 var islandPlayerTrustLink = new IslandUserTrustLink();
 
