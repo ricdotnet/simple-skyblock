@@ -6,26 +6,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@DatabaseTable(tableName = "sales")
+@DatabaseTable(tableName = "gambles")
 @NoArgsConstructor
 @Getter
 @Setter
-public class Sale {
+public class GambleEntity {
     @DatabaseField(generatedId = true)
     private int id;
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private User user;
+    private PlayerEntity player;
 
     @DatabaseField(canBeNull = false)
-    private double value;
+    private double amount;
 
     @DatabaseField(canBeNull = false)
-    private String item;
-
-    @DatabaseField(canBeNull = false)
-    private int quantity;
-
-    @DatabaseField(canBeNull = false)
-    private String type; // Buy or Sell
+    private String type; // Won or Lost
 }

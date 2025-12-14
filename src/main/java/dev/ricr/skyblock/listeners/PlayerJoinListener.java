@@ -3,7 +3,7 @@ package dev.ricr.skyblock.listeners;
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -36,7 +36,7 @@ public class PlayerJoinListener implements Listener {
         var lobbyWorld = ServerUtils.loadOrCreateLobby();
         player.sendMessage(Component.text("Welcome to SimpleSkyblock!", NamedTextColor.GREEN));
 
-        this.initializeUserTable(player);
+        this.createPlayerEntity(player);
         this.plugin.islandManager.addPlayerIsland(player.getUniqueId());
 
         // always start in the lobby / spawn world
@@ -50,32 +50,32 @@ public class PlayerJoinListener implements Listener {
         this.plugin.onlinePlayers.removePlayer(player.getUniqueId());
     }
 
-    private void initializeUserTable(Player player) {
-        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
+    private void createPlayerEntity(Player player) {
+        Dao<PlayerEntity, String> playersDao = this.plugin.databaseManager.getPlayersDao();
 
         var playerUniqueId = player.getUniqueId();
 
         try {
-            var playerRecord = userDao.queryForId(playerUniqueId.toString());
+            var playerEntity = playersDao.queryForId(playerUniqueId.toString());
 
-            if (playerRecord != null) {
+            if (playerEntity != null) {
                 this.plugin.getLogger()
-                        .info(String.format("Player %s already joined before. Skipping initialization of user record.",
+                        .info(String.format("Player %s already joined before. Skipping initialization of player entity.",
                                 player.getName()));
 
-                this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerRecord);
+                this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerEntity);
                 return;
             }
 
-            playerRecord = new User();
-            playerRecord.setUserId(playerUniqueId.toString());
-            playerRecord.setUsername(player.getName());
-            playerRecord.setBalance(100.0d);
+            playerEntity = new PlayerEntity();
+            playerEntity.setPlayerId(playerUniqueId.toString());
+            playerEntity.setUsername(player.getName());
+            playerEntity.setBalance(100.0d);
 
-            this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerRecord);
+            this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerEntity);
 
-            var userCreateOrUpdate = new DatabaseChange.UserCreateOrUpdate(playerRecord);
-            this.plugin.databaseChangesAccumulator.add(userCreateOrUpdate);
+            var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
+            this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
         } catch (SQLException e) {
             // ignore for now
         }

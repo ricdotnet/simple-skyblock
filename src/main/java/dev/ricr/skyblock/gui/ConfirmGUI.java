@@ -1,10 +1,10 @@
 package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.AuctionHouse;
-import dev.ricr.skyblock.database.AuctionHouseTransaction;
+import dev.ricr.skyblock.database.AuctionHouseItemEntity;
+import dev.ricr.skyblock.database.AuctionHouseTransactionEntity;
 import dev.ricr.skyblock.database.DatabaseChange;
-import dev.ricr.skyblock.database.Sale;
+import dev.ricr.skyblock.database.SaleEntity;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
@@ -34,7 +34,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final Inventory inventory;
     @Getter
     private final ShopType shopType;
-    private AuctionHouse auctionHouseItem;
+    private AuctionHouseItemEntity auctionHouseItem;
 
     public ConfirmGUI(SimpleSkyblock plugin, Player player, Material item, ShopItems.PricePair pricePair,
                       ShopType shopType) {
@@ -229,14 +229,14 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                         ServerUtils.getTextFromComponent(actionableItem.displayName()),
                         auctionHouseItem.getOwnerName(), ServerUtils.COIN_SYMBOL,
                         ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())), NamedTextColor.GREEN));
-                this.sendMessageToSeller(auctionHouseItem.getUser()
-                                .getUserId(), player,
+                this.sendMessageToSeller(auctionHouseItem.getPlayer()
+                                .getPlayerId(), player,
                         ServerUtils.getTextFromComponent(actionableItem.displayName()),
                         price);
 
-                var transaction = new AuctionHouseTransaction();
-                transaction.setUser(buyerPlayerRecord);
-                transaction.setSeller(auctionHouseItem.getUser());
+                var transaction = new AuctionHouseTransactionEntity();
+                transaction.setPlayer(buyerPlayerRecord);
+                transaction.setSeller(auctionHouseItem.getPlayer());
                 transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
                 transaction.setPrice(price);
 
@@ -246,26 +246,26 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 var auctionHouseItemRemove = new DatabaseChange.AuctionHouseItemRemove(auctionHouseItem);
                 this.plugin.databaseChangesAccumulator.add(auctionHouseItemRemove);
 
-                var playerCreateOrUpdateBuyer = new DatabaseChange.UserCreateOrUpdate(buyerPlayerRecord);
+                var playerCreateOrUpdateBuyer = new DatabaseChange.PlayerCreateOrUpdate(buyerPlayerRecord);
                 this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateBuyer);
 
                 try {
                     var sellerPlayerRecord = this.plugin.databaseManager
-                            .getUsersDao()
-                            .queryForId(auctionHouseItem.getUser().getUserId());
+                            .getPlayersDao()
+                            .queryForId(auctionHouseItem.getPlayer().getPlayerId());
 
-                    DatabaseChange.UserCreateOrUpdate playerCreateOrUpdateSeller;
+                    DatabaseChange.PlayerCreateOrUpdate playerCreateOrUpdateSeller;
 
                     // Update the cached player instance if the seller is online
-                    var onlineSellerPlayerRecord = this.plugin.onlinePlayers.getPlayer(UUID.fromString(sellerPlayerRecord.getUserId()));
+                    var onlineSellerPlayerRecord = this.plugin.onlinePlayers.getPlayer(UUID.fromString(sellerPlayerRecord.getPlayerId()));
                     if (onlineSellerPlayerRecord != null) {
                         var newBalance = onlineSellerPlayerRecord.getBalance() + price;
                         onlineSellerPlayerRecord.setBalance(newBalance);
-                        playerCreateOrUpdateSeller = new DatabaseChange.UserCreateOrUpdate(onlineSellerPlayerRecord);
+                        playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(onlineSellerPlayerRecord);
                     } else {
                         var newBalance = sellerPlayerRecord.getBalance() + price;
                         sellerPlayerRecord.setBalance(newBalance);
-                        playerCreateOrUpdateSeller = new DatabaseChange.UserCreateOrUpdate(sellerPlayerRecord);
+                        playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(sellerPlayerRecord);
                     }
 
                     this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSeller);
@@ -317,7 +317,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
-        var saleRecord = new Sale();
+        var saleRecord = new SaleEntity();
 
         if (transactionType == TransactionType.Buy) {
             if (isPlayerInventoryFull(player)) {
@@ -372,11 +372,11 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         saleRecord.setItem(material.name());
         saleRecord.setValue(totalPrice);
         saleRecord.setQuantity(itemAmount);
-        saleRecord.setUser(playerRecord);
+        saleRecord.setPlayer(playerRecord);
         saleRecord.setType(transactionType.toString());
 
-        var userCreateOrUpdate = new DatabaseChange.UserCreateOrUpdate(playerRecord);
-        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdate);
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerRecord);
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
         var saleRecordAdd = new DatabaseChange.SaleRecordAdd(saleRecord);
         this.plugin.databaseChangesAccumulator.add(saleRecordAdd);

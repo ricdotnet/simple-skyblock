@@ -11,8 +11,8 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
-import dev.ricr.skyblock.database.Island;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.IslandEntity;
+import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
@@ -37,12 +37,12 @@ import java.util.concurrent.CompletableFuture;
 public class IslandCommand implements ICommand {
     private final SimpleSkyblock plugin;
 
-    private final Dao<User, String> usersDao;
-    private final Dao<Island, String> islandsDao;
+    private final Dao<PlayerEntity, String> playersDao;
+    private final Dao<IslandEntity, String> islandsDao;
 
     public IslandCommand(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.usersDao = plugin.databaseManager.getUsersDao();
+        this.playersDao = plugin.databaseManager.getPlayersDao();
         this.islandsDao = plugin.databaseManager.getIslandsDao();
     }
 
@@ -159,11 +159,11 @@ public class IslandCommand implements ICommand {
         var playerUniqueId = player.getUniqueId().toString();
 
         try {
-            var user = this.usersDao.queryForId(playerUniqueId);
-            if (user == null) {
+            var playerEntity = this.playersDao.queryForId(playerUniqueId);
+            if (playerEntity == null) {
                 return;
             }
-            var island = this.islandsDao.queryForId(user.getUserId());
+            var island = this.islandsDao.queryForId(playerEntity.getPlayerId());
             if (island != null) {
                 this.plugin.getLogger()
                         .info(String.format("Player %s already has an island and tried creating another one",
@@ -171,9 +171,9 @@ public class IslandCommand implements ICommand {
                 return;
             }
 
-            island = new Island();
-            island.setId(user.getUserId());
-            island.setUser(user);
+            island = new IslandEntity();
+            island.setId(playerEntity.getPlayerId());
+            island.setPlayer(playerEntity);
             island.setSeed(seed);
 
             // Using multiple island worlds means we always start at 0 64 0
@@ -295,15 +295,15 @@ public class IslandCommand implements ICommand {
         }
 
         try {
-            var userIsland = islandsDao.queryForId(player.getUniqueId().toString());
-            var targetUser = usersDao.queryForId(targetPlayer.getUniqueId().toString());
+            var playerIsland = islandsDao.queryForId(player.getUniqueId().toString());
+            var targetPlayerEntity = this.playersDao.queryForId(targetPlayer.getUniqueId().toString());
 
-            if (targetUser == null) {
+            if (targetPlayerEntity == null) {
                 sender.sendMessage(Component.text(String.format("Player %s does not exist in our server database", targetPlayer.getName()), NamedTextColor.RED));
                 return Command.SINGLE_SUCCESS;
             }
 
-            var trustedPlayerAdd = new DatabaseChange.TrustedPlayerAdd(userIsland, targetUser);
+            var trustedPlayerAdd = new DatabaseChange.TrustedPlayerAdd(playerIsland, targetPlayerEntity);
             this.plugin.databaseChangesAccumulator.add(trustedPlayerAdd);
 
             var newIslandRecord = this.plugin.islandManager
@@ -406,15 +406,15 @@ public class IslandCommand implements ICommand {
                 }));
 
         try {
-            var userIsland = islandsDao.queryForId(targetPlayer.getUniqueId().toString());
-            if (userIsland == null) {
+            var playerIsland = islandsDao.queryForId(targetPlayer.getUniqueId().toString());
+            if (playerIsland == null) {
                 sender.sendMessage(Component.text(String.format("%s", targetPlayer.getName()), NamedTextColor.GOLD)
                         .appendSpace()
                         .append(Component.text("does not have an island", NamedTextColor.RED)));
                 return Command.SINGLE_SUCCESS;
             }
 
-            if (userIsland.isPrivate()) {
+            if (playerIsland.isPrivate()) {
                 sender.sendMessage(Component.text(String.format("%s's", targetPlayer), NamedTextColor.GOLD)
                         .append(Component.text("island is private and you cannot visit", NamedTextColor.RED)));
                 return Command.SINGLE_SUCCESS;
@@ -458,8 +458,8 @@ public class IslandCommand implements ICommand {
         playerRecord.setBalance(playerRecord.getBalance() - totalPriceToExpand);
         playerRecord.setExpansionSize(playerRecord.getExpansionSize() + blocksToExpand); // for keeping track, we keep the original number of blocks
 
-        var userCreateOrUpdate = new DatabaseChange.UserCreateOrUpdate(playerRecord);
-        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdate);
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerRecord);
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
         player.sendMessage(Component.text(String.format("Your island has been expanded by %d blocks", blocksToExpand), NamedTextColor.GREEN));
 

@@ -14,7 +14,7 @@ package dev.ricr.skyblock.shop;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.AuctionHouse;
+import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -32,7 +32,7 @@ import java.util.Map;
 public class AuctionHouseItems {
     private final SimpleSkyblock plugin;
     private final int TOTAL_ITEMS_PER_PAGE = 45;
-    private final Dao<AuctionHouse, Integer> auctionHouseDao;
+    private final Dao<AuctionHouseItemEntity, Integer> auctionHouseDao;
 
     @Getter
     private final Map<Integer, ItemMeta> itemOriginalMeta;
@@ -53,13 +53,13 @@ public class AuctionHouseItems {
         List<ItemStack> pageItems = new ArrayList<>();
 
         try {
-            List<AuctionHouse> auctionHouseItemsList = auctionHouseDao.queryBuilder()
+            List<AuctionHouseItemEntity> auctionHouseItemsList = auctionHouseDao.queryBuilder()
                     .orderBy("id", false)
                     .limit((long) this.TOTAL_ITEMS_PER_PAGE)
                     .offset((long) offset)
                     .query();
 
-            for (AuctionHouse auctionHouseItem : auctionHouseItemsList) {
+            for (AuctionHouseItemEntity auctionHouseItem : auctionHouseItemsList) {
                 ItemStack item = ItemStack.deserializeBytes(ServerUtils.bytesFromBase64(auctionHouseItem.getItem()));
 
                 ItemStack clonedItem = item.clone();

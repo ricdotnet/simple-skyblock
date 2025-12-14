@@ -6,26 +6,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@DatabaseTable(tableName = "auction_house_transaction")
+@DatabaseTable(tableName = "sales")
 @NoArgsConstructor
 @Getter
 @Setter
-public class AuctionHouseTransaction {
+public class SaleEntity {
     @DatabaseField(generatedId = true)
     private int id;
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private User user;
-
-    @DatabaseField(foreign = true, canBeNull = false)
-    private User seller;
+    private PlayerEntity player;
 
     @DatabaseField(canBeNull = false)
-    private double price;
+    private double value;
 
     @DatabaseField(canBeNull = false)
     private String item;
 
-    @DatabaseField(columnName = "date_added", canBeNull = false)
-    private long dateAdded = System.currentTimeMillis();
+    @DatabaseField(canBeNull = false)
+    private int quantity;
+
+    @DatabaseField(canBeNull = false)
+    private String type; // Buy or Sell
 }

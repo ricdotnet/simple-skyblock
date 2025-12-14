@@ -12,12 +12,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Island {
+public class IslandEntity {
     @DatabaseField(id = true)
     private String id; // the UUID of the player
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private User user;
+    private PlayerEntity player;
 
     @DatabaseField
     private String islandName;
@@ -29,7 +29,7 @@ public class Island {
     private double positionZ;
 
     @ForeignCollectionField
-    private ForeignCollection<IslandUserTrustLink> trustedPlayers;
+    private ForeignCollection<IslandPlayerTrustLinkEntity> trustedPlayers;
 
     @DatabaseField(canBeNull = false)
     private boolean isPrivate = false;

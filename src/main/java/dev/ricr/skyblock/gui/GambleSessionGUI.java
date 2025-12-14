@@ -1,11 +1,9 @@
 package dev.ricr.skyblock.gui;
 
-import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
-import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
-import dev.ricr.skyblock.database.Gamble;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.GambleEntity;
+import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.GambleType;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
@@ -23,7 +21,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.sql.SQLException;
 import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
@@ -92,13 +89,13 @@ public class GambleSessionGUI implements InventoryHolder {
         Player winner = players.toArray(Player[]::new)[randomIndex];
 
         for (Player player : players) {
-            var gamble = new Gamble();
+            var gamble = new GambleEntity();
             var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
             if (player.getUniqueId() == winner.getUniqueId()) {
                 player.sendMessage(Component.text("You won the gamble!", NamedTextColor.GREEN));
 
-                gamble.setUser(playerRecord);
+                gamble.setPlayer(playerRecord);
                 gamble.setAmount(this.amount);
                 gamble.setType(GambleType.Won.toString());
 
@@ -110,7 +107,7 @@ public class GambleSessionGUI implements InventoryHolder {
                 player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()),
                         NamedTextColor.DARK_RED));
 
-                gamble.setUser(playerRecord);
+                gamble.setPlayer(playerRecord);
                 gamble.setAmount(this.originalAmount);
                 gamble.setType(GambleType.Lost.toString());
 
@@ -148,10 +145,10 @@ public class GambleSessionGUI implements InventoryHolder {
     }
 
     private void updatePlayerBalance(Player player, double amount) {
-        User hostUser = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
-        hostUser.setBalance(hostUser.getBalance() + amount);
+        PlayerEntity hostPlayer = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        hostPlayer.setBalance(hostPlayer.getBalance() + amount);
 
-        var userCreateOrUpdate = new DatabaseChange.UserCreateOrUpdate(hostUser);
-        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdate);
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(hostPlayer);
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
     }
 }

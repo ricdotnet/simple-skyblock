@@ -2,8 +2,8 @@ package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Sale;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.SaleEntity;
+import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -30,49 +30,49 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.inventory = Bukkit.createInventory(this, 27, Component.text("Balance leaderboard"));
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            Dao<User, String> usersDao = plugin.databaseManager.getUsersDao();
-            Dao<Sale, Integer> saleDao = plugin.databaseManager.getSalesDao();
+            Dao<PlayerEntity, String> playersDao = plugin.databaseManager.getPlayersDao();
+            Dao<SaleEntity, Integer> saleDao = plugin.databaseManager.getSalesDao();
 
             try {
-                List<User> users = usersDao.queryBuilder()
+                List<PlayerEntity> playerEntities = playersDao.queryBuilder()
                         .orderBy("balance", false)
                         .query();
-                List<Sale> sales = saleDao.queryForAll();
+                List<SaleEntity> sales = saleDao.queryForAll();
 
-                double totalEconomyValue = users.stream()
-                        .mapToDouble(User::getBalance)
+                double totalEconomyValue = playerEntities.stream()
+                        .mapToDouble(PlayerEntity::getBalance)
                         .sum();
                 double totalServerBought =
                         sales.stream()
                                 .filter(sale -> sale.getType()
                                         .equals(TransactionType.Buy.toString()))
-                                .mapToDouble(Sale::getValue)
+                                .mapToDouble(SaleEntity::getValue)
                                 .sum();
                 double totalServerSold =
                         sales.stream()
                                 .filter(sale -> sale.getType()
                                         .equals(TransactionType.Sell.toString()))
-                                .mapToDouble(Sale::getValue)
+                                .mapToDouble(SaleEntity::getValue)
                                 .sum();
 
-                for (User user : users) {
-                    UUID uuid = UUID.fromString(user.getUserId());
+                for (PlayerEntity playerEntity : playerEntities) {
+                    UUID uuid = UUID.fromString(playerEntity.getPlayerId());
 
                     double totalBought =
                             sales.stream()
-                                    .filter(sale -> sale.getUser()
-                                            .getUserId()
+                                    .filter(sale -> sale.getPlayer()
+                                            .getPlayerId()
                                             .equals(uuid.toString()) && sale.getType()
                                             .equals(TransactionType.Buy.toString()))
-                                    .mapToDouble(Sale::getValue)
+                                    .mapToDouble(SaleEntity::getValue)
                                     .sum();
                     double totalSold =
                             sales.stream()
-                                    .filter(sale -> sale.getUser()
-                                            .getUserId()
+                                    .filter(sale -> sale.getPlayer()
+                                            .getPlayerId()
                                             .equals(uuid.toString()) && sale.getType()
                                             .equals(TransactionType.Sell.toString()))
-                                    .mapToDouble(Sale::getValue)
+                                    .mapToDouble(SaleEntity::getValue)
                                     .sum();
 
                     ItemStack playerHead = PlayerUtils.getPlayerHead(uuid);
@@ -83,7 +83,7 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     lore.add(Component.text()
                             .content("Balance: ")
                             .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
-                                            ServerUtils.formatMoneyValue(user.getBalance())),
+                                            ServerUtils.formatMoneyValue(playerEntity.getBalance())),
                                     NamedTextColor.GOLD))
                             .build());
                     lore.add(Component.text()

@@ -8,29 +8,29 @@ public sealed interface DatabaseChange permits
         DatabaseChange.SaleRecordAdd,
         DatabaseChange.TrustedPlayerAdd,
         DatabaseChange.TrustedPlayerRemove,
-        DatabaseChange.UserCreateOrUpdate {
+        DatabaseChange.PlayerCreateOrUpdate {
 
-    record AuctionHouseItemAdd(AuctionHouse auctionHouse) implements DatabaseChange {
+    record AuctionHouseItemAdd(AuctionHouseItemEntity auctionHouseItem) implements DatabaseChange {
     }
 
-    record AuctionHouseItemRemove(AuctionHouse auctionHouse) implements DatabaseChange {
+    record AuctionHouseItemRemove(AuctionHouseItemEntity auctionHouseItem) implements DatabaseChange {
     }
 
-    record AuctionHouseTransactionAdd(AuctionHouseTransaction auctionHouseTransaction) implements DatabaseChange {
+    record AuctionHouseTransactionAdd(AuctionHouseTransactionEntity auctionHouseTransaction) implements DatabaseChange {
     }
 
-    record GambleRecordAdd(Gamble gamble) implements DatabaseChange {
+    record GambleRecordAdd(GambleEntity gamble) implements DatabaseChange {
     }
 
-    record SaleRecordAdd(Sale sale) implements DatabaseChange {
+    record SaleRecordAdd(SaleEntity sale) implements DatabaseChange {
     }
 
-    record TrustedPlayerAdd(Island island, User trustedUser) implements DatabaseChange {
+    record TrustedPlayerAdd(IslandEntity island, PlayerEntity trustedPlayer) implements DatabaseChange {
     }
 
-    record TrustedPlayerRemove(String islandOwnerUniqueId, String trustedUserId) implements DatabaseChange {
+    record TrustedPlayerRemove(String islandOwnerUniqueId, String trustedPlayerId) implements DatabaseChange {
     }
 
-    record UserCreateOrUpdate(User player) implements DatabaseChange {
+    record PlayerCreateOrUpdate(PlayerEntity player) implements DatabaseChange {
     }
 }

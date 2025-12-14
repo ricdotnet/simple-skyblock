@@ -72,13 +72,13 @@ public class GambleCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        var hostUser = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
-        if (hostUser == null) {
+        var hostPlayer = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        if (hostPlayer == null) {
             // somehow we broke the game
             return Command.SINGLE_SUCCESS;
         }
 
-        if (hostUser.getBalance() < amount) {
+        if (hostPlayer.getBalance() < amount) {
             player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble for %s%s",
                     ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
@@ -142,9 +142,9 @@ public class GambleCommand implements ICommand {
         } else {
 
             try {
-                var user = this.plugin.databaseManager.getUsersDao().queryForId(player.getUniqueId().toString());
+                var playerEntity = this.plugin.databaseManager.getPlayersDao().queryForId(player.getUniqueId().toString());
 
-                if (user.getBalance() < gambleSessionGUI.getOriginalAmount()) {
+                if (playerEntity.getBalance() < gambleSessionGUI.getOriginalAmount()) {
                     player.sendMessage(Component.text(String.format("You cannot join a gamble session with less than %s%s",
                                     ServerUtils.COIN_SYMBOL,
                                     ServerUtils.formatMoneyValue(gambleSessionGUI.getOriginalAmount())),

@@ -1,7 +1,7 @@
 package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Island;
+import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.enums.Buttons;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
@@ -55,31 +55,31 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
     }
 
     private void openInventory(Player player) {
-        var userDao = this.plugin.databaseManager.getUsersDao();
-        var islandDao = this.plugin.databaseManager.getIslandsDao();
+        var playersDao = this.plugin.databaseManager.getPlayersDao();
+        var islandsDao = this.plugin.databaseManager.getIslandsDao();
 
         var playerUniqueId = player.getUniqueId()
                 .toString();
 
-        Island userIsland = null;
+        IslandEntity playerIsland = null;
 
         try {
-            var user = userDao.queryForId(playerUniqueId);
-            userIsland = islandDao.queryForId(user.getUserId());
+            var playerEntity = playersDao.queryForId(playerUniqueId);
+            playerIsland = islandsDao.queryForId(playerEntity.getPlayerId());
         } catch (SQLException e) {
             // ignore for now
         }
 
-        if (userIsland == null) {
+        if (playerIsland == null) {
             this.plugin.getLogger()
                     .warning("Player " + player.getName() + " has no island");
             return;
         }
 
-        var isIslandPrivate = userIsland.isPrivate();
+        var isIslandPrivate = playerIsland.isPrivate();
         this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
 
-        var isIslandAllowNetherTeleport = userIsland.isAllowNetherTeleport();
+        var isIslandAllowNetherTeleport = playerIsland.isAllowNetherTeleport();
         this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Disable Nether teleport", "Allow Nether teleport");
 
         var seedButton = new ItemStack(Material.FILLED_MAP);
@@ -140,10 +140,10 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     private void handleShowIslandSeedClick(Player player) {
         try {
-            var user = this.plugin.databaseManager.getUsersDao().queryForId(player.getUniqueId().toString());
+            var playerEntity = this.plugin.databaseManager.getPlayersDao().queryForId(player.getUniqueId().toString());
             var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
 
-            if (user.getBalance() < showSeedPrice) {
+            if (playerEntity.getBalance() < showSeedPrice) {
                 player.sendMessage(Component.text("You don't have enough money to show the seed", NamedTextColor.RED));
                 return;
             }
@@ -151,8 +151,8 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             var seed = island.getSeed();
 
-            user.setBalance(user.getBalance() - showSeedPrice);
-            this.plugin.databaseManager.getUsersDao().update(user);
+            playerEntity.setBalance(playerEntity.getBalance() - showSeedPrice);
+            this.plugin.databaseManager.getPlayersDao().update(playerEntity);
 
             player.sendMessage(Component.text("Seed:").appendSpace().append(Component.text(seed, NamedTextColor.GREEN)));
         } catch (SQLException e) {

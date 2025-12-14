@@ -3,9 +3,9 @@ package dev.ricr.skyblock.utils;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.ForeignCollection;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Island;
-import dev.ricr.skyblock.database.IslandUserTrustLink;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.IslandEntity;
+import dev.ricr.skyblock.database.IslandPlayerTrustLinkEntity;
+import dev.ricr.skyblock.database.PlayerEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
@@ -29,12 +29,12 @@ public class IslandManager {
         this.plugin = plugin;
         this.islands = new HashMap<>();
 
-        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
+        Dao<PlayerEntity, String> playersDao = this.plugin.databaseManager.getPlayersDao();
 
         try {
-            List<User> userList = usersDao.queryForAll();
-            for (User user : userList) {
-                this.addPlayerIsland(UUID.fromString(user.getUserId()));
+            List<PlayerEntity> playerEntitiesList = playersDao.queryForAll();
+            for (PlayerEntity playerEntity : playerEntitiesList) {
+                this.addPlayerIsland(UUID.fromString(playerEntity.getPlayerId()));
             }
         } catch (SQLException e) {
             // ignore for now
@@ -50,25 +50,25 @@ public class IslandManager {
     }
 
     public void addPlayerIsland(UUID playerUniqueId) {
-        Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
+        Dao<IslandEntity, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
 
         try {
-            Island userIsland = islandsDao.queryForId(playerUniqueId.toString());
+            IslandEntity playerIsland = islandsDao.queryForId(playerUniqueId.toString());
 
-            if (userIsland == null) {
+            if (playerIsland == null) {
                 return;
             }
 
-            int islandX = (int) userIsland.getPositionX();
-            int islandZ = (int) userIsland.getPositionZ();
-            ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
+            int islandX = (int) playerIsland.getPositionX();
+            int islandZ = (int) playerIsland.getPositionZ();
+            ForeignCollection<IslandPlayerTrustLinkEntity> trustedPlayers = playerIsland.getTrustedPlayers();
 
-            List<Tuple<String, String>> trustedUserIds = trustedPlayers.stream().map(
-                    trustedPlayer -> new Tuple<>(trustedPlayer.getUser()
-                            .getUserId(), trustedPlayer.getUser().getUsername())
+            List<Tuple<String, String>> trustedPlayersId = trustedPlayers.stream().map(
+                    trustedPlayer -> new Tuple<>(trustedPlayer.getPlayer()
+                            .getPlayerId(), trustedPlayer.getPlayer().getUsername())
             ).collect(ArrayList::new, List::add, List::addAll);
 
-            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedUserIds));
+            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedPlayersId));
         } catch (SQLException e) {
             // ignore for now
         }

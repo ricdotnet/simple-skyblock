@@ -63,11 +63,11 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
-        var userCreateOrUpdateSender = new DatabaseChange.UserCreateOrUpdate(senderPlayerRecord);
-        var userCreateOrUpdateTarget = new DatabaseChange.UserCreateOrUpdate(targetPlayerRecord);
+        var playerCreateOrUpdateSender = new DatabaseChange.PlayerCreateOrUpdate(senderPlayerRecord);
+        var playerCreateOrUpdateTarget = new DatabaseChange.PlayerCreateOrUpdate(targetPlayerRecord);
 
-        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdateSender);
-        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdateTarget);
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSender);
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateTarget);
 
         player.sendMessage(Component.text(String.format("Paid %s%s to %s", ServerUtils.COIN_SYMBOL,
                 ServerUtils.formatMoneyValue(amount),

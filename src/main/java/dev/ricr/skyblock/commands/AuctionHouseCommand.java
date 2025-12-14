@@ -1,7 +1,7 @@
 package dev.ricr.skyblock.commands;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.AuctionHouse;
+import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -62,13 +62,13 @@ public class AuctionHouseCommand implements CommandExecutor {
             return true;
         }
 
-        var userSelling = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        var playerSelling = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
         var playerListingsCount = 0L;
         try {
             playerListingsCount = this.plugin.databaseManager.getAuctionHouseDao().queryBuilder()
                     .where()
-                    .eq("user_id", userSelling.getUserId())
+                    .eq("player_id", playerSelling.getPlayerId())
                     .countOf();
         } catch (SQLException e) {
             // ignore for now
@@ -80,16 +80,16 @@ public class AuctionHouseCommand implements CommandExecutor {
             return true;
         }
 
-        var auctionHouse = new AuctionHouse();
-        auctionHouse.setUser(userSelling);
-        auctionHouse.setOwnerName(player.getName());
-        auctionHouse.setPrice(price);
-        auctionHouse.setItem(ServerUtils.base64FromBytes(itemInHand.serializeAsBytes()));
+        var auctionHouseItemEntity = new AuctionHouseItemEntity();
+        auctionHouseItemEntity.setPlayer(playerSelling);
+        auctionHouseItemEntity.setOwnerName(player.getName());
+        auctionHouseItemEntity.setPrice(price);
+        auctionHouseItemEntity.setItem(ServerUtils.base64FromBytes(itemInHand.serializeAsBytes()));
 
-        var auctionHouseAdd = new DatabaseChange.AuctionHouseItemAdd(auctionHouse);
+        var auctionHouseAdd = new DatabaseChange.AuctionHouseItemAdd(auctionHouseItemEntity);
         this.plugin.databaseChangesAccumulator.add(auctionHouseAdd);
 
-        this.plugin.auctionHouseItems.buildAndAddMeta(auctionHouse.getId(), clonedItem, player.getName(), price);
+        this.plugin.auctionHouseItems.buildAndAddMeta(auctionHouseItemEntity.getId(), clonedItem, player.getName(), price);
 
         itemInHand.setAmount(0);
         player.sendMessage(Component.text("Successfully placed an auction for your item", NamedTextColor.GREEN));

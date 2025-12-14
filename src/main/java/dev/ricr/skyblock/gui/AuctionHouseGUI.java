@@ -1,7 +1,7 @@
 package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.AuctionHouse;
+import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
@@ -147,15 +147,15 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         try {
-            AuctionHouse auctionHouse = this.plugin.databaseManager.getAuctionHouseDao()
+            var auctionHouseItemEntity = this.plugin.databaseManager.getAuctionHouseDao()
                     .queryForId(itemId);
 
-            if (auctionHouse == null) {
+            if (auctionHouseItemEntity == null) {
                 return;
             }
 
-            if (!auctionHouse.getUser()
-                    .getUserId()
+            if (!auctionHouseItemEntity.getPlayer()
+                    .getPlayerId()
                     .equals(player.getUniqueId()
                             .toString())) {
                 return;
@@ -167,7 +167,7 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
             itemToGive.setItemMeta(originalMeta);
 
             this.plugin.databaseManager.getAuctionHouseDao()
-                    .delete(auctionHouse);
+                    .delete(auctionHouseItemEntity);
 
             player.getInventory()
                     .addItem(itemToGive);

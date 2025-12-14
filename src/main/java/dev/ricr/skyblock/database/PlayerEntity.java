@@ -6,13 +6,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@DatabaseTable(tableName = "users")
+@DatabaseTable(tableName = "players")
 @NoArgsConstructor
 @Getter
 @Setter
-public class User {
+public class PlayerEntity {
     @DatabaseField(id = true)
-    private String userId;
+    private String playerId;
 
     @DatabaseField(unique = true)
     private String username;

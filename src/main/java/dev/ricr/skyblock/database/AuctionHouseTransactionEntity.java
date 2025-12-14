@@ -6,19 +6,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@DatabaseTable(tableName = "auction_house")
+@DatabaseTable(tableName = "auction_house_transaction")
 @NoArgsConstructor
 @Getter
 @Setter
-public class AuctionHouse {
+public class AuctionHouseTransactionEntity {
     @DatabaseField(generatedId = true)
     private int id;
 
     @DatabaseField(foreign = true, canBeNull = false)
-    private User user;
+    private PlayerEntity player;
 
-    @DatabaseField(columnName = "owner_name", canBeNull = false)
-    private String ownerName;
+    @DatabaseField(foreign = true, canBeNull = false)
+    private PlayerEntity seller;
 
     @DatabaseField(canBeNull = false)
     private double price;

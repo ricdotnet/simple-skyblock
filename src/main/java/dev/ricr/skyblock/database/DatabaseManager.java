@@ -18,13 +18,13 @@ public class DatabaseManager {
     private final SimpleSkyblock plugin;
     private final DatabaseChangesAccumulator accumulator;
 
-    private Dao<IslandUserTrustLink, String> islandUserTrustLinksDao;
-    private Dao<User, String> usersDao;
-    private Dao<Island, String> islandsDao;
-    private Dao<Sale, Integer> salesDao;
-    private Dao<Gamble, Integer> gamblesDao;
-    private Dao<AuctionHouse, Integer> auctionHouseDao;
-    private Dao<AuctionHouseTransaction, Integer> auctionHouseTransactionsDao;
+    private Dao<IslandPlayerTrustLinkEntity, String> islandPlayerTrustLinksDao;
+    private Dao<PlayerEntity, String> playersDao;
+    private Dao<IslandEntity, String> islandsDao;
+    private Dao<SaleEntity, Integer> salesDao;
+    private Dao<GambleEntity, Integer> gamblesDao;
+    private Dao<AuctionHouseItemEntity, Integer> auctionHouseDao;
+    private Dao<AuctionHouseTransactionEntity, Integer> auctionHouseTransactionsDao;
 
     public DatabaseManager(SimpleSkyblock plugin, DatabaseChangesAccumulator accumulator) {
         this.plugin = plugin;
@@ -38,21 +38,21 @@ public class DatabaseManager {
         try {
             ConnectionSource connection = new JdbcConnectionSource(databaseUrl);
 
-            this.islandUserTrustLinksDao = DaoManager.createDao(connection, IslandUserTrustLink.class);
-            this.usersDao = DaoManager.createDao(connection, User.class);
-            this.islandsDao = DaoManager.createDao(connection, Island.class);
-            this.salesDao = DaoManager.createDao(connection, Sale.class);
-            this.gamblesDao = DaoManager.createDao(connection, Gamble.class);
-            this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouse.class);
-            this.auctionHouseTransactionsDao = DaoManager.createDao(connection, AuctionHouseTransaction.class);
+            this.islandPlayerTrustLinksDao = DaoManager.createDao(connection, IslandPlayerTrustLinkEntity.class);
+            this.playersDao = DaoManager.createDao(connection, PlayerEntity.class);
+            this.islandsDao = DaoManager.createDao(connection, IslandEntity.class);
+            this.salesDao = DaoManager.createDao(connection, SaleEntity.class);
+            this.gamblesDao = DaoManager.createDao(connection, GambleEntity.class);
+            this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouseItemEntity.class);
+            this.auctionHouseTransactionsDao = DaoManager.createDao(connection, AuctionHouseTransactionEntity.class);
 
-            TableUtils.createTableIfNotExists(connection, IslandUserTrustLink.class);
-            TableUtils.createTableIfNotExists(connection, User.class);
-            TableUtils.createTableIfNotExists(connection, Island.class);
-            TableUtils.createTableIfNotExists(connection, Sale.class);
-            TableUtils.createTableIfNotExists(connection, Gamble.class);
-            TableUtils.createTableIfNotExists(connection, AuctionHouse.class);
-            TableUtils.createTableIfNotExists(connection, AuctionHouseTransaction.class);
+            TableUtils.createTableIfNotExists(connection, IslandPlayerTrustLinkEntity.class);
+            TableUtils.createTableIfNotExists(connection, PlayerEntity.class);
+            TableUtils.createTableIfNotExists(connection, IslandEntity.class);
+            TableUtils.createTableIfNotExists(connection, SaleEntity.class);
+            TableUtils.createTableIfNotExists(connection, GambleEntity.class);
+            TableUtils.createTableIfNotExists(connection, AuctionHouseItemEntity.class);
+            TableUtils.createTableIfNotExists(connection, AuctionHouseTransactionEntity.class);
 
             plugin.getLogger()
                     .info("Successfully connected to database.");
@@ -111,29 +111,29 @@ public class DatabaseManager {
 
     private void applyChange(DatabaseChange change) throws SQLException {
         switch (change) {
-            case DatabaseChange.UserCreateOrUpdate(User player) -> this.usersDao.createOrUpdate(player);
-            case DatabaseChange.GambleRecordAdd(Gamble gamble) -> this.gamblesDao.create(gamble);
-            case DatabaseChange.SaleRecordAdd(Sale sale) -> this.salesDao.create(sale);
-            case DatabaseChange.AuctionHouseItemAdd(AuctionHouse auctionHouse) ->
-                    this.auctionHouseDao.create(auctionHouse);
-            case DatabaseChange.AuctionHouseItemRemove(AuctionHouse auctionHouse) ->
-                    this.auctionHouseDao.delete(auctionHouse);
-            case DatabaseChange.AuctionHouseTransactionAdd(AuctionHouseTransaction auctionHouseTransaction) ->
+            case DatabaseChange.PlayerCreateOrUpdate(PlayerEntity player) -> this.playersDao.createOrUpdate(player);
+            case DatabaseChange.GambleRecordAdd(GambleEntity gamble) -> this.gamblesDao.create(gamble);
+            case DatabaseChange.SaleRecordAdd(SaleEntity sale) -> this.salesDao.create(sale);
+            case DatabaseChange.AuctionHouseItemAdd(AuctionHouseItemEntity auctionHouseItem) ->
+                    this.auctionHouseDao.create(auctionHouseItem);
+            case DatabaseChange.AuctionHouseItemRemove(AuctionHouseItemEntity auctionHouseItem) ->
+                    this.auctionHouseDao.delete(auctionHouseItem);
+            case DatabaseChange.AuctionHouseTransactionAdd(AuctionHouseTransactionEntity auctionHouseTransaction) ->
                     this.auctionHouseTransactionsDao.create(auctionHouseTransaction);
-            case DatabaseChange.TrustedPlayerAdd(Island userIsland, User targetUser) -> {
-                var islandPlayerTrustLink = new IslandUserTrustLink();
+            case DatabaseChange.TrustedPlayerAdd(IslandEntity playerIsland, PlayerEntity targetPlayer) -> {
+                var islandPlayerTrustLink = new IslandPlayerTrustLinkEntity();
 
-                islandPlayerTrustLink.setIsland(userIsland);
-                islandPlayerTrustLink.setUser(targetUser);
+                islandPlayerTrustLink.setIsland(playerIsland);
+                islandPlayerTrustLink.setPlayer(targetPlayer);
 
-                this.islandUserTrustLinksDao.create(islandPlayerTrustLink);
+                this.islandPlayerTrustLinksDao.create(islandPlayerTrustLink);
             }
             case DatabaseChange.TrustedPlayerRemove(String islandOwnerId, String trustedPlayerId) -> {
-                var deleteBuilder = this.plugin.databaseManager.getIslandUserTrustLinksDao().deleteBuilder();
+                var deleteBuilder = this.plugin.databaseManager.getIslandPlayerTrustLinksDao().deleteBuilder();
                 deleteBuilder.where()
                         .eq("island_id", islandOwnerId)
                         .and()
-                        .eq("user_id", trustedPlayerId);
+                        .eq("player_id", trustedPlayerId);
                 deleteBuilder.delete();
             }
             default -> throw new IllegalStateException("Unexpected value: " + change);
