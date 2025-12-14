@@ -4,6 +4,7 @@ A simple Paper plugin for Minecraft `>1.21.10` that every player to have their o
 
 ## Features
 
+- Void World generator
 - Automatically generates an island for new players when they use `/island create`
 - Nether worlds are generated for each island, with a custom nether island structure
   - Each player has their own nether portal to the island's nether world
@@ -54,6 +55,14 @@ The compiled JAR file will be in `target/SimpleSkyblock-{version}.jar`
 ## Configuration
 
 The plugin stores player island data in `plugins/SimpleSkyblock/` directory. Each player's island location is saved in a YAML file named after their UUID.
+
+For having the plugin generate the default lobby / spawn world as a void world, set the following in your `bukkit.yml` file:
+
+```yaml
+worlds:
+  void_skyblock:
+    generator: SimpleSkyblock
+```
 
 ## Island Generation
 
