@@ -1,6 +1,7 @@
 package dev.ricr.skyblock;
 
 import dev.ricr.skyblock.commands.*;
+import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.listeners.*;
@@ -9,11 +10,7 @@ import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.TextDisplay;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -27,21 +24,24 @@ public class SimpleSkyblock extends JavaPlugin {
     public IslandManager islandManager;
     public AuctionHouseItems auctionHouseItems;
     public IslandGenerator islandGenerator;
+    public DatabaseChangesAccumulator databaseChangesAccumulator;
 
     @Override
     public void onEnable() {
         this.ensureDataFolderExists();
-
         this.createAndLoadServerConfig();
         this.createAndLoadServerShop();
 
         // Open managers
-        this.databaseManager = new DatabaseManager(this);
+        this.databaseChangesAccumulator = new DatabaseChangesAccumulator();
+
+        this.databaseManager = new DatabaseManager(this, this.databaseChangesAccumulator);
         this.islandManager = new IslandManager(this);
 
         // Open an auction house class with fast access Dao
         this.auctionHouseItems = new AuctionHouseItems(this);
 
+        // Instantiate the island generator
         this.islandGenerator = new IslandGenerator(this);
 
         // TODO: refactor a bit more

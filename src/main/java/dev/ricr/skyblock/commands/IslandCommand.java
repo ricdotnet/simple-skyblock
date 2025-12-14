@@ -9,14 +9,13 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.Island;
-import dev.ricr.skyblock.database.IslandUserTrustLink;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
-import dev.ricr.skyblock.utils.Tuple;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -292,16 +291,8 @@ public class IslandCommand implements ICommand {
                 return Command.SINGLE_SUCCESS;
             }
 
-            var trustedPlayers = userIsland.getTrustedPlayers();
-
-            var islandUserTrustLink = new IslandUserTrustLink();
-            islandUserTrustLink.setIsland(userIsland);
-            islandUserTrustLink.setUser(targetUser);
-
-            trustedPlayers.add(islandUserTrustLink);
-            userIsland.setTrustedPlayers(trustedPlayers);
-
-            islandsDao.update(userIsland);
+            var trustedPlayerAdd = new DatabaseChange.TrustedPlayerAdd(userIsland, targetUser);
+            this.plugin.databaseChangesAccumulator.add(trustedPlayerAdd);
 
             var newIslandRecord = this.plugin.islandManager
                     .getIslandRecord(player.getUniqueId())
@@ -336,23 +327,11 @@ public class IslandCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
+        var trustedPlayerRemove = new DatabaseChange.TrustedPlayerRemove(player.getUniqueId().toString(), targetPlayerUniqueId);
+        this.plugin.databaseChangesAccumulator.add(trustedPlayerRemove);
+
         var newIslandRecord = islandRecord.removeTrustedPlayer(targetPlayerName);
         this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
-
-        String finalTargetPlayerUniqueId = targetPlayerUniqueId;
-        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
-            try {
-                var dao = this.plugin.databaseManager.getIslandUserTrustLinksDao();
-                var deleteBuilder = dao.deleteBuilder();
-                deleteBuilder.where()
-                        .eq("island_id", player.getUniqueId().toString())
-                        .and()
-                        .eq("user_id", finalTargetPlayerUniqueId);
-                deleteBuilder.delete();
-            } catch (SQLException e) {
-                // ignore for now
-            }
-        });
 
         sender.sendMessage(Component.text(String.format("Player %s is no longer trusted in your island", targetPlayerName), NamedTextColor.GREEN));
 

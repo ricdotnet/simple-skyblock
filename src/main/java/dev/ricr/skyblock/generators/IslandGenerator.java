@@ -24,31 +24,6 @@ public class IslandGenerator {
         this.dataFolder = plugin.getDataFolder();
     }
 
-    public boolean hasIsland(Player player) {
-        File playerFile = new File(dataFolder, player.getUniqueId() + ".yml");
-        return playerFile.exists();
-    }
-
-    public Location getIslandLocation(Player player) {
-        File playerFile = new File(dataFolder, player.getUniqueId() + ".yml");
-        if (!playerFile.exists()) {
-            return null;
-        }
-
-        FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-        World world = Bukkit.getWorld(config.getString("world", "world"));
-        if (world == null) {
-            return null;
-        }
-
-        return new Location(
-            world,
-            config.getDouble("x"),
-            config.getDouble("y"),
-            config.getDouble("z")
-        );
-    }
-
     public Location generateIsland(World world, Player player) {
         Location islandLocation = new Location(world, -5, 61, -5);
         StructureUtils.placeStructure(this.plugin, islandLocation, CustomStructures.ISLAND);
