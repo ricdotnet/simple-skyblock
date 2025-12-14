@@ -19,7 +19,6 @@ import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -27,7 +26,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -272,7 +270,7 @@ public class IslandCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var targetPlayer = this.resolvePlayerFromCommandArgument(sender, ctx);
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
         if (targetPlayer == null) {
             return Command.SINGLE_SUCCESS;
         }
@@ -380,7 +378,7 @@ public class IslandCommand implements ICommand {
 
         var senderName = player.getName();
 
-        var targetPlayer = this.resolvePlayerFromCommandArgument(sender, ctx);
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
         if (targetPlayer == null) {
             return Command.SINGLE_SUCCESS;
         }
@@ -424,17 +422,6 @@ public class IslandCommand implements ICommand {
             // ignore for now
             return false;
         }
-    }
-
-    private Player resolvePlayerFromCommandArgument(CommandSender sender, CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-        var players = resolver.resolve(ctx.getSource());
-        if (players.isEmpty()) {
-            sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
-            return null;
-        }
-
-        return players.getFirst();
     }
 
     private CompletableFuture<Suggestions> getTrustedPlayersList(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {

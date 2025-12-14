@@ -1,6 +1,10 @@
 package dev.ricr.skyblock.utils;
 
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.ricr.skyblock.SimpleSkyblock;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -169,5 +173,16 @@ public class ServerUtils {
         plugin.getServer().getWorlds().forEach(world -> {
             world.getEntitiesByClass(TextDisplay.class).forEach(Display::remove);
         });
+    }
+
+    public static Player resolvePlayerFromCommandArgument(CommandSender sender, CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+        var players = resolver.resolve(ctx.getSource());
+        if (players.isEmpty()) {
+            sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
+            return null;
+        }
+
+        return players.getFirst();
     }
 }

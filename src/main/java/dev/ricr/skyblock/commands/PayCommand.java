@@ -1,8 +1,7 @@
 package dev.ricr.skyblock.commands;
 
-import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
@@ -13,8 +12,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.sql.SQLException;
 
 @AllArgsConstructor
 public class PayCommand implements CommandExecutor {
@@ -54,40 +51,29 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
-        Dao<User, String> usersDao = plugin.databaseManager.getUsersDao();
+        var targetPlayerRecord = this.plugin.onlinePlayers.getPlayer(targetPlayer.getUniqueId());
+        var senderPlayerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
-        try {
-            User targetUser = usersDao.queryForId(targetPlayer.getUniqueId()
-                    .toString());
-
-            if (player.isOp()) {
-                targetUser.setBalance(targetUser.getBalance() + amount);
-                usersDao.update(targetUser);
-            } else {
-                User userSender = usersDao.queryForId(player.getUniqueId()
-                        .toString());
-
-                if (userSender.getBalance() >= amount) {
-                    userSender.setBalance(userSender.getBalance() - amount);
-                    targetUser.setBalance(targetUser.getBalance() + amount);
-                } else {
-                    player.sendMessage(Component.text("You don't have enough money to pay that amount",
-                            NamedTextColor.RED));
-                    return true;
-                }
-
-                usersDao.update(userSender);
-                usersDao.update(targetUser);
-            }
-        } catch (SQLException e) {
-            // ignore for now
+        if (senderPlayerRecord.getBalance() >= amount) {
+            senderPlayerRecord.setBalance(senderPlayerRecord.getBalance() - amount);
+            targetPlayerRecord.setBalance(targetPlayerRecord.getBalance() + amount);
+        } else {
+            player.sendMessage(Component.text("You don't have enough money to pay that amount",
+                    NamedTextColor.RED));
+            return true;
         }
+
+        var userCreateOrUpdateSender = new DatabaseChange.UserCreateOrUpdate(senderPlayerRecord);
+        var userCreateOrUpdateTarget = new DatabaseChange.UserCreateOrUpdate(targetPlayerRecord);
+
+        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdateSender);
+        this.plugin.databaseChangesAccumulator.add(userCreateOrUpdateTarget);
 
         player.sendMessage(Component.text(String.format("Paid %s%s to %s", ServerUtils.COIN_SYMBOL,
                 ServerUtils.formatMoneyValue(amount),
                 targetPlayerName), NamedTextColor.GREEN));
         targetPlayer.sendMessage(Component.text(String.format("You received %s%s from %s",
-                ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount), player.getName()),
+                        ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount), player.getName()),
                 NamedTextColor.GREEN));
 
         return true;

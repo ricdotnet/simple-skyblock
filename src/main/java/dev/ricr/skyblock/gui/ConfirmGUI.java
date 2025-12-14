@@ -253,9 +253,21 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     var sellerPlayerRecord = this.plugin.databaseManager
                             .getUsersDao()
                             .queryForId(auctionHouseItem.getUser().getUserId());
-                    sellerPlayerRecord.setBalance(sellerPlayerRecord.getBalance() + price);
 
-                    var playerCreateOrUpdateSeller = new DatabaseChange.UserCreateOrUpdate(sellerPlayerRecord);
+                    DatabaseChange.UserCreateOrUpdate playerCreateOrUpdateSeller;
+
+                    // Update the cached player instance if the seller is online
+                    var onlineSellerPlayerRecord = this.plugin.onlinePlayers.getPlayer(UUID.fromString(sellerPlayerRecord.getUserId()));
+                    if (onlineSellerPlayerRecord != null) {
+                        var newBalance = onlineSellerPlayerRecord.getBalance() + price;
+                        onlineSellerPlayerRecord.setBalance(newBalance);
+                        playerCreateOrUpdateSeller = new DatabaseChange.UserCreateOrUpdate(onlineSellerPlayerRecord);
+                    } else {
+                        var newBalance = sellerPlayerRecord.getBalance() + price;
+                        sellerPlayerRecord.setBalance(newBalance);
+                        playerCreateOrUpdateSeller = new DatabaseChange.UserCreateOrUpdate(sellerPlayerRecord);
+                    }
+
                     this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSeller);
                 } catch (SQLException e) {
                     // ignore for now

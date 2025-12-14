@@ -116,7 +116,7 @@ public class GambleCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var hostPlayer = this.resolvePlayerFromCommandArgument(sender, ctx);
+        var hostPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
 
         if (hostPlayer == null) {
             player.sendMessage(Component.text("No gamble session found for that player",
@@ -191,16 +191,5 @@ public class GambleCommand implements ICommand {
                     Bukkit.getGlobalRegionScheduler()
                             .execute(plugin, () -> gambleSession.updateCountdownClock((int) remaining));
                 }, 1, 1, TimeUnit.SECONDS);
-    }
-
-    private Player resolvePlayerFromCommandArgument(CommandSender sender, CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        var resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-        var players = resolver.resolve(ctx.getSource());
-        if (players.isEmpty()) {
-            sender.sendMessage(Component.text("Player not found", NamedTextColor.RED));
-            return null;
-        }
-
-        return players.getFirst();
     }
 }
