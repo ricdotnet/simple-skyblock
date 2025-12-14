@@ -25,9 +25,9 @@ public class PlayerRespawnListener implements Listener {
             this.plugin.getLogger()
                     .info(String.format("Player %s does not have a bed, sending to lobby", player.getName()));
 
-            // TODO: get player set tp and teleport there maybe
-            var lobbyWorld = ServerUtils.loadOrCreateWorld(player, null, null);
-            player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
+            // TODO: if player has no island teleport to lobby then
+            var lobbyWorld = ServerUtils.loadOrCreateLobby();
+            event.setRespawnLocation(new Location(lobbyWorld, 0.5, 65, 0.5));
         }
 
     }

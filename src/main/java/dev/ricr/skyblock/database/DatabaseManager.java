@@ -13,6 +13,7 @@ import java.sql.SQLException;
 
 @Getter
 public class DatabaseManager {
+    private Dao<IslandUserTrustLink, String> islandUserTrustLinksDao;
     private Dao<User, String> usersDao;
     private Dao<Island, String> islandsDao;
     private Dao<Sale, Integer> salesDao;
@@ -30,6 +31,7 @@ public class DatabaseManager {
         try {
             ConnectionSource connection = new JdbcConnectionSource(databaseUrl);
 
+            this.islandUserTrustLinksDao = DaoManager.createDao(connection, IslandUserTrustLink.class);
             this.usersDao = DaoManager.createDao(connection, User.class);
             this.islandsDao = DaoManager.createDao(connection, Island.class);
             this.salesDao = DaoManager.createDao(connection, Sale.class);

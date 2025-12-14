@@ -2,8 +2,11 @@ package dev.ricr.skyblock.commands;
 
 import com.j256.ormlite.dao.Dao;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.Island;
@@ -13,6 +16,7 @@ import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
+import dev.ricr.skyblock.utils.Tuple;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -30,6 +34,7 @@ import org.codehaus.plexus.util.FileUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.concurrent.CompletableFuture;
 
 public class IslandCommand implements ICommand {
     private final SimpleSkyblock plugin;
@@ -67,11 +72,17 @@ public class IslandCommand implements ICommand {
                         .executes(this::teleportPlayerToOwnIsland)
                         .then(Commands.literal("set").executes(this::setIslandTeleportPosition))
                 )
+                .then(Commands.literal("kick").executes(this::kickPlayersFromIsland))
                 .then(Commands.literal("trust").then(
                                 Commands.argument("player", ArgumentTypes.player())
                                         .executes(this::trustPlayerToOwnIsland)
                         )
                 )
+                .then(Commands.literal("untrust").then(
+                        Commands.argument("player", StringArgumentType.string())
+                                .suggests(this::getTrustedPlayersList)
+                                .executes(this::untrustPlayerToOwnIsland)
+                ))
                 .then(Commands.literal("visit").then(
                                 Commands.argument("player", ArgumentTypes.player())
                                         .executes(this::visitPlayerIsland)
@@ -188,6 +199,16 @@ public class IslandCommand implements ICommand {
         var islandNetherWorld = ServerUtils.loadOrCreateWorld(player, World.Environment.NETHER, null);
         var currentWorld = player.getWorld();
 
+        var currentPlayersInIslandWorld = islandWorld.getPlayers();
+        var currentPlayersInIslandNetherWorld = islandNetherWorld.getPlayers();
+
+        if (!currentPlayersInIslandWorld.isEmpty() || !currentPlayersInIslandNetherWorld.isEmpty()) {
+            player.sendMessage(Component.text("Unable to delete your island because there are players in it", NamedTextColor.RED)
+                    .appendNewline()
+                    .append(Component.text("Kick everyone out and try again", NamedTextColor.RED)));
+            return Command.SINGLE_SUCCESS;
+        }
+
         if (!currentWorld.getName().equals("lobby")) {
             var lobbyWorld = Bukkit.getWorld("lobby");
             player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
@@ -282,15 +303,58 @@ public class IslandCommand implements ICommand {
 
             islandsDao.update(userIsland);
 
-            // Add to island record live list
-            this.plugin.islandManager.getIslandRecord(player.getUniqueId())
-                    .trustedPlayers()
-                    .add(targetPlayer.getUniqueId().toString());
+            var newIslandRecord = this.plugin.islandManager
+                    .getIslandRecord(player.getUniqueId())
+                    .addTrustedPlayer(targetPlayer.getUniqueId().toString(), targetPlayer.getName());
+            this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
 
             player.sendMessage(Component.text(String.format("Player %s is now trusted", targetPlayer.getName()), NamedTextColor.GREEN));
         } catch (SQLException e) {
             // ignore for now
         }
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int untrustPlayerToOwnIsland(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayerName = ctx.getArgument("player", String.class);
+        var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+        String targetPlayerUniqueId = null;
+
+        for (var trustedPlayerTuple : islandRecord.trustedPlayers()) {
+            if (trustedPlayerTuple.getSecond().equals(targetPlayerName)) {
+                targetPlayerUniqueId = trustedPlayerTuple.getFirst();
+                break;
+            }
+        }
+
+        if (targetPlayerUniqueId == null) {
+            sender.sendMessage(Component.text(String.format("Player %s is not trusted in your island", targetPlayerName), NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var newIslandRecord = islandRecord.removeTrustedPlayer(targetPlayerName);
+        this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
+
+        String finalTargetPlayerUniqueId = targetPlayerUniqueId;
+        Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+            try {
+                var dao = this.plugin.databaseManager.getIslandUserTrustLinksDao();
+                var deleteBuilder = dao.deleteBuilder();
+                deleteBuilder.where()
+                        .eq("island_id", player.getUniqueId().toString())
+                        .and()
+                        .eq("user_id", finalTargetPlayerUniqueId);
+                deleteBuilder.delete();
+            } catch (SQLException e) {
+                // ignore for now
+            }
+        });
+
+        sender.sendMessage(Component.text(String.format("Player %s is no longer trusted in your island", targetPlayerName), NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -309,6 +373,24 @@ public class IslandCommand implements ICommand {
 
         // set the new tp location for when the player uses /is or /island
         currentWorld.setSpawnLocation(location);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int kickPlayersFromIsland(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+        var currentPlayersInIsland = islandWorld.getPlayers();
+        var lobbyWorld = ServerUtils.loadOrCreateLobby();
+
+        currentPlayersInIsland.forEach(playerInIsland -> {
+            if (playerInIsland.getUniqueId().equals(player.getUniqueId())) {
+                return;
+            }
+            playerInIsland.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
+        });
 
         return Command.SINGLE_SUCCESS;
     }
@@ -333,9 +415,9 @@ public class IslandCommand implements ICommand {
                 }));
 
         try {
-            var userIsland = islandsDao.queryForId(player.getUniqueId().toString());
+            var userIsland = islandsDao.queryForId(targetPlayer.getUniqueId().toString());
             if (userIsland == null) {
-                sender.sendMessage(Component.text(String.format("%s", targetPlayer), NamedTextColor.GOLD)
+                sender.sendMessage(Component.text(String.format("%s", targetPlayer.getName()), NamedTextColor.GOLD)
                         .appendSpace()
                         .append(Component.text("does not have an island", NamedTextColor.RED)));
                 return Command.SINGLE_SUCCESS;
@@ -374,5 +456,22 @@ public class IslandCommand implements ICommand {
         }
 
         return players.getFirst();
+    }
+
+    private CompletableFuture<Suggestions> getTrustedPlayersList(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+        if (islandRecord == null) {
+            return builder.buildFuture();
+        }
+
+        var remaining = builder.getRemaining().toLowerCase();
+        islandRecord.trustedPlayers().stream()
+                .filter(trustedPlayerTuple -> trustedPlayerTuple.getSecond().toLowerCase().startsWith(remaining))
+                .forEach(trustedPlayerTuple -> builder.suggest(trustedPlayerTuple.getSecond()));
+
+        return builder.buildFuture();
     }
 }

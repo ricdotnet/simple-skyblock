@@ -11,12 +11,11 @@ import lombok.Setter;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class IslandManager {
 
@@ -46,6 +45,10 @@ public class IslandManager {
         return this.islands.get(playerUniqueId);
     }
 
+    public void replaceIslandRecord(UUID playerUniqueId, IslandRecord islandRecord) {
+        this.islands.put(playerUniqueId, islandRecord);
+    }
+
     public void addPlayerIsland(UUID playerUniqueId) {
         Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
 
@@ -60,10 +63,10 @@ public class IslandManager {
             int islandZ = (int) userIsland.getPositionZ();
             ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
 
-            Set<String> trustedUserIds = trustedPlayers.stream().map(
-                    trustedPlayer -> trustedPlayer.getUser()
-                            .getUserId()
-            ).collect(Collectors.toSet());
+            List<Tuple<String, String>> trustedUserIds = trustedPlayers.stream().map(
+                    trustedPlayer -> new Tuple(trustedPlayer.getUser()
+                            .getUserId(), trustedPlayer.getUser().getUsername())
+            ).collect(ArrayList::new, List::add, List::addAll);
 
             this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedUserIds));
         } catch (SQLException e) {
@@ -72,7 +75,7 @@ public class IslandManager {
     }
 
     public boolean isPlayerInOwnIsland(Player player, String worldName) {
-        return player.getUniqueId().toString().contains(worldName);
+        return worldName.contains(player.getUniqueId().toString());
     }
 
     public boolean shouldStopIslandInteraction(Player player) {
@@ -94,8 +97,8 @@ public class IslandManager {
             return false;
         }
 
-        for (String trustedPlayerUniqueId : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().toString().equals(trustedPlayerUniqueId)) {
+        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
+            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
                 return false;
             }
         }
@@ -119,8 +122,8 @@ public class IslandManager {
             return true;
         }
 
-        for (String trustedPlayerUniqueId : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().toString().equals(trustedPlayerUniqueId)) {
+        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
+            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
                 return false;
             }
         }
@@ -143,7 +146,7 @@ public class IslandManager {
 
     private IslandRecord findCurrentIslandRecord(String worldName) {
         for (IslandRecord islandRecord : this.islands.values()) {
-            if (islandRecord.owner().toString().contains(worldName)) {
+            if (worldName.contains(islandRecord.owner().toString())) {
                 return islandRecord;
             }
         }
