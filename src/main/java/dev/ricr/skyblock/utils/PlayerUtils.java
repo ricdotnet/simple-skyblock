@@ -69,4 +69,40 @@ public class PlayerUtils {
         File playerFile = new File(plugin.getDataFolder(), playerUniqueId + ".yml");
         return YamlConfiguration.loadConfiguration(playerFile);
     }
+
+    public static void savePlayerConfiguration(FileConfiguration playerConfig, File playerConfigFile) {
+        try {
+            playerConfig.save(playerConfigFile);
+        } catch (Exception e) {
+            logger.severe("Failed to save config: " + e.getMessage());
+        }
+    }
+
+    public static void saveTpLocation(SimpleSkyblock plugin, Player player, Location location) {
+        var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, player.getUniqueId());
+
+        playerConfig.set("tp.x", location.getX());
+        playerConfig.set("tp.y", location.getY());
+        playerConfig.set("tp.z", location.getZ());
+        playerConfig.set("tp.yaw", location.getYaw());
+        playerConfig.set("tp.pitch", location.getPitch());
+
+        var playerConfigFile = new File(plugin.getDataFolder(), String.format("%s.yml", player.getUniqueId()));
+        PlayerUtils.savePlayerConfiguration(playerConfig, playerConfigFile);
+    }
+
+    public static Location getTpLocation(SimpleSkyblock plugin, Player player) {
+        var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, player.getUniqueId());
+
+        double x = NumberUtils.objectToDouble(playerConfig.get("tp.x"));
+        double y = NumberUtils.objectToDouble(playerConfig.get("tp.y"));
+        double z = NumberUtils.objectToDouble(playerConfig.get("tp.z"));
+        float yaw = NumberUtils.objectToFloat(playerConfig.get("tp.yaw"));
+        float pitch = NumberUtils.objectToFloat(playerConfig.get("tp.pitch"));
+
+        // TODO: this is not ideal here
+        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+
+        return new Location(islandWorld, x, y, z, yaw, pitch);
+    }
 }

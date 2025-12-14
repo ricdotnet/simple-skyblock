@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum Buttons {
     IslandPrivacy("island_privacy"),
-    BorderVisibility("border_visibility");
+    IslandAllowNetherTeleport("island_allow_nether_teleport"),
+    IslandShowSeed("island_show_seed");
 
     public final String label;
 

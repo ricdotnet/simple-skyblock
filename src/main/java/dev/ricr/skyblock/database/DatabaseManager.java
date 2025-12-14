@@ -11,20 +11,14 @@ import lombok.Getter;
 import java.io.File;
 import java.sql.SQLException;
 
+@Getter
 public class DatabaseManager {
-    @Getter
-    private Dao<Balance, String> balancesDao;
-    @Getter
+    private Dao<IslandUserTrustLink, String> islandUserTrustLinksDao;
     private Dao<User, String> usersDao;
-    @Getter
     private Dao<Island, String> islandsDao;
-    @Getter
     private Dao<Sale, Integer> salesDao;
-    @Getter
     private Dao<Gamble, Integer> gamblesDao;
-    @Getter
     private Dao<AuctionHouse, Integer> auctionHouseDao;
-    @Getter
     private Dao<AuctionHouseTransaction, Integer> auctionHouseTransactionsDao;
 
     public DatabaseManager(SimpleSkyblock plugin) {
@@ -37,7 +31,7 @@ public class DatabaseManager {
         try {
             ConnectionSource connection = new JdbcConnectionSource(databaseUrl);
 
-            this.balancesDao = DaoManager.createDao(connection, Balance.class);
+            this.islandUserTrustLinksDao = DaoManager.createDao(connection, IslandUserTrustLink.class);
             this.usersDao = DaoManager.createDao(connection, User.class);
             this.islandsDao = DaoManager.createDao(connection, Island.class);
             this.salesDao = DaoManager.createDao(connection, Sale.class);
@@ -45,7 +39,6 @@ public class DatabaseManager {
             this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouse.class);
             this.auctionHouseTransactionsDao = DaoManager.createDao(connection, AuctionHouseTransaction.class);
 
-            TableUtils.createTableIfNotExists(connection, Balance.class);
             TableUtils.createTableIfNotExists(connection, IslandUserTrustLink.class);
             TableUtils.createTableIfNotExists(connection, User.class);
             TableUtils.createTableIfNotExists(connection, Island.class);

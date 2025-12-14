@@ -2,13 +2,13 @@ package dev.ricr.skyblock.listeners;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Balance;
-import dev.ricr.skyblock.database.Island;
 import dev.ricr.skyblock.database.User;
 import dev.ricr.skyblock.generators.IslandGenerator;
-import dev.ricr.skyblock.utils.PlayerUtils;
+import dev.ricr.skyblock.utils.ServerUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,51 +19,33 @@ import java.sql.SQLException;
 public class PlayerJoinListener implements Listener {
 
     private final SimpleSkyblock plugin;
-    private final IslandGenerator islandGenerator;
 
-    public PlayerJoinListener(SimpleSkyblock plugin, IslandGenerator islandGenerator) {
+    public PlayerJoinListener(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.islandGenerator = islandGenerator;
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+        var player = event.getPlayer();
 
-        if (!islandGenerator.hasIsland(player)) {
-            Location islandLocation = islandGenerator.generateIsland(player);
-            Location playerSpawnLocation = islandLocation.clone();
-            playerSpawnLocation.add(2.5, 8, 4.5);
-            playerSpawnLocation.setYaw(180);
-
-            player.getServer()
-                    .getScheduler()
-                    .runTaskLater(
-                            islandGenerator.getPlugin(),
-                            () -> player.teleport(playerSpawnLocation),
-                            20L
-                    );
-
-            player.setRespawnLocation(playerSpawnLocation, true);
-            player.sendMessage("§aWelcome! Your skyblock island has been generated!");
-        } else {
-            Location playerLastLocation = player.getLocation();
-            player.teleport(playerLastLocation);
-
-            player.sendMessage("§aWelcome back!");
+        var isUsingLobbyWorld = this.plugin.serverConfig.getBoolean("lobby", true);
+        if (!isUsingLobbyWorld) {
+            // TODO: implement island creation on join
+            return;
         }
 
-        this.initializeUserTable(player);
-        this.initializeIslandTable(player);
+        var lobbyWorld = ServerUtils.loadOrCreateLobby();
+        player.sendMessage(Component.text("Welcome to SimpleSkyblock!", NamedTextColor.GREEN));
 
-        // Add player to island list
+        this.initializeUserTable(player);
         this.plugin.islandManager.addPlayerIsland(player.getUniqueId());
+
+        // always start in the lobby / spawn world
+        player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
     }
 
     private void initializeUserTable(Player player) {
         Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
-        // get balance to migrate
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
 
         String playerUniqueId = player.getUniqueId()
                 .toString();
@@ -78,83 +60,13 @@ public class PlayerJoinListener implements Listener {
                 return;
             }
 
-            Balance userBalance = balanceDao.queryForId(playerUniqueId);
-
             user = new User();
             user.setUserId(player.getUniqueId()
                     .toString());
             user.setUsername(player.getName());
-
-            if (userBalance == null) {
-                user.setBalance(100.0d);
-            } else {
-                user.setBalance(userBalance.getValue());
-            }
+            user.setBalance(100.0d);
 
             userDao.create(user);
-        } catch (SQLException e) {
-            // ignore for now
-        }
-    }
-
-    private void initializeIslandTable(Player player) {
-        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
-        Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
-
-        FileConfiguration playerConfig = PlayerUtils.getPlayerConfiguration(this.plugin, player.getUniqueId());
-
-        String playerUniqueId = player.getUniqueId()
-                .toString();
-
-        try {
-            User user = userDao.queryForId(playerUniqueId);
-            if (user == null) {
-                return;
-            }
-            Island island = islandsDao.queryForId(user.getUserId());
-            if (island != null) {
-                this.plugin.getLogger()
-                        .info(String.format("Player %s already joined before. Skipping initialization of island " +
-                                        "record.",
-                                player.getName()));
-                return;
-            }
-
-            Double x = (Double) playerConfig.get("x");
-            Double z = (Double) playerConfig.get("z");
-
-            assert x != null;
-            assert z != null;
-
-            island = new Island();
-            island.setId(user.getUserId());
-            island.setUser(user);
-            island.setPositionX(x);
-            island.setPositionZ(z);
-            islandsDao.create(island);
-        } catch (SQLException e) {
-            // ignore for now
-        }
-    }
-
-    @Deprecated(forRemoval = true)
-    private void addInitialBalance(Player player) {
-        Dao<Balance, String> balanceDao = this.plugin.databaseManager.getBalancesDao();
-
-        try {
-            Balance userBalance = balanceDao.queryForId(player.getUniqueId()
-                    .toString());
-
-            if (userBalance == null) {
-                this.plugin.getLogger()
-                        .info("Creating balance for player " + player.getName());
-
-                userBalance = new Balance();
-                userBalance.setUserId(player.getUniqueId()
-                        .toString());
-                userBalance.setValue(100.0d);
-                balanceDao.create(userBalance);
-            }
         } catch (SQLException e) {
             // ignore for now
         }

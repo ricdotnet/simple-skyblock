@@ -29,10 +29,13 @@ dependencies {
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
     implementation("org.projectlombok:lombok:1.18.42")
     annotationProcessor("org.projectlombok:lombok:1.18.42")
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 }
 
 group = "dev.ricr.skyblock"
-version = "0.0.6"
+version = "0.0.7-SNAPSHOT"
 description = "SimpleSkyblock"
 java.sourceCompatibility = JavaVersion.VERSION_21
 
@@ -66,4 +69,8 @@ tasks.withType<JavaCompile>() {
 
 tasks.withType<Javadoc>() {
     options.encoding = "UTF-8"
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
