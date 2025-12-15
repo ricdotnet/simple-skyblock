@@ -2,10 +2,10 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.CustomStructures;
+import dev.ricr.skyblock.enums.SignShopType;
 import dev.ricr.skyblock.gui.*;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
-import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -15,10 +15,13 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -30,6 +33,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
 
 import java.sql.SQLException;
@@ -100,20 +104,27 @@ public class IslandListeners implements Listener {
         Block clickedBlock = event.getClickedBlock();
         Material clickedBlockMaterial = clickedBlock == null ? Material.AIR : clickedBlock.getType();
 
-        if (this.plugin.islandManager.shouldStopIslandInteraction(player) && PROTECTED_BLOCKS.contains(clickedBlockMaterial)) {
+        var shouldStopIslandInteraction = this.plugin.islandManager.shouldStopIslandInteraction(player);
+
+        if (PROTECTED_BLOCKS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {
             player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
             return;
         }
 
-        ItemStack item = event.getItem();
-        if (item == null) {
+        ItemStack itemInHand = event.getItem();
+        if (itemInHand == null) {
             return;
         }
-        Material material = item.getType();
+        Material material = itemInHand.getType();
+
+        if (clickedBlock != null && clickedBlock.getState() instanceof Sign sign) {
+            this.updateSignShop(event, sign, material, event.getAction());
+            return;
+        }
 
         // Precedence to non-restricted interact events
-        if (item.getType() == Material.ENDER_EYE) {
+        if (itemInHand.getType() == Material.ENDER_EYE) {
             Double x = (Double) this.plugin.serverConfig.get("stronghold_location.x");
             Double y = (Double) this.plugin.serverConfig.get("stronghold_location.y");
             Double z = (Double) this.plugin.serverConfig.get("stronghold_location.z");
@@ -147,12 +158,12 @@ public class IslandListeners implements Listener {
                                 .spawnParticle(Particle.END_ROD, projectile.getLocation(), 1, 0, 0, 0, 0);
                     }, 0, 1);
 
-            decreaseItemAmount(player, item);
+            decreaseItemAmount(player, itemInHand);
 
             return;
         }
 
-        if (item.getType() == Material.FIREWORK_ROCKET) {
+        if (itemInHand.getType() == Material.FIREWORK_ROCKET) {
             // ignore fireworks
             return;
         }
@@ -162,18 +173,18 @@ public class IslandListeners implements Listener {
             return;
         }
 
-        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
+        if (shouldStopIslandInteraction) {
             player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
             return;
         }
 
-        if (item.getType() == Material.BUCKET) {
+        if (itemInHand.getType() == Material.BUCKET) {
             if (clickedBlock == null) return;
 
             if (clickedBlock.getType() == Material.OBSIDIAN && event.getAction()
                     .isRightClick()) {
-                decreaseItemAmount(player, item);
+                decreaseItemAmount(player, itemInHand);
                 player.getInventory()
                         .addItem(new ItemStack(Material.LAVA_BUCKET));
                 clickedBlock.setType(Material.AIR);
@@ -294,5 +305,85 @@ public class IslandListeners implements Listener {
             player.getInventory()
                     .remove(item);
         }
+    }
+
+    private void updateSignShop(PlayerInteractEvent event, Sign sign, Material itemInHand, Action actionType) {
+        var signShopTypeString = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_TYPE, PersistentDataType.STRING);
+        if (signShopTypeString == null) return;
+
+        event.setCancelled(true);
+        var signShopType = SignShopType.getByLabel(signShopTypeString);
+
+        var isShopActive = isOutItemSet(sign) && isInItemSet(sign);
+
+        var player = event.getPlayer();
+        var signOwner = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OWNER, PersistentDataType.STRING);
+        if (signOwner == null) return;
+        if (!signOwner.equals(player.getUniqueId().toString())) {
+            if (!isShopActive) {
+                player.sendMessage(Component.text("This sign shop is not active yet", NamedTextColor.RED));
+            }
+            // TODO: handle trade shop
+            return;
+        }
+
+        if (signShopType == SignShopType.Trade) {
+            if (actionType.isLeftClick()) {
+                if (isOutItemSet(sign)) return;
+
+                var shopOutItem = sign.getPersistentDataContainer()
+                        .get(ServerUtils.SIGN_SHOP_OUT_ITEM, PersistentDataType.STRING);
+
+                assert shopOutItem != null;
+                var amount = shopOutItem.split(":")[1];
+                shopOutItem = shopOutItem.replace("{item}", itemInHand.toString());
+
+                sign.getPersistentDataContainer().set(
+                        ServerUtils.SIGN_SHOP_OUT_ITEM,
+                        PersistentDataType.STRING,
+                        shopOutItem
+                );
+
+                var line = Component.text(String.format("%sx %s", amount, itemInHand), NamedTextColor.WHITE);
+
+                sign.getSide(Side.FRONT).line(1, line);
+                sign.update();
+
+            } else if (actionType.isRightClick()) {
+                if (isInItemSet(sign)) return;
+
+                var shopInItem = sign.getPersistentDataContainer()
+                        .get(ServerUtils.SIGN_SHOP_IN_ITEM, PersistentDataType.STRING);
+
+                if (shopInItem == null) return;
+
+                var amount = shopInItem.split(":")[1];
+                shopInItem = shopInItem.replace("{item}", itemInHand.toString());
+
+                sign.getPersistentDataContainer().set(
+                        ServerUtils.SIGN_SHOP_IN_ITEM,
+                        PersistentDataType.STRING,
+                        shopInItem
+                );
+
+                var line = Component.text(String.format("%sx %s", amount, itemInHand), NamedTextColor.WHITE);
+
+                sign.getSide(Side.FRONT).line(2, line);
+                sign.update();
+
+            }
+        }
+    }
+
+    private boolean isOutItemSet(Sign sign) {
+        var signShopOut = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OUT_ITEM, PersistentDataType.STRING);
+
+        return signShopOut != null && !signShopOut.contains("{item}");
+    }
+
+    private boolean isInItemSet(Sign sign) {
+        var signShopIn = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_IN_ITEM, PersistentDataType.STRING);
+
+        return signShopIn == null || !signShopIn.contains("{item}");
     }
 }

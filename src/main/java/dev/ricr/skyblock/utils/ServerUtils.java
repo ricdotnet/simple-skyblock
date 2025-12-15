@@ -52,6 +52,12 @@ public class ServerUtils {
     // custom display entities
     public static TextDisplay END_PORTAL_TEXT_DISPLAY;
 
+    // sign shop
+    public static NamespacedKey SIGN_SHOP_TYPE;
+    public static NamespacedKey SIGN_SHOP_OUT_ITEM;
+    public static NamespacedKey SIGN_SHOP_IN_ITEM;
+    public static NamespacedKey SIGN_SHOP_OWNER;
+
     public static FileConfiguration loadConfig(SimpleSkyblock plugin) {
         File serverConfig = new File(plugin.getDataFolder(), "config.yml");
 
@@ -94,6 +100,10 @@ public class ServerUtils {
     public static void initiateNamespacedKeys(SimpleSkyblock plugin) {
         AUCTION_HOUSE_ITEM_ID = new NamespacedKey(plugin, "auction_house_item");
         GUI_BUTTON_TYPE = new NamespacedKey(plugin, "gui_button_type");
+        SIGN_SHOP_TYPE = new NamespacedKey(plugin, "sign_shop_type");
+        SIGN_SHOP_OUT_ITEM = new NamespacedKey(plugin, "sign_shop_out_item");
+        SIGN_SHOP_IN_ITEM = new NamespacedKey(plugin, "sign_shop_in_item");
+        SIGN_SHOP_OWNER = new NamespacedKey(plugin, "sign_shop_owner");
     }
 
     public static World loadOrCreateLobby() {

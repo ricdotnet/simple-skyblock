@@ -96,6 +96,8 @@ public class PlayerUtils {
     }
 
     public static boolean isPlayerInOwnIsland(Player player, String worldName) {
+        // TODO: if we ever add friends or island colaborators we can also check here
+
         return worldName.contains(player.getUniqueId().toString());
     }
 
