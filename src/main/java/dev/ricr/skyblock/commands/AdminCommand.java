@@ -90,8 +90,7 @@ public class AdminCommand implements ICommand {
         var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(targetPlayerRecord);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
-        targetPlayer.sendMessage(Component.text(String.format("An admin sent you %s%s",
-                        ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount)),
+        targetPlayer.sendMessage(Component.text(String.format("An admin sent you %s", ServerUtils.formatMoneyValue(amount)),
                 NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;

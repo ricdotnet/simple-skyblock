@@ -16,7 +16,7 @@ public class IslandEntity {
     @DatabaseField(id = true)
     private String id; // the UUID of the player
 
-    @DatabaseField(foreign = true, canBeNull = false)
+    @DatabaseField(foreign = true, foreignAutoRefresh = true, canBeNull = false)
     private PlayerEntity player;
 
     @DatabaseField

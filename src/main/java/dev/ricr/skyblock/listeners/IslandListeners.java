@@ -36,7 +36,6 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.Set;
 
-@AllArgsConstructor
 public class IslandListeners implements Listener {
     private final SimpleSkyblock plugin;
 
@@ -68,6 +67,11 @@ public class IslandListeners implements Listener {
             Material.WARPED_BUTTON,
             Material.LEVER
     );
+
+    public IslandListeners(SimpleSkyblock plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {

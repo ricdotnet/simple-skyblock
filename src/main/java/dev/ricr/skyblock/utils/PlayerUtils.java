@@ -41,18 +41,6 @@ public class PlayerUtils {
         return head;
     }
 
-    public static Location getPlayerIslandLocation(SimpleSkyblock plugin, Player player) {
-        UUID playerUniqueId = player.getUniqueId();
-
-        File playerFile = new File(plugin.getDataFolder(), playerUniqueId + ".yml");
-        FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-
-        return new Location(plugin.getServer()
-                .getWorld(Objects.requireNonNull(config.getString("world"))), config.getDouble("x"),
-                config.getDouble("y"), config.getDouble(
-                "z"));
-    }
-
     public static int getAllItemsInInventoryOfItem(Player player, Material item) {
         return Arrays.stream(player.getInventory()
                         .getContents())
@@ -104,5 +92,9 @@ public class PlayerUtils {
         var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
 
         return new Location(islandWorld, x, y, z, yaw, pitch);
+    }
+
+    public static boolean isPlayerInOwnIsland(Player player, String worldName) {
+        return worldName.contains(player.getUniqueId().toString());
     }
 }

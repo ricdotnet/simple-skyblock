@@ -85,7 +85,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var seedButton = new ItemStack(Material.FILLED_MAP);
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
 
-        this.setItemMeta(seedButton, String.format("Show seed: %s%s", ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
+        this.setItemMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
         this.inventory.setItem(12, seedButton);
     }
 

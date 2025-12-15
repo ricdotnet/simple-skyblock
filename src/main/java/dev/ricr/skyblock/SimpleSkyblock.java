@@ -15,8 +15,7 @@ import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.listeners.ChatListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
-import dev.ricr.skyblock.listeners.PlayerJoinListener;
-import dev.ricr.skyblock.listeners.PlayerRespawnListener;
+import dev.ricr.skyblock.listeners.PlayerListeners;
 import dev.ricr.skyblock.listeners.ServerLoadListener;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
@@ -62,19 +61,12 @@ public class SimpleSkyblock extends JavaPlugin {
         // Instantiate the island generator
         this.islandGenerator = new IslandGenerator(this);
 
-        // TODO: refactor a bit more
-        this.getServer().getPluginManager()
-                .registerEvents(new ServerLoadListener(this), this);
-        this.getServer().getPluginManager()
-                .registerEvents(new ChatListener(), this);
-        this.getServer().getPluginManager()
-                .registerEvents(new PlayerJoinListener(this), this);
-        this.getServer().getPluginManager()
-                .registerEvents(new InventoryClickListener(this), this);
-        this.getServer().getPluginManager()
-                .registerEvents(new PlayerRespawnListener(this), this);
-        this.getServer().getPluginManager()
-                .registerEvents(new IslandListeners(this), this);
+        // Register listeners
+        new ServerLoadListener(this);
+        new ChatListener(this);
+        new PlayerListeners(this);
+        new InventoryClickListener(this);
+        new IslandListeners(this);
 
         // Register commands
         new AdminCommand(this).register();

@@ -67,8 +67,10 @@ public class GambleCommand implements ICommand {
         var amount = ctx.getArgument("amount", Double.class);
 
         if (gambleSessions.containsKey(player.getUniqueId())) {
-            player.sendMessage(Component.text(String.format("You already have an ongoing gamble session. Type /gamble %s to join",
-                    player.getName()), NamedTextColor.GREEN));
+            player.sendMessage(Component.text("You already have an ongoing gamble session", NamedTextColor.GREEN)
+                    .appendNewline()
+                    .append(Component.text(String.format("Type /gamble join %s to see who joined", player.getName()), NamedTextColor.GREEN))
+            );
             return Command.SINGLE_SUCCESS;
         }
 
@@ -79,8 +81,8 @@ public class GambleCommand implements ICommand {
         }
 
         if (hostPlayer.getBalance() < amount) {
-            player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble for %s%s",
-                    ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
+            player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble for %s",
+                    ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }
 
@@ -90,8 +92,8 @@ public class GambleCommand implements ICommand {
         player.openInventory(gambleSession.getInventory());
         var globalMessage = Component.text(String.format("%s", player.getName()), NamedTextColor.GOLD)
                 .appendSpace()
-                .append(Component.text(String.format("started a gamble session with %s%s bets.",
-                                ServerUtils.COIN_SYMBOL, amount),
+                .append(Component.text(String.format("started a gamble session with %s bets.",
+                                ServerUtils.formatMoneyValue(amount)),
                         NamedTextColor.GREEN))
                 .appendNewline()
                 .append(Component.text("Type /gamble join <name> to join.", NamedTextColor.GREEN))
@@ -145,8 +147,7 @@ public class GambleCommand implements ICommand {
                 var playerEntity = this.plugin.databaseManager.getPlayersDao().queryForId(player.getUniqueId().toString());
 
                 if (playerEntity.getBalance() < gambleSessionGUI.getOriginalAmount()) {
-                    player.sendMessage(Component.text(String.format("You cannot join a gamble session with less than %s%s",
-                                    ServerUtils.COIN_SYMBOL,
+                    player.sendMessage(Component.text(String.format("You cannot join a gamble session with less than %s",
                                     ServerUtils.formatMoneyValue(gambleSessionGUI.getOriginalAmount())),
                             NamedTextColor.RED));
                     return Command.SINGLE_SUCCESS;

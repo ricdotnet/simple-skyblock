@@ -119,7 +119,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
         if (price == -1) {
             return "Not available";
         } else {
-            return String.format("%s%s", ServerUtils.COIN_SYMBOL, price);
+            return String.format("%s", ServerUtils.formatMoneyValue(price));
         }
     }
 }

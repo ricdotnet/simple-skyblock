@@ -69,11 +69,11 @@ public class PayCommand implements CommandExecutor {
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSender);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateTarget);
 
-        player.sendMessage(Component.text(String.format("Paid %s%s to %s", ServerUtils.COIN_SYMBOL,
+        player.sendMessage(Component.text(String.format("Paid %s to %s",
                 ServerUtils.formatMoneyValue(amount),
                 targetPlayerName), NamedTextColor.GREEN));
-        targetPlayer.sendMessage(Component.text(String.format("You received %s%s from %s",
-                        ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount), player.getName()),
+        targetPlayer.sendMessage(Component.text(String.format("You received %s from %s",
+                        ServerUtils.formatMoneyValue(amount), player.getName()),
                 NamedTextColor.GREEN));
 
         return true;

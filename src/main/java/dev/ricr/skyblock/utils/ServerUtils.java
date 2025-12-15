@@ -77,8 +77,8 @@ public class ServerUtils {
                 .serialize(component);
     }
 
-    public static double formatMoneyValue(double value) {
-        return Math.round(value * 100.00) / 100.00;
+    public static String formatMoneyValue(double value) {
+        return String.format("%s%s", ServerUtils.COIN_SYMBOL, Math.round(value * 100.00) / 100.00);
     }
 
     public static String base64FromBytes(byte[] bytes) {

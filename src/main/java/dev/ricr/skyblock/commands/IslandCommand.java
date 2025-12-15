@@ -138,7 +138,6 @@ public class IslandCommand implements ICommand {
             newIslandWorld.save();
 
             var newLocation = this.plugin.islandGenerator.generateIsland(newIslandWorld, player);
-            this.createIslandDatabaseRecord(player, seed);
 
             newLocation.setY(64);
             newLocation.setX(0.5);
@@ -148,14 +147,13 @@ public class IslandCommand implements ICommand {
             PlayerUtils.saveTpLocation(this.plugin, player, newLocation);
             newIslandWorld.setSpawnLocation(newLocation);
 
-            player.teleport(newLocation);
-            player.sendMessage(Component.text("Welcome to your new island", NamedTextColor.GREEN));
+            this.createIslandDatabaseRecord(player, seed, newLocation);
         }
 
         return Command.SINGLE_SUCCESS;
     }
 
-    private void createIslandDatabaseRecord(Player player, long seed) {
+    private void createIslandDatabaseRecord(Player player, long seed, Location newLocation) {
         var playerUniqueId = player.getUniqueId().toString();
 
         try {
@@ -180,7 +178,22 @@ public class IslandCommand implements ICommand {
             island.setPositionX(0.0d);
             island.setPositionZ(0.0d);
 
-            this.islandsDao.create(island);
+            IslandEntity finalIsland = island;
+            Bukkit.getAsyncScheduler().runNow(this.plugin, (task) -> {
+                try {
+                    this.islandsDao.create(finalIsland);
+                } catch (SQLException e) {
+                    // ignore for now
+                    this.plugin.getLogger().severe(String.format("Unable to create island database record for player %s", player.getName()));
+                    task.cancel();
+                    return;
+                }
+
+                Bukkit.getScheduler().runTask(this.plugin, () -> {
+                    player.teleport(newLocation);
+                    player.sendMessage(Component.text("Welcome to your new island", NamedTextColor.GREEN));
+                });
+            });
         } catch (SQLException e) {
             // ignore for now
         }

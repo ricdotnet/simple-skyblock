@@ -80,8 +80,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 ItemStack sellAll = new ItemStack(Material.TNT, 1);
                 ItemMeta sellAllItemMeta = sellAll.getItemMeta();
                 sellAllItemMeta.displayName(Component.text("Sell all " + item.name()));
-                sellAllItemMeta.lore(List.of(Component.text(String.format("Total: %s%s", ServerUtils.COIN_SYMBOL,
-                        pricePair.sellPrice() * totalInPlayerInventory))));
+                sellAllItemMeta.lore(List.of(Component.text(String.format("Total: %s",
+                        ServerUtils.formatMoneyValue(pricePair.sellPrice() * totalInPlayerInventory)))));
                 sellAll.setItemMeta(sellAllItemMeta);
 
                 inventory.setItem(15, sellSingle);
@@ -133,8 +133,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     Component.empty(),
                     Component.text()
                             .content("Price: ")
-                            .append(Component.text(String.format("%s%s",
-                                            ServerUtils.COIN_SYMBOL,
+                            .append(Component.text(String.format("%s",
                                             ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())),
                                     NamedTextColor.GOLD))
                             .build()
@@ -224,10 +223,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 player.getInventory()
                         .addItem(itemToGive);
 
-                player.sendMessage(Component.text(String.format("Bought %s %s from %s for %s%s",
+                player.sendMessage(Component.text(String.format("Bought %s %s from %s for %s",
                         itemToGive.getAmount(),
                         ServerUtils.getTextFromComponent(actionableItem.displayName()),
-                        auctionHouseItem.getOwnerName(), ServerUtils.COIN_SYMBOL,
+                        auctionHouseItem.getOwnerName(),
                         ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())), NamedTextColor.GREEN));
                 this.sendMessageToSeller(auctionHouseItem.getPlayer()
                                 .getPlayerId(), player,
@@ -335,8 +334,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 player.getInventory()
                         .addItem(new ItemStack(material, itemAmount));
 
-                player.sendMessage(Component.text(String.format("You bought %s %s for %s%s", itemAmount,
-                        ServerUtils.getTextFromComponent(actionableItem.displayName()), ServerUtils.COIN_SYMBOL,
+                player.sendMessage(Component.text(String.format("You bought %s %s for %s", itemAmount,
+                        ServerUtils.getTextFromComponent(actionableItem.displayName()),
                         ServerUtils.formatMoneyValue(totalPrice)), NamedTextColor.GREEN));
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
             } else {
@@ -364,8 +363,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     .removeItem(new ItemStack(material, itemAmount));
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
 
-            player.sendMessage(Component.text(String.format("You sold %s %s for %s%s", itemAmount,
-                    ServerUtils.getTextFromComponent(actionableItem.displayName()), ServerUtils.COIN_SYMBOL,
+            player.sendMessage(Component.text(String.format("You sold %s %s for %s", itemAmount,
+                    ServerUtils.getTextFromComponent(actionableItem.displayName()),
                     ServerUtils.formatMoneyValue(totalPrice)), NamedTextColor.GREEN));
         }
 
@@ -382,10 +381,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.plugin.databaseChangesAccumulator.add(saleRecordAdd);
 
         plugin.getLogger()
-                .info(String.format("Created sale entry costs %s%s for %s", ServerUtils.COIN_SYMBOL, totalPrice,
+                .info(String.format("Created sale entry costs %s for %s", ServerUtils.formatMoneyValue(totalPrice),
                         player.getName()));
 
-        player.sendMessage(Component.text(String.format("Your balance is now %s%s", ServerUtils.COIN_SYMBOL,
+        player.sendMessage(Component.text(String.format("Your balance is now %s",
                 ServerUtils.formatMoneyValue(finalBalance)), NamedTextColor.GOLD));
     }
 
@@ -396,7 +395,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         if (meta != null) {
             meta.displayName(Component.text(transactionType + " " + material.name()));
-            meta.lore(List.of(Component.text(String.format("Total: %s%s", ServerUtils.COIN_SYMBOL, price * stackSize))));
+            meta.lore(List.of(Component.text(String.format("Total: %s", ServerUtils.formatMoneyValue(price * stackSize)))));
             meta.itemName(Component.text(transactionType.name()));
             itemStack.setItemMeta(meta);
         }
@@ -409,8 +408,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 .getPlayer(UUID.fromString(sellerId));
 
         if (seller != null) {
-            seller.sendMessage(Component.text(String.format("%s bought your %s from the action house for %s%s",
-                            buyer.getName(), itemName, ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(price)),
+            seller.sendMessage(Component.text(String.format("%s bought your %s from the action house for %s",
+                            buyer.getName(), itemName, ServerUtils.formatMoneyValue(price)),
                     NamedTextColor.GOLD));
             seller.playSound(seller.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
         }

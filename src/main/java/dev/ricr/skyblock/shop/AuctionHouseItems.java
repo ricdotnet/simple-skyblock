@@ -99,9 +99,7 @@ public class AuctionHouseItems {
                 Component.empty(),
                 Component.text()
                         .content("Price: ")
-                        .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
-                                        ServerUtils.formatMoneyValue(price)),
-                                NamedTextColor.GOLD))
+                        .append(Component.text(String.format("%s", ServerUtils.formatMoneyValue(price)), NamedTextColor.GOLD))
                         .build()
         ));
 

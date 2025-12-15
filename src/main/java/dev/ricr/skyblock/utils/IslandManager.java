@@ -74,14 +74,12 @@ public class IslandManager {
         }
     }
 
-    public boolean isPlayerInOwnIsland(Player player, String worldName) {
-        return worldName.contains(player.getUniqueId().toString());
-    }
+
 
     public boolean shouldStopIslandInteraction(Player player) {
         var world = player.getWorld();
 
-        if (isOpOverride(player) || this.isPlayerInOwnIsland(player, world.getName())) {
+        if (isOpOverride(player) || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 
@@ -103,13 +101,13 @@ public class IslandManager {
             }
         }
 
-        return !this.isPlayerInOwnIsland(player, world.getName());
+        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
     }
 
     public boolean shouldStopNetherTeleport(Player player) {
         var world = player.getWorld();
 
-        if (isOpOverride(player) || this.isPlayerInOwnIsland(player, world.getName())) {
+        if (isOpOverride(player) || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 
@@ -137,7 +135,7 @@ public class IslandManager {
             // ignore for now
         }
 
-        return !this.isPlayerInOwnIsland(player, world.getName());
+        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
     }
 
     private boolean isOpOverride(Player player) {

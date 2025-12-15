@@ -7,9 +7,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 
-@AllArgsConstructor
 public class ServerLoadListener implements Listener {
     private final SimpleSkyblock plugin;
+
+    public ServerLoadListener(SimpleSkyblock plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
 
     @EventHandler
     public void onServerLoad(ServerLoadEvent event) {

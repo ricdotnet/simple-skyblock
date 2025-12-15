@@ -82,19 +82,19 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     lore.add(Component.empty());
                     lore.add(Component.text()
                             .content("Balance: ")
-                            .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                            .append(Component.text(String.format("%s",
                                             ServerUtils.formatMoneyValue(playerEntity.getBalance())),
                                     NamedTextColor.GOLD))
                             .build());
                     lore.add(Component.text()
                             .content("Bought: ")
-                            .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                            .append(Component.text(String.format("%s",
                                             ServerUtils.formatMoneyValue(totalBought)),
                                     NamedTextColor.GREEN))
                             .build());
                     lore.add(Component.text()
                             .content("Sold: ")
-                            .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                            .append(Component.text(String.format("%s",
                                             ServerUtils.formatMoneyValue(totalSold)),
                                     NamedTextColor.BLUE))
                             .build());
@@ -112,19 +112,19 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 lore.add(Component.empty());
                 lore.add(Component.text()
                         .content("Total balances: ")
-                        .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                        .append(Component.text(String.format("%s",
                                         ServerUtils.formatMoneyValue(totalEconomyValue)),
                                 NamedTextColor.GOLD))
                         .build());
                 lore.add(Component.text()
                         .content("Total bought: ")
-                        .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                        .append(Component.text(String.format("%s",
                                         ServerUtils.formatMoneyValue(totalServerBought)),
                                 NamedTextColor.GREEN))
                         .build());
                 lore.add(Component.text()
                         .content("Total sold: ")
-                        .append(Component.text(String.format("%s%s", ServerUtils.COIN_SYMBOL,
+                        .append(Component.text(String.format("%s",
                                         ServerUtils.formatMoneyValue(totalServerSold)),
                                 NamedTextColor.BLUE))
                         .build());

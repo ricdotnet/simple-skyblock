@@ -21,8 +21,12 @@ public class BalanceCommand implements CommandExecutor {
 
         var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
-        player.sendMessage(Component.text(String.format("Your balance is: %s%s", ServerUtils.COIN_SYMBOL,
-                ServerUtils.formatMoneyValue(playerRecord.getBalance())), NamedTextColor.GOLD));
+        player.sendMessage(Component.text("Your balance is:", NamedTextColor.GREEN)
+                .appendSpace()
+                .append(
+                        Component.text(String.format("%s", ServerUtils.formatMoneyValue(playerRecord.getBalance())),
+                                NamedTextColor.GOLD))
+        );
 
         return true;
     }

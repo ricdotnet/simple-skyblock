@@ -47,8 +47,8 @@ public class GambleSessionGUI implements InventoryHolder {
         this.inventory = Bukkit.createInventory(this, 27, Component.text(String.format("Gamble session - %s",
                 this.host.getName())));
 
-        this.bossBar = Bukkit.createBossBar(String.format("Gamble end in %ss - Money pool: %s%s",
-                        this.countdownClock.get(), ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(this.amount)),
+        this.bossBar = Bukkit.createBossBar(String.format("Gamble end in %ss - Money pool: %s",
+                        this.countdownClock.get(), ServerUtils.formatMoneyValue(this.amount)),
                 BarColor.GREEN, BarStyle.SOLID);
         this.bossBar.setProgress(1.0);
         this.bossBar.setVisible(true);
@@ -139,8 +139,8 @@ public class GambleSessionGUI implements InventoryHolder {
     }
 
     public void updateCountdownClock(int seconds) {
-        this.bossBar.setTitle(String.format("Gamble end in %ss - Money pool: %s%s",
-                seconds, ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(this.amount)));
+        this.bossBar.setTitle(String.format("Gamble end in %ss - Money pool: %s",
+                seconds, ServerUtils.formatMoneyValue(this.amount)));
         this.bossBar.setProgress(1.0 - seconds / (double) ServerUtils.GAMBLE_COUNTDOWN);
     }
 
