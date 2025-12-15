@@ -37,12 +37,10 @@ public class AdminCommand implements ICommand {
                 .then(Commands.literal("opOverride").executes(this::opOverride))
                 .then(Commands.literal("reloadShop").executes(this::reloadShop))
                 .then(Commands.literal("giveMoney")
-                        .then(
-                                Commands.argument("player", ArgumentTypes.player())
-                                        .then(
-                                                Commands.argument("amount", DoubleArgumentType.doubleArg())
-                                                        .executes(this::giveMoney)
-                                        )
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
+                                        .executes(this::giveMoney)
+                                )
                         )
                 )
                 .build();

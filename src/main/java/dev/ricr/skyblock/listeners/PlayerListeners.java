@@ -5,6 +5,7 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -86,9 +87,11 @@ public class PlayerListeners implements Listener {
         }
 
         IslandEntity playerIsland = null;
-        var playerUniqueId = player.getUniqueId().toString();
+        var islandId = world.getName()
+                .replace("islands/", "")
+                .replace("nether_", "");
         try {
-            playerIsland = this.plugin.databaseManager.getIslandsDao().queryForId(playerUniqueId);
+            playerIsland = this.plugin.databaseManager.getIslandsDao().queryForId(islandId);
         } catch (SQLException e) {
             // ignore for now
         }
@@ -103,7 +106,7 @@ public class PlayerListeners implements Listener {
                 .appendSpace()
                 .append(Component.text("=-", NamedTextColor.GREEN));
 
-        player.sendTitlePart(TitlePart.SUBTITLE, message);
+        PlayerUtils.showTitleMessage(this.plugin, player, message, 20L);
     }
 
     private void createPlayerEntity(Player player) {

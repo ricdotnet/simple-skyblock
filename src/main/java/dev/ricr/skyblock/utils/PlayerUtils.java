@@ -2,6 +2,7 @@ package dev.ricr.skyblock.utils;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -96,5 +97,13 @@ public class PlayerUtils {
 
     public static boolean isPlayerInOwnIsland(Player player, String worldName) {
         return worldName.contains(player.getUniqueId().toString());
+    }
+
+    public static void showTitleMessage(SimpleSkyblock plugin, Player player, Component message) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendTitlePart(TitlePart.TITLE, message), 0L);
+    }
+
+    public static void showTitleMessage(SimpleSkyblock plugin, Player player, Component message, Long delay) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendTitlePart(TitlePart.TITLE, message), delay);
     }
 }

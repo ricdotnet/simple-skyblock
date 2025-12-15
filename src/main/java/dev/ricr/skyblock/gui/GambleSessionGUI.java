@@ -5,6 +5,7 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.GambleEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.GambleType;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -93,7 +94,10 @@ public class GambleSessionGUI implements InventoryHolder {
             var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
             if (player.getUniqueId() == winner.getUniqueId()) {
-                player.sendMessage(Component.text("You won the gamble!", NamedTextColor.GREEN));
+                var message = Component.text("You won the gamble!", NamedTextColor.GREEN);
+
+                player.sendMessage(message);
+                PlayerUtils.showTitleMessage(this.plugin, player, message);
 
                 gamble.setPlayer(playerRecord);
                 gamble.setAmount(this.amount);
@@ -103,7 +107,10 @@ public class GambleSessionGUI implements InventoryHolder {
 
                 player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1f, 1f);
             } else {
-                player.sendMessage(Component.text("You lost the gamble \uD83E\uDD40", NamedTextColor.RED));
+                var message = Component.text("You lost the gamble \uD83E\uDD40", NamedTextColor.RED);
+
+                player.sendMessage(message);
+                PlayerUtils.showTitleMessage(this.plugin, player, message);
                 player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()),
                         NamedTextColor.DARK_RED));
 

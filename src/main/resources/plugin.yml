@@ -15,9 +15,6 @@ commands:
     description: Get your economy balance
     usage: /balance
     aliases: [ bal ]
-  pay:
-    description: Pay or give money to another player
-    usage: /pay
   shop:
     description: Open the shop GUI
     usage: /shop
@@ -36,9 +33,6 @@ permissions:
     default: true
   balance:
     description: Allows players to check their economy balance
-    default: true
-  pay:
-    description: Allows players to pay other players
     default: true
   shop:
     description: Allows players to open the shop GUI

@@ -72,6 +72,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new AdminCommand(this).register();
         new IslandCommand(this).register();
         new GambleCommand(this).register();
+        new PayCommand(this).register();
 
         Objects.requireNonNull(this.getCommand("lobby"))
                 .setExecutor(new LobbyCommand(this));
@@ -83,8 +84,6 @@ public class SimpleSkyblock extends JavaPlugin {
                 .setExecutor(new LeaderboardCommand(this));
 
         // TODO: refactor into command tree
-        Objects.requireNonNull(this.getCommand("pay"))
-                .setExecutor(new PayCommand(this));
         Objects.requireNonNull(this.getCommand("auctionhouse"))
                 .setExecutor(new AuctionHouseCommand(this));
 

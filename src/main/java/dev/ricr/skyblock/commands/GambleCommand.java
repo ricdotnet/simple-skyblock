@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.gui.GambleSessionGUI;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -176,6 +177,13 @@ public class GambleCommand implements ICommand {
                 .runAtFixedRate(plugin, (task) -> {
                     long remaining = gambleSession.getCountdownClock()
                             .decrementAndGet();
+
+                    if (remaining > 0 && remaining <= 3) {
+                        for (Player player : gambleSession.getPlayers()) {
+                            var message = Component.text(String.format("Gamble ends in: %s", remaining), NamedTextColor.RED);
+                            PlayerUtils.showTitleMessage(plugin, player, message);
+                        }
+                    }
 
                     if (remaining <= 0) {
                         task.cancel();

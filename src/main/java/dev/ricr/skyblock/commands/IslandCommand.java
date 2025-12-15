@@ -70,15 +70,15 @@ public class IslandCommand implements ICommand {
                         .executes(this::teleportPlayerToOwnIsland)
                         .then(Commands.literal("set").executes(this::setIslandTeleportPosition))
                 )
-                .then(Commands.literal("expand").then(
-                                Commands.argument("blocks", IntegerArgumentType.integer(1, 10))
-                                        .executes(this::expandIsland)
+                .then(Commands.literal("expand")
+                        .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 10))
+                                .executes(this::expandIsland)
                         )
                 )
                 .then(Commands.literal("kick").executes(this::kickPlayersFromIsland))
-                .then(Commands.literal("trust").then(
-                                Commands.argument("player", ArgumentTypes.player())
-                                        .executes(this::trustPlayerToOwnIsland)
+                .then(Commands.literal("trust")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .executes(this::trustPlayerToOwnIsland)
                         )
                 )
                 .then(Commands.literal("untrust").then(
@@ -86,9 +86,9 @@ public class IslandCommand implements ICommand {
                                 .suggests(this::getTrustedPlayersList)
                                 .executes(this::untrustPlayerToOwnIsland)
                 ))
-                .then(Commands.literal("visit").then(
-                                Commands.argument("player", ArgumentTypes.player())
-                                        .executes(this::visitPlayerIsland)
+                .then(Commands.literal("visit")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .executes(this::visitPlayerIsland)
                         )
                 )
                 .build();
@@ -411,8 +411,8 @@ public class IslandCommand implements ICommand {
         }
 
         var base = Component.text(String.format("%s", senderName), NamedTextColor.GOLD);
-        var reason = Component.text("wants to visit your island,", NamedTextColor.GREEN);
-        var clickable = Component.text("click here to accept", NamedTextColor.AQUA)
+        var reason = Component.text("wants to visit your island.", NamedTextColor.GREEN);
+        var clickable = Component.text("Click here to accept", NamedTextColor.AQUA)
                 .clickEvent(ClickEvent.callback(audience -> {
                     var locationToTp = PlayerUtils.getTpLocation(plugin, targetPlayer);
                     player.teleport(locationToTp);

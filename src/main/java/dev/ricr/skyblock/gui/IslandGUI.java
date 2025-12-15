@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 
 public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
@@ -82,11 +83,18 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var isIslandAllowNetherTeleport = playerIsland.isAllowNetherTeleport();
         this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Disable Nether teleport", "Allow Nether teleport");
 
+        var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
+        var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
+        var expansionSize = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getExpansionSize();
+        var totalSize = (defaultSize + expansionSize) * 2;
+        this.setItemMeta(islandSizeIcon, String.format("Island size: %sx%s", totalSize, totalSize), null);
+
         var seedButton = new ItemStack(Material.FILLED_MAP);
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
+        this.inventory.setItem(12, islandSizeIcon);
 
         this.setItemMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
-        this.inventory.setItem(12, seedButton);
+        this.inventory.setItem(13, seedButton);
     }
 
     private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons label, String nameOn, String nameOff) {
@@ -103,12 +111,16 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.inventory.setItem(inventoryPosition, booleanButton);
     }
 
-    private void setItemMeta(ItemStack item, String name, Buttons buttonType) {
+    private void setItemMeta(ItemStack item, String name, @Nullable Buttons buttonType) {
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text(name));
-        meta.getPersistentDataContainer()
-                .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING,
-                        buttonType.getLabel());
+
+        if (buttonType != null) {
+            meta.getPersistentDataContainer()
+                    .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING,
+                            buttonType.getLabel());
+        }
+
         item.setItemMeta(meta);
     }
 
