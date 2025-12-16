@@ -14,6 +14,7 @@ import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
@@ -149,14 +150,14 @@ public class ServerUtils {
 
     public static void setEndPortalTextDisplay(SimpleSkyblock plugin) {
         var lobbyWorld = ServerUtils.loadOrCreateLobby();
-        var textDisplayLocation = new Location(lobbyWorld, 0, 69, -25);
+        var textDisplayLocation = new Location(lobbyWorld, 0.5, 67.5, -9.5);
 
         var theEndPortalPrice = plugin.serverConfig.getDouble("end_portal_price", 100000);
         var message = Component.text("To jump in", NamedTextColor.GREEN)
                 .appendSpace()
                 .append(Component.text("The End", NamedTextColor.DARK_PURPLE))
                 .appendSpace()
-                .append(Component.text(String.format("you need %s%s", ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(theEndPortalPrice)), NamedTextColor.GREEN));
+                .append(Component.text(String.format("you need %s", ServerUtils.formatMoneyValue(theEndPortalPrice)), NamedTextColor.GREEN));
 
         var textDisplay = lobbyWorld.spawn(textDisplayLocation, TextDisplay.class, entity -> {
             entity.text(message);
@@ -170,7 +171,7 @@ public class ServerUtils {
                 new Transformation(
                         new Vector3f(0, 0, 0),           // translation
                         new AxisAngle4f(0, 0, 0, 1),     // left rotation
-                        new Vector3f(2.5f, 2.5f, 2.5f),  // scale (THIS controls size)
+                        new Vector3f(1.5f, 1.5f, 1.5f),  // scale (THIS controls size)
                         new AxisAngle4f(0, 0, 0, 1)      // right rotation
                 )
         );
@@ -182,9 +183,7 @@ public class ServerUtils {
         plugin.getServer().getLogger().info("Cleaning up end portal text displays...");
 
         // TODO: refactor later with a list of text displays with ephemeral and dynamic displays if needed
-        plugin.getServer().getWorlds().forEach(world -> {
-            world.getEntitiesByClass(TextDisplay.class).forEach(Display::remove);
-        });
+        plugin.getServer().getWorlds().forEach(world -> world.getEntitiesByClass(TextDisplay.class).forEach(Display::remove));
     }
 
     public static Player resolvePlayerFromCommandArgument(CommandSender sender, CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -223,5 +222,15 @@ public class ServerUtils {
         }
 
         return lines;
+    }
+
+    public static ArmorStand armorStandText(World world, Location textDisplayLocation, Component message) {
+        return world.spawn(textDisplayLocation, ArmorStand.class, stand -> {
+            stand.setMarker(true);
+            stand.setInvisible(true);
+            stand.setGravity(false);
+            stand.setCustomNameVisible(true);
+            stand.customName(message);
+        });
     }
 }

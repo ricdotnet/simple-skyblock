@@ -23,9 +23,12 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -127,6 +130,14 @@ public class PlayerListeners implements Listener {
 
         var shouldStopIslandInteraction = this.plugin.islandManager.shouldStopIslandInteraction(player);
 
+        if (event.getAction() == Action.PHYSICAL) {
+            if (shouldStopIslandInteraction) {
+                event.setCancelled(true);
+                player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            }
+            return;
+        }
+
         if (IslandProtectedBlocks.BLOCKS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {
             player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
@@ -227,6 +238,19 @@ public class PlayerListeners implements Listener {
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onCommand(PlayerCommandPreprocessEvent event) {
+        String message = event.getMessage();
+        Player player = event.getPlayer();
+
+        if (message.equalsIgnoreCase("/seed") || message.contains("/locate")) {
+            event.setCancelled(true);
+            player.sendMessage(
+                    Component.text("You are not allowed to use this command", NamedTextColor.RED)
+            );
         }
     }
 
