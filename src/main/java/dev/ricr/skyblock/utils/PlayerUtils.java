@@ -115,6 +115,8 @@ public class PlayerUtils {
     }
 
     public static boolean hasSpaceInInventory(Player player, Integer amount) {
-        return player.getInventory().all(Material.AIR).size() >= amount;
+        return Arrays.stream(player.getInventory().getContents())
+                .filter(Objects::isNull)
+                .count() >= amount;
     }
 }

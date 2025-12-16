@@ -133,12 +133,6 @@ public class PlayerListeners implements Listener {
             return;
         }
 
-        ItemStack itemInHand = event.getItem();
-        if (itemInHand == null) {
-            return;
-        }
-        Material material = itemInHand.getType();
-
         if (clickedBlock != null && clickedBlock.getState() instanceof Sign sign) {
             var signShopTypeString = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_TYPE, PersistentDataType.STRING);
             if (signShopTypeString == null) {
@@ -148,6 +142,12 @@ public class PlayerListeners implements Listener {
             new SignShop(this.plugin, event, sign, SignShopType.getByLabel(signShopTypeString));
             return;
         }
+
+        ItemStack itemInHand = event.getItem();
+        if (itemInHand == null) {
+            return;
+        }
+        Material material = itemInHand.getType();
 
         // Precedence to non-restricted interact events
         if (itemInHand.getType() == Material.ENDER_EYE) {

@@ -49,9 +49,9 @@ public class SignShop {
         this.signShopType = signShopType;
 
         if (this.signShopType == SignShopType.Trade) {
-            this.handleActivateSignTradeShop();
+            this.handleSignTradeShop();
         } else if (this.signShopType == SignShopType.Shop) {
-            this.handleSignShopTransaction();
+            // shop is still not available
         }
     }
 
@@ -64,54 +64,7 @@ public class SignShop {
         this.handleSignShopCreation();
     }
 
-    private void handleSignShopTransaction() {
-        var attachedBlock = this.getAttachedChestBlock((WallSign) this.sign.getBlockData(), this.sign.getBlock());
-        if (!(attachedBlock instanceof Chest chestBlock)) return;
-
-        ItemStack itemToTradeIn = null;
-
-        if (this.actionType.isRightClick()) {
-            var itemToTradeOutTuple = this.getItemToTradeOut();
-            var materialToTradeOut = itemToTradeOutTuple.getFirst();
-            var amountToTradeOut = itemToTradeOutTuple.getSecond();
-
-            if (!chestBlock.getInventory().contains(materialToTradeOut, amountToTradeOut)) {
-                this.player.sendMessage(Component.text("There is not enough inventory", NamedTextColor.RED));
-                return;
-            }
-
-            if (PlayerUtils.isInventoryFull(this.player) || !PlayerUtils.hasSpaceInInventory(this.player, amountToTradeOut)) {
-                this.player.sendMessage(Component.text("You have no space in your inventory", NamedTextColor.RED));
-                return;
-            }
-
-            var itemToTradeInTuple = this.getItemToTradeIn();
-            if (itemToTradeInTuple != null) {
-                var materialToTradeIn = itemToTradeInTuple.getFirst();
-                var amountToTradeIn = itemToTradeInTuple.getSecond();
-
-                if (this.player.getInventory().contains(materialToTradeIn, amountToTradeIn)) {
-                    itemToTradeIn = new ItemStack(materialToTradeIn, amountToTradeIn);
-                    this.player.getInventory().removeItem(itemToTradeIn);
-                } else {
-                    this.player.sendMessage(Component.text("You do not have enough items to trade in", NamedTextColor.RED));
-                    return;
-                }
-            }
-
-            var itemToTradeOut = new ItemStack(materialToTradeOut, amountToTradeOut);
-            chestBlock.getInventory().removeItem(itemToTradeOut);
-            this.player.getInventory().addItem(itemToTradeOut);
-
-            if (itemToTradeIn != null) {
-                chestBlock.getInventory().addItem(itemToTradeIn);
-            }
-
-            this.player.sendMessage(Component.text("You have successfully traded out your items", NamedTextColor.GREEN));
-        }
-    }
-
-    private void handleActivateSignTradeShop() {
+    private void handleSignTradeShop() {
         this.playerInteractEvent.setCancelled(true);
 
         if (this.isShopOwner(this.sign) && this.isShopActive(sign)) {
@@ -122,9 +75,10 @@ public class SignShop {
         if (!this.isShopOwner(this.sign)) {
             if (!this.isShopActive(this.sign)) {
                 this.player.sendMessage(Component.text("This sign shop is not active yet", NamedTextColor.RED));
+                return;
             }
 
-            // TODO: handle trade shop
+            this.handleSignShopTransaction();
             return;
         }
 
@@ -273,6 +227,55 @@ public class SignShop {
 
         wallSign.update();
         this.player.sendMessage(shopMessage);
+    }
+
+    private void handleSignShopTransaction() {
+        var attachedBlock = this.getAttachedChestBlock((WallSign) this.sign.getBlockData(), this.sign.getBlock());
+        if (attachedBlock == null || !(attachedBlock.getState() instanceof Chest chestBlock)) {
+            return;
+        }
+
+        ItemStack itemToTradeIn = null;
+
+        if (this.actionType.isRightClick()) {
+            var itemToTradeOutTuple = this.getItemToTradeOut();
+            var materialToTradeOut = itemToTradeOutTuple.getFirst();
+            var amountToTradeOut = itemToTradeOutTuple.getSecond();
+
+            if (!chestBlock.getInventory().contains(materialToTradeOut, amountToTradeOut)) {
+                this.player.sendMessage(Component.text("There is not enough inventory", NamedTextColor.RED));
+                return;
+            }
+
+            if (PlayerUtils.isInventoryFull(this.player) || !PlayerUtils.hasSpaceInInventory(this.player, amountToTradeOut)) {
+                this.player.sendMessage(Component.text("You have no space in your inventory", NamedTextColor.RED));
+                return;
+            }
+
+            var itemToTradeInTuple = this.getItemToTradeIn();
+            if (itemToTradeInTuple != null) {
+                var materialToTradeIn = itemToTradeInTuple.getFirst();
+                var amountToTradeIn = itemToTradeInTuple.getSecond();
+
+                if (this.player.getInventory().contains(materialToTradeIn, amountToTradeIn)) {
+                    itemToTradeIn = new ItemStack(materialToTradeIn, amountToTradeIn);
+                    this.player.getInventory().removeItem(itemToTradeIn);
+                } else {
+                    this.player.sendMessage(Component.text("You do not have enough items to trade in", NamedTextColor.RED));
+                    return;
+                }
+            }
+
+            var itemToTradeOut = new ItemStack(materialToTradeOut, amountToTradeOut);
+            chestBlock.getInventory().removeItem(itemToTradeOut);
+            this.player.getInventory().addItem(itemToTradeOut);
+
+            if (itemToTradeIn != null) {
+                chestBlock.getInventory().addItem(itemToTradeIn);
+            }
+
+            this.player.sendMessage(Component.text("You have successfully traded out your items", NamedTextColor.GREEN));
+        }
     }
 
     private Tuple<Material, Integer> getItemToTradeOut() {
