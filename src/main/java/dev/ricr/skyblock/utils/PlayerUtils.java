@@ -108,4 +108,13 @@ public class PlayerUtils {
     public static void showTitleMessage(SimpleSkyblock plugin, Player player, Component message, Long delay) {
         Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendTitlePart(TitlePart.TITLE, message), delay);
     }
+
+    public static boolean isInventoryFull(Player player) {
+        return player.getInventory()
+                .firstEmpty() == -1;
+    }
+
+    public static boolean hasSpaceInInventory(Player player, Integer amount) {
+        return player.getInventory().all(Material.AIR).size() >= amount;
+    }
 }

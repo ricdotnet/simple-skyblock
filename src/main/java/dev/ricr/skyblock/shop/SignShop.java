@@ -5,12 +5,15 @@ import dev.ricr.skyblock.enums.SignShopType;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
+import dev.ricr.skyblock.utils.Tuple;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
@@ -18,7 +21,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+
+// left click is selling block or block to give or trade out
+// right click is buying block or block to take or trade in
 
 public class SignShop {
     private final SimpleSkyblock plugin;
@@ -44,7 +51,7 @@ public class SignShop {
         if (this.signShopType == SignShopType.Trade) {
             this.handleActivateSignTradeShop();
         } else if (this.signShopType == SignShopType.Shop) {
-            // handle sign shop
+            this.handleSignShopTransaction();
         }
     }
 
@@ -55,6 +62,53 @@ public class SignShop {
         this.player = event.getPlayer();
 
         this.handleSignShopCreation();
+    }
+
+    private void handleSignShopTransaction() {
+        var attachedBlock = this.getAttachedChestBlock((WallSign) this.sign.getBlockData(), this.sign.getBlock());
+        if (!(attachedBlock instanceof Chest chestBlock)) return;
+
+        ItemStack itemToTradeIn = null;
+
+        if (this.actionType.isRightClick()) {
+            var itemToTradeOutTuple = this.getItemToTradeOut();
+            var materialToTradeOut = itemToTradeOutTuple.getFirst();
+            var amountToTradeOut = itemToTradeOutTuple.getSecond();
+
+            if (!chestBlock.getInventory().contains(materialToTradeOut, amountToTradeOut)) {
+                this.player.sendMessage(Component.text("There is not enough inventory", NamedTextColor.RED));
+                return;
+            }
+
+            if (PlayerUtils.isInventoryFull(this.player) || !PlayerUtils.hasSpaceInInventory(this.player, amountToTradeOut)) {
+                this.player.sendMessage(Component.text("You have no space in your inventory", NamedTextColor.RED));
+                return;
+            }
+
+            var itemToTradeInTuple = this.getItemToTradeIn();
+            if (itemToTradeInTuple != null) {
+                var materialToTradeIn = itemToTradeInTuple.getFirst();
+                var amountToTradeIn = itemToTradeInTuple.getSecond();
+
+                if (this.player.getInventory().contains(materialToTradeIn, amountToTradeIn)) {
+                    itemToTradeIn = new ItemStack(materialToTradeIn, amountToTradeIn);
+                    this.player.getInventory().removeItem(itemToTradeIn);
+                } else {
+                    this.player.sendMessage(Component.text("You do not have enough items to trade in", NamedTextColor.RED));
+                    return;
+                }
+            }
+
+            var itemToTradeOut = new ItemStack(materialToTradeOut, amountToTradeOut);
+            chestBlock.getInventory().removeItem(itemToTradeOut);
+            this.player.getInventory().addItem(itemToTradeOut);
+
+            if (itemToTradeIn != null) {
+                chestBlock.getInventory().addItem(itemToTradeIn);
+            }
+
+            this.player.sendMessage(Component.text("You have successfully traded out your items", NamedTextColor.GREEN));
+        }
     }
 
     private void handleActivateSignTradeShop() {
@@ -140,10 +194,7 @@ public class SignShop {
             return;
         }
 
-        var facing = wallSign.getFacing();
-        var attachedBlock = signBlock.getRelative(facing.getOppositeFace());
-
-        if (attachedBlock.getType() != Material.CHEST) {
+        if (this.getAttachedChestBlock(wallSign, signBlock) == null) {
             return;
         }
 
@@ -224,6 +275,26 @@ public class SignShop {
         this.player.sendMessage(shopMessage);
     }
 
+    private Tuple<Material, Integer> getItemToTradeOut() {
+        var signShopOut = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OUT_ITEM, PersistentDataType.STRING);
+        assert signShopOut != null;
+
+        var materialToTradeOut = signShopOut.split(":")[0];
+        var amountToTradeOut = signShopOut.split(":")[1];
+
+        return new Tuple<>(Material.getMaterial(materialToTradeOut), Integer.parseInt(amountToTradeOut));
+    }
+
+    private Tuple<Material, Integer> getItemToTradeIn() {
+        var signShopIn = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_IN_ITEM, PersistentDataType.STRING);
+        if (signShopIn == null) return null;
+
+        var materialToTradeIn = signShopIn.split(":")[0];
+        var amountToTradeIn = signShopIn.split(":")[1];
+
+        return new Tuple<>(Material.getMaterial(materialToTradeIn), Integer.parseInt(amountToTradeIn));
+    }
+
     private boolean isOutItemSet(Sign sign) {
         var signShopOut = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OUT_ITEM, PersistentDataType.STRING);
 
@@ -243,5 +314,12 @@ public class SignShop {
     private boolean isShopOwner(Sign sign) {
         var shopOwnerId = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OWNER, PersistentDataType.STRING);
         return shopOwnerId != null && shopOwnerId.equals(this.player.getUniqueId().toString());
+    }
+
+    private Block getAttachedChestBlock(WallSign wallSign, Block signBlock) {
+        var facing = wallSign.getFacing();
+        var attachedBlock = signBlock.getRelative(facing.getOppositeFace());
+
+        return attachedBlock.getType() == Material.CHEST ? attachedBlock : null;
     }
 }
