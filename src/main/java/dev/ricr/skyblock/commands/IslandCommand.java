@@ -14,6 +14,7 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.gui.IslandGUI;
+import dev.ricr.skyblock.utils.CommandUtils;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -26,12 +27,14 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.codehaus.plexus.util.FileUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class IslandCommand implements ICommand {
@@ -87,7 +90,8 @@ public class IslandCommand implements ICommand {
                                 .executes(this::untrustPlayerToOwnIsland)
                 ))
                 .then(Commands.literal("visit")
-                        .then(Commands.argument("player", ArgumentTypes.player())
+                        .then(Commands.argument("player", StringArgumentType.string())
+                                .suggests(CommandUtils::currentOnlinePlayers)
                                 .executes(this::visitPlayerIsland)
                         )
                 )
@@ -123,7 +127,7 @@ public class IslandCommand implements ICommand {
         }
 
         var seed = NumberUtils.newSeed();
-        var newIslandWorld = ServerUtils.loadOrCreateWorld(player, World.Environment.NORMAL, seed);
+        var newIslandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NORMAL, seed);
 
         if (newIslandWorld == null) {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
@@ -213,8 +217,8 @@ public class IslandCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
-        var islandNetherWorld = ServerUtils.loadOrCreateWorld(player, World.Environment.NETHER, null);
+        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
+        var islandNetherWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NETHER, null);
         var currentWorld = player.getWorld();
 
         var currentPlayersInIslandWorld = islandWorld.getPlayers()
@@ -287,7 +291,7 @@ public class IslandCommand implements ICommand {
         }
 
         // TODO: check if this would have the same behaviour as using world.getSpawnLocation()
-        var islandLocation = PlayerUtils.getTpLocation(this.plugin, player);
+        var islandLocation = PlayerUtils.getTpLocation(this.plugin, player.getUniqueId());
         player.teleport(islandLocation);
 
         return Command.SINGLE_SUCCESS;
@@ -385,7 +389,7 @@ public class IslandCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
         var currentPlayersInIsland = islandWorld.getPlayers();
         var lobbyWorld = ServerUtils.loadOrCreateLobby();
 
@@ -399,41 +403,80 @@ public class IslandCommand implements ICommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private int visitPlayerIsland(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+    private int visitPlayerIsland(CommandContext<CommandSourceStack> ctx) {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
         var senderName = player.getName();
 
-        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
-        if (targetPlayer == null) {
+        var targetPlayerName = ctx.getArgument("player", String.class);
+        PlayerEntity targetPlayerEntity = null;
+
+        try {
+            targetPlayerEntity = this.playersDao.queryBuilder()
+                    .where()
+                    .eq("username", targetPlayerName)
+                    .queryForFirst();
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        if (targetPlayerEntity == null) {
+            sender.sendMessage(Component.text(String.format("%s", targetPlayerName), NamedTextColor.RED)
+                    .appendSpace()
+                    .append(Component.text("is an unknown username", NamedTextColor.RED))
+            );
             return Command.SINGLE_SUCCESS;
         }
+
+        OfflinePlayer offlinePlayer = this.plugin.getServer().getOfflinePlayer(UUID.fromString(targetPlayerEntity.getPlayerId()));
+        var targetPlayer = offlinePlayer.getPlayer();
 
         var base = Component.text(String.format("%s", senderName), NamedTextColor.GOLD);
         var reason = Component.text("wants to visit your island.", NamedTextColor.GREEN);
         var clickable = Component.text("Click here to accept", NamedTextColor.AQUA)
                 .clickEvent(ClickEvent.callback(audience -> {
-                    var locationToTp = PlayerUtils.getTpLocation(plugin, targetPlayer);
+                    var locationToTp = PlayerUtils.getTpLocation(plugin, offlinePlayer.getUniqueId());
                     player.teleport(locationToTp);
                 }));
 
+        IslandEntity islandEntity = null;
         try {
-            var playerIsland = islandsDao.queryForId(targetPlayer.getUniqueId().toString());
-            if (playerIsland == null) {
-                sender.sendMessage(Component.text(String.format("%s", targetPlayer.getName()), NamedTextColor.GOLD)
-                        .appendSpace()
-                        .append(Component.text("does not have an island", NamedTextColor.RED)));
-                return Command.SINGLE_SUCCESS;
-            }
-
-            if (playerIsland.isPrivate()) {
-                sender.sendMessage(Component.text(String.format("%s's", targetPlayer), NamedTextColor.GOLD)
-                        .append(Component.text("island is private and you cannot visit", NamedTextColor.RED)));
-                return Command.SINGLE_SUCCESS;
-            }
+            islandEntity = islandsDao.queryForId(offlinePlayer.getUniqueId().toString());
         } catch (SQLException e) {
             // ignore for now
+        }
+
+        if (islandEntity == null) {
+            sender.sendMessage(Component.text(String.format("%s", targetPlayerEntity.getUsername()), NamedTextColor.GOLD)
+                    .appendSpace()
+                    .append(Component.text("does not have an island", NamedTextColor.RED))
+            );
+            return Command.SINGLE_SUCCESS;
+        }
+
+        // We check if the target player allows offline visits, we tp regardless of island privacy
+        if (islandEntity.isAllowOfflineVisits()) {
+            var locationToTp = PlayerUtils.getTpLocation(plugin, offlinePlayer.getUniqueId());
+            player.teleport(locationToTp);
+            return Command.SINGLE_SUCCESS;
+        }
+
+        if (targetPlayer == null) {
+            sender.sendMessage(Component.text(String.format("%s's", targetPlayerName), NamedTextColor.GOLD)
+                    .appendSpace()
+                    .append(Component.text("island is not open to offline visits or they are not online at the moment",
+                            NamedTextColor.RED))
+            );
+            return Command.SINGLE_SUCCESS;
+        }
+
+        if (islandEntity.isPrivate()) {
+            sender.sendMessage(Component.text(String.format("%s's", targetPlayer.getName()), NamedTextColor.GOLD)
+                    .appendSpace()
+                    .append(Component.text("island is private and you cannot visit", NamedTextColor.RED))
+            );
+            return Command.SINGLE_SUCCESS;
         }
 
         targetPlayer.sendMessage(base.appendSpace().append(reason).appendSpace().append(clickable));
@@ -445,7 +488,7 @@ public class IslandCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
         if (islandWorld == null) {
             player.sendMessage(Component.text("You do not have an island to expand", NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;

@@ -65,12 +65,13 @@ public class SignShop {
     }
 
     private void handleSignTradeShop() {
-        this.playerInteractEvent.setCancelled(true);
-
         if (this.isShopOwner(this.sign) && this.isShopActive(sign)) {
             this.player.sendMessage(Component.text("Your Sign Trade shop is already active", NamedTextColor.RED));
             return;
         }
+
+        // After checking ownership because we need to allow the sign to be broken
+        this.playerInteractEvent.setCancelled(true);
 
         if (!this.isShopOwner(this.sign)) {
             if (!this.isShopActive(this.sign)) {
@@ -152,7 +153,6 @@ public class SignShop {
             return;
         }
 
-        // TODO: implement sign shop / trade
         var topLine = this.signChangeEvent.line(0);
         if (topLine == null) {
             return;
@@ -247,7 +247,11 @@ public class SignShop {
                 return;
             }
 
-            if (PlayerUtils.isInventoryFull(this.player) || !PlayerUtils.hasSpaceInInventory(this.player, amountToTradeOut)) {
+            var itemToTradeOut = new ItemStack(materialToTradeOut, amountToTradeOut);
+            var isInventoryFull = PlayerUtils.isInventoryFull(this.player);
+            var hasSpaceInInventory = PlayerUtils.hasSpaceInInventory(this.player, itemToTradeOut, amountToTradeOut);
+
+            if (isInventoryFull || !hasSpaceInInventory) {
                 this.player.sendMessage(Component.text("You have no space in your inventory", NamedTextColor.RED));
                 return;
             }
@@ -266,7 +270,6 @@ public class SignShop {
                 }
             }
 
-            var itemToTradeOut = new ItemStack(materialToTradeOut, amountToTradeOut);
             chestBlock.getInventory().removeItem(itemToTradeOut);
             this.player.getInventory().addItem(itemToTradeOut);
 

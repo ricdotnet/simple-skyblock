@@ -80,8 +80,8 @@ public class PlayerUtils {
         PlayerUtils.savePlayerConfiguration(playerConfig, playerConfigFile);
     }
 
-    public static Location getTpLocation(SimpleSkyblock plugin, Player player) {
-        var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, player.getUniqueId());
+    public static Location getTpLocation(SimpleSkyblock plugin, UUID playerUniqueId) {
+        var playerConfig = PlayerUtils.getPlayerConfiguration(plugin, playerUniqueId);
 
         double x = NumberUtils.objectToDouble(playerConfig.get("tp.x"));
         double y = NumberUtils.objectToDouble(playerConfig.get("tp.y"));
@@ -90,13 +90,13 @@ public class PlayerUtils {
         float pitch = NumberUtils.objectToFloat(playerConfig.get("tp.pitch"));
 
         // TODO: this is not ideal here
-        var islandWorld = ServerUtils.loadOrCreateWorld(player, null, null);
+        var islandWorld = ServerUtils.loadOrCreateWorld(playerUniqueId, null, null);
 
         return new Location(islandWorld, x, y, z, yaw, pitch);
     }
 
     public static boolean isPlayerInOwnIsland(Player player, String worldName) {
-        // TODO: if we ever add friends or island colaborators we can also check here
+        // TODO: if we ever add friends or island collaborators we can also check here
 
         return worldName.contains(player.getUniqueId().toString());
     }
@@ -114,9 +114,8 @@ public class PlayerUtils {
                 .firstEmpty() == -1;
     }
 
-    public static boolean hasSpaceInInventory(Player player, Integer amount) {
-        return Arrays.stream(player.getInventory().getContents())
-                .filter(Objects::isNull)
-                .count() >= amount;
+    public static boolean hasSpaceInInventory(Player player, ItemStack item, Integer amount) {
+        long spaces = Arrays.stream(player.getInventory().getContents()).filter(Objects::nonNull).count();
+        return spaces * item.getMaxStackSize() >= amount;
     }
 }

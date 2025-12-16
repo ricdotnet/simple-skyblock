@@ -15,6 +15,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,6 +28,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
 
@@ -50,6 +53,18 @@ public class IslandListeners implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
+
+        if ((event.getBlock().getBlockData() instanceof WallSign)) {
+            var sign = (Sign) event.getBlock().getState();
+            var shopOwnerId = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OWNER, PersistentDataType.STRING);
+
+            var isShop = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_TYPE, PersistentDataType.STRING) != null;
+            var isShopOwner = shopOwnerId != null && shopOwnerId.equals(player.getUniqueId().toString());
+
+            if (isShop && isShopOwner) {
+                player.sendMessage(Component.text("Your Sign Trade shop has been destroyed", NamedTextColor.GREEN));
+            }
+        }
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
@@ -134,7 +149,7 @@ public class IslandListeners implements Listener {
         try {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             var seed = island.getSeed();
-            var netherWorld = ServerUtils.loadOrCreateWorld(event.getPlayer(), World.Environment.NETHER, seed);
+            var netherWorld = ServerUtils.loadOrCreateWorld(event.getPlayer().getUniqueId(), World.Environment.NETHER, seed);
 
             if (!island.isHasNether()) {
                 StructureUtils.placeStructure(this.plugin, new Location(netherWorld, -4, 61, -4), CustomStructures.NETHER_ISLAND);

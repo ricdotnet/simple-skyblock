@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.command.CommandException;
@@ -24,6 +25,7 @@ import org.joml.Vector3f;
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class ServerUtils {
@@ -117,8 +119,8 @@ public class ServerUtils {
         return lobbyWorld;
     }
 
-    public static World loadOrCreateWorld(Player player, World.Environment environment, Long seed) {
-        var suffix = player.getUniqueId() + (environment == World.Environment.NETHER ? "_nether" : "");
+    public static World loadOrCreateWorld(UUID playerUniqueId, World.Environment environment, Long seed) {
+        var suffix = playerUniqueId.toString() + (environment == World.Environment.NETHER ? "_nether" : "");
         var islandName = String.format("islands/%s", suffix);
 
         var islandWorld = Bukkit.getWorld(islandName);
@@ -194,5 +196,32 @@ public class ServerUtils {
         }
 
         return players.getFirst();
+    }
+
+    public static List<Component> wrapLore(
+            String text,
+            int maxLineLength,
+            TextColor color
+    ) {
+        List<Component> lines = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+
+        for (String word : text.split(" ")) {
+            if (current.length() + word.length() + 1 > maxLineLength) {
+                lines.add(Component.text(current.toString(), color));
+                current.setLength(0);
+            }
+
+            if (!current.isEmpty()) {
+                current.append(' ');
+            }
+            current.append(word);
+        }
+
+        if (!current.isEmpty()) {
+            lines.add(Component.text(current.toString(), color));
+        }
+
+        return lines;
     }
 }
