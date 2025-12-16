@@ -4,11 +4,10 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.utils.CommandUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -17,9 +16,6 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-
-import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 public class PayCommand implements ICommand {
@@ -37,7 +33,7 @@ public class PayCommand implements ICommand {
     private LiteralCommandNode<CommandSourceStack> command() {
         return Commands.literal("pay")
                 .then(Commands.argument("player", ArgumentTypes.player())
-                        .suggests(this::currentOnlinePlayers)
+                        .suggests(CommandUtils::currentOnlinePlayers)
                         .then(Commands.argument("amount", DoubleArgumentType.doubleArg(1))
                                 .executes(this::pay)
                         )
@@ -89,14 +85,5 @@ public class PayCommand implements ICommand {
                 NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
-    }
-
-    private CompletableFuture<Suggestions> currentOnlinePlayers(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
-        var sender = ctx.getSource().getSender();
-        ServerUtils.ensureCommandSenderIsPlayer(sender);
-
-        Bukkit.getOnlinePlayers().forEach(onlinePlayer -> builder.suggest(onlinePlayer.getName()));
-
-        return builder.buildFuture();
     }
 }

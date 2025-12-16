@@ -23,6 +23,20 @@ public class NumberUtils {
         return Float.NaN;
     }
 
+    public static int objectToIntOrZero(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                // ignore for now
+            }
+        }
+        return 0;
+    }
+
     public static long newSeed() {
         return ThreadLocalRandom.current().nextLong();
     }

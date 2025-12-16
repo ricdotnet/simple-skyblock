@@ -19,6 +19,8 @@ import org.bukkit.persistence.PersistentDataType;
 
 import javax.annotation.Nullable;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final SimpleSkyblock plugin;
@@ -51,6 +53,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             }
             case Buttons.IslandPrivacy -> this.handleIslandPrivacyClick(player);
             case Buttons.IslandAllowNetherTeleport -> this.handleAllowNetherTeleportClick(player);
+            case Buttons.IslandAllowOfflineVisits -> this.handleAllowOfflineVisits(player);
             case Buttons.IslandShowSeed -> this.handleShowIslandSeedClick(player);
         }
     }
@@ -78,40 +81,46 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         var isIslandPrivate = playerIsland.isPrivate();
-        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
+        var islandPrivacyDescription = "Makes your island private and prevents other players from sending visit requests.";
+        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island privacy", islandPrivacyDescription, isIslandPrivate);
 
         var isIslandAllowNetherTeleport = playerIsland.isAllowNetherTeleport();
-        this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Disable Nether teleport", "Allow Nether teleport");
+        var islandAllowNetherTeleportDescription = "Prevents other players from teleporting to your nether island using your nether portal.";
+        this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Nether teleport", islandAllowNetherTeleportDescription, isIslandAllowNetherTeleport);
+
+        var islandAllowOfflineVisits = playerIsland.isAllowOfflineVisits();
+        var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
+        this.addBooleanButton(islandAllowOfflineVisits, 12, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription, islandAllowOfflineVisits);
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
         var expansionSize = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getExpansionSize();
         var totalSize = (defaultSize + expansionSize) * 2;
-        this.setItemMeta(islandSizeIcon, String.format("Island size: %sx%s", totalSize, totalSize), null);
+        this.setItemSimpleMeta(islandSizeIcon, String.format("Island size: %sx%s", totalSize, totalSize), null);
+        this.inventory.setItem(14, islandSizeIcon);
 
         var seedButton = new ItemStack(Material.FILLED_MAP);
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
-        this.inventory.setItem(12, islandSizeIcon);
 
-        this.setItemMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
-        this.inventory.setItem(13, seedButton);
+        this.setItemSimpleMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
+        this.inventory.setItem(15, seedButton);
     }
 
-    private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons label, String nameOn, String nameOff) {
+    private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons buttonType, String label, String description, boolean state) {
         ItemStack booleanButton;
 
         if (isTrue) {
             booleanButton = new ItemStack(Material.GREEN_TERRACOTTA);
-            this.setItemMeta(booleanButton, nameOn, label);
+            this.setItemComplexMeta(booleanButton, label, description, state, buttonType);
         } else {
             booleanButton = new ItemStack(Material.RED_TERRACOTTA);
-            this.setItemMeta(booleanButton, nameOff, label);
+            this.setItemComplexMeta(booleanButton, label, description, state, buttonType);
         }
 
         this.inventory.setItem(inventoryPosition, booleanButton);
     }
 
-    private void setItemMeta(ItemStack item, String name, @Nullable Buttons buttonType) {
+    private void setItemSimpleMeta(ItemStack item, String name, @Nullable Buttons buttonType) {
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text(name));
 
@@ -120,6 +129,33 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING,
                             buttonType.getLabel());
         }
+
+        item.setItemMeta(meta);
+    }
+
+    private void setItemComplexMeta(ItemStack item, String label, String description, boolean state, Buttons buttonType) {
+        var meta = item.getItemMeta();
+        var itemMetaComponent = Component.text(label, NamedTextColor.LIGHT_PURPLE);
+
+        var listOfLore = new ArrayList<Component>();
+        listOfLore.addAll(
+                List.of(Component.empty(),
+                        Component.text("Enabled:", NamedTextColor.WHITE)
+                                .appendSpace()
+                                .append(Component.text(
+                                        String.valueOf(state),
+                                        state ? NamedTextColor.GREEN : NamedTextColor.RED
+                                )),
+                        Component.text("Click to change", NamedTextColor.GRAY),
+                        Component.empty()));
+        listOfLore.addAll(ServerUtils.wrapLore(description, 28, NamedTextColor.WHITE));
+
+        meta.displayName(itemMetaComponent);
+        meta.lore(listOfLore);
+
+        meta.getPersistentDataContainer()
+                .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING,
+                        buttonType.getLabel());
 
         item.setItemMeta(meta);
     }
@@ -141,6 +177,19 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         try {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             island.setAllowNetherTeleport(!island.isAllowNetherTeleport());
+            this.plugin.databaseManager.getIslandsDao().update(island);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        // refresh only
+        this.openInventory(player);
+    }
+
+    private void handleAllowOfflineVisits(Player player) {
+        try {
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            island.setAllowOfflineVisits(!island.isAllowOfflineVisits());
             this.plugin.databaseManager.getIslandsDao().update(island);
         } catch (SQLException e) {
             // ignore for now

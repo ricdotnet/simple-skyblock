@@ -41,5 +41,8 @@ public class IslandEntity {
     private boolean allowNetherTeleport = false;
 
     @DatabaseField(canBeNull = false)
+    private boolean allowOfflineVisits = false;
+
+    @DatabaseField(canBeNull = false)
     private long seed;
 }
