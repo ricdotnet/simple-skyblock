@@ -5,28 +5,35 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
+import dev.ricr.skyblock.enums.IslandProtectedBlocks;
 import dev.ricr.skyblock.enums.SignShopType;
-import dev.ricr.skyblock.utils.NumberUtils;
+import dev.ricr.skyblock.shop.SignShop;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.Style;
-import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.block.data.type.WallSign;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
 
 import java.sql.SQLException;
 
@@ -112,38 +119,120 @@ public class PlayerListeners implements Listener {
     }
 
     @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+
+        Block clickedBlock = event.getClickedBlock();
+        Material clickedBlockMaterial = clickedBlock == null ? Material.AIR : clickedBlock.getType();
+
+        var shouldStopIslandInteraction = this.plugin.islandManager.shouldStopIslandInteraction(player);
+
+        if (IslandProtectedBlocks.BLOCKS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {
+            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            event.setCancelled(true);
+            return;
+        }
+
+        ItemStack itemInHand = event.getItem();
+        if (itemInHand == null) {
+            return;
+        }
+        Material material = itemInHand.getType();
+
+        if (clickedBlock != null && clickedBlock.getState() instanceof Sign sign) {
+            var signShopTypeString = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_TYPE, PersistentDataType.STRING);
+            if (signShopTypeString == null) {
+                return;
+            }
+
+            new SignShop(this.plugin, event, sign, SignShopType.getByLabel(signShopTypeString));
+            return;
+        }
+
+        // Precedence to non-restricted interact events
+        if (itemInHand.getType() == Material.ENDER_EYE) {
+            Double x = (Double) this.plugin.serverConfig.get("stronghold_location.x");
+            Double y = (Double) this.plugin.serverConfig.get("stronghold_location.y");
+            Double z = (Double) this.plugin.serverConfig.get("stronghold_location.z");
+
+            if (x == null || y == null || z == null) {
+                this.plugin.getLogger()
+                        .warning("Stronghold location not found");
+                player.sendMessage(Component.text("Stronghold location not found", NamedTextColor.RED));
+                return;
+            }
+
+            Location eyeStart = player.getEyeLocation();
+            Location strongholdLocation = new Location(event.getPlayer()
+                    .getWorld(), x, y, z);
+
+            Vector direction = strongholdLocation.toVector()
+                    .subtract(eyeStart.toVector())
+                    .normalize()
+                    .multiply(0.5);
+            direction.setY(0.3); // upward arc
+
+            Snowball projectile = player.launchProjectile(Snowball.class);
+            projectile.setVelocity(direction);
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDER_EYE_LAUNCH, 1f, 1f);
+
+            // Particle trail while moving
+            Bukkit.getScheduler()
+                    .runTaskTimer(this.plugin, task -> {
+                        if (!projectile.isValid()) task.cancel();
+                        else projectile.getWorld()
+                                .spawnParticle(Particle.END_ROD, projectile.getLocation(), 1, 0, 0, 0, 0);
+                    }, 0, 1);
+
+            decreaseItemAmount(player, itemInHand);
+
+            return;
+        }
+
+        if (itemInHand.getType() == Material.FIREWORK_ROCKET) {
+            // ignore fireworks
+            return;
+        }
+
+        if (material.isEdible()) {
+            // ignore food
+            return;
+        }
+
+        if (shouldStopIslandInteraction) {
+            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            event.setCancelled(true);
+            return;
+        }
+
+        if (itemInHand.getType() == Material.BUCKET) {
+            if (clickedBlock == null) return;
+
+            if (clickedBlock.getType() == Material.OBSIDIAN && event.getAction()
+                    .isRightClick()) {
+                decreaseItemAmount(player, itemInHand);
+                player.getInventory()
+                        .addItem(new ItemStack(Material.LAVA_BUCKET));
+                clickedBlock.setType(Material.AIR);
+                player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1f, 1f);
+            }
+
+        }
+    }
+
+    @EventHandler
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+
+        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
+            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     public void onSignChangeEvent(SignChangeEvent event) {
-        var player = event.getPlayer();
-        var world = player.getWorld();
-
-        var signBlock = event.getBlock();
-        var signBlockData = signBlock.getBlockData();
-
-        if (!(signBlockData instanceof WallSign wallSign) ||
-                world.getName().equals("lobby") ||
-                world.getEnvironment() == World.Environment.THE_END ||
-                !PlayerUtils.isPlayerInOwnIsland(player, world.getName())
-        ) {
-            return;
-        }
-
-        var facing = wallSign.getFacing();
-        var attachedBlock = signBlock.getRelative(facing.getOppositeFace());
-
-        if (attachedBlock.getType() != Material.CHEST) {
-            return;
-        }
-
-        // TODO: implement sign shop / trade
-        var topLine = event.line(0);
-        if (topLine == null) {
-            return;
-        }
-
-        var topLineText = ServerUtils.getTextFromComponent(topLine);
-        if (topLineText.equalsIgnoreCase("[trade]")) {
-            this.makeTradeSign(event);
-        }
+        new SignShop(this.plugin, event);
     }
 
     private void createPlayerEntity(Player player) {
@@ -177,63 +266,13 @@ public class PlayerListeners implements Listener {
         }
     }
 
-    private void makeTradeSign(SignChangeEvent event) {
-        var line1 = event.line(1);
-        var line2 = event.line(2);
-
-        if (line1 == null || ServerUtils.getTextFromComponent(line1).isBlank()) {
-            return;
+    private void decreaseItemAmount(Player player, ItemStack item) {
+        if (item.getAmount() > 1) {
+            item.setAmount(item.getAmount() - 1);
+        } else {
+            player.getInventory()
+                    .remove(item);
         }
-
-        var wallSign = (Sign) event.getBlock().getState();
-        wallSign.getPersistentDataContainer().set(
-                ServerUtils.SIGN_SHOP_TYPE,
-                PersistentDataType.STRING,
-                SignShopType.Trade.getLabel()
-        );
-
-        var outAmount = NumberUtils.objectToIntOrZero(ServerUtils.getTextFromComponent(line1));
-        var inAmount = NumberUtils.objectToIntOrZero(ServerUtils.getTextFromComponent(line2));
-
-        var topLine = Component.text(inAmount > 0 ? "[Trade]" : "[Free]")
-                .style(Style.style(inAmount > 0 ? NamedTextColor.DARK_BLUE : NamedTextColor.GREEN, TextDecoration.BOLD, TextDecoration.ITALIC));
-        event.line(0, topLine);
-
-        var outAmountLine = Component.text("{trading_out}", NamedTextColor.WHITE);
-        event.line(1, outAmountLine);
-        wallSign.getPersistentDataContainer().set(
-                ServerUtils.SIGN_SHOP_OUT_ITEM,
-                PersistentDataType.STRING,
-                String.format("{item}:%s", outAmount)
-        );
-
-        if (inAmount > 0) {
-            var inAmountLine = Component.text("{trading_in}", NamedTextColor.WHITE);
-            event.line(2, inAmountLine);
-            wallSign.getPersistentDataContainer().set(
-                    ServerUtils.SIGN_SHOP_IN_ITEM,
-                    PersistentDataType.STRING,
-                    String.format("{item}:%s", inAmount)
-            );
-        }
-
-        var player = event.getPlayer();
-        Component shopMessage = Component.text("Left click to set selling block", NamedTextColor.GREEN);
-
-        if (inAmount > 0) {
-            shopMessage = shopMessage
-                    .appendNewline()
-                    .append(Component.text("Right click to set buying block", NamedTextColor.RED));
-        }
-
-        wallSign.getPersistentDataContainer().set(
-                ServerUtils.SIGN_SHOP_OWNER,
-                PersistentDataType.STRING,
-                player.getUniqueId().toString()
-        );
-
-        wallSign.update();
-        player.sendMessage(shopMessage);
     }
 }
 
