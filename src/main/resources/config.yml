@@ -1,7 +1,7 @@
-# should the server owner want a lobby world to be the spawn
+# should the server owner want a lobby world to be the initial spawning world
 lobby: true
-# should the server owner want multiple all the islands in a single island
-single_world: false
-next_island:
-  x: -300
-  z: 0
+end_portal_price: 100000
+island:
+  starting_border_radius: 60
+  show_seed_price: 25000
+  expand_price: 10000 # price per block - 10 blocks means 10 * price

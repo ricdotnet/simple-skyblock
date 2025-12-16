@@ -3,40 +3,38 @@ package dev.ricr.skyblock.utils;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.ForeignCollection;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Island;
-import dev.ricr.skyblock.database.IslandUserTrustLink;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.IslandEntity;
+import dev.ricr.skyblock.database.IslandPlayerTrustLinkEntity;
+import dev.ricr.skyblock.database.PlayerEntity;
+import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class IslandManager {
 
     private final SimpleSkyblock plugin;
     private final Map<UUID, IslandRecord> islands;
     @Setter
+    @Getter
     private boolean opOverride = false;
 
     public IslandManager(SimpleSkyblock plugin) {
         this.plugin = plugin;
         this.islands = new HashMap<>();
 
-        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
+        Dao<PlayerEntity, String> playersDao = this.plugin.databaseManager.getPlayersDao();
 
         try {
-            List<User> userList = usersDao.queryForAll();
-            for (User user : userList) {
-                this.addPlayerIsland(UUID.fromString(user.getUserId()));
+            List<PlayerEntity> playerEntitiesList = playersDao.queryForAll();
+            for (PlayerEntity playerEntity : playerEntitiesList) {
+                this.addPlayerIsland(UUID.fromString(playerEntity.getPlayerId()));
             }
         } catch (SQLException e) {
             // ignore for now
@@ -47,98 +45,106 @@ public class IslandManager {
         return this.islands.get(playerUniqueId);
     }
 
+    public void replaceIslandRecord(UUID playerUniqueId, IslandRecord islandRecord) {
+        this.islands.put(playerUniqueId, islandRecord);
+    }
+
     public void addPlayerIsland(UUID playerUniqueId) {
-        Dao<Island, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
+        Dao<IslandEntity, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
 
         try {
-            Island userIsland = islandsDao.queryForId(playerUniqueId.toString());
+            IslandEntity playerIsland = islandsDao.queryForId(playerUniqueId.toString());
 
-            int islandX = (int) userIsland.getPositionX();
-            int islandZ = (int) userIsland.getPositionZ();
-            ForeignCollection<IslandUserTrustLink> trustedPlayers = userIsland.getTrustedPlayers();
+            if (playerIsland == null) {
+                return;
+            }
 
-            Set<String> trustedUserIds = trustedPlayers.stream().map(
-                    trustedPlayer -> trustedPlayer.getUser()
-                            .getUserId()
-            ).collect(Collectors.toSet());
+            int islandX = (int) playerIsland.getPositionX();
+            int islandZ = (int) playerIsland.getPositionZ();
+            ForeignCollection<IslandPlayerTrustLinkEntity> trustedPlayers = playerIsland.getTrustedPlayers();
 
-            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedUserIds));
+            List<Tuple<String, String>> trustedPlayersId = trustedPlayers.stream().map(
+                    trustedPlayer -> new Tuple<>(trustedPlayer.getPlayer()
+                            .getPlayerId(), trustedPlayer.getPlayer().getUsername())
+            ).collect(ArrayList::new, List::add, List::addAll);
+
+            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedPlayersId));
         } catch (SQLException e) {
             // ignore for now
         }
     }
 
-    public void showPlayerBorder(Player player) {
-        WorldBorder playerBorder = Bukkit.createWorldBorder();
-        playerBorder.setCenter(this.islands.get(player.getUniqueId())
-                .x(), this.islands.get(player.getUniqueId())
-                .z());
-        playerBorder.setSize(280);
-        player.setWorldBorder(playerBorder);
-    }
 
-    public void hidePlayerBorder(Player player) {
-        player.setWorldBorder(null);
-    }
-
-    public boolean isPlayerInOwnIsland(Player player) {
-        int playerPosX = player.getLocation()
-                .getBlockX();
-        int playerPoxZ = player.getLocation()
-                .getBlockZ();
-        int islandX = this.islands.get(player.getUniqueId())
-                .x();
-        int islandZ = this.islands.get(player.getUniqueId())
-                .z();
-
-        int islandMinX = islandX - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-        int islandMaxX = islandX + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-        int islandMinZ = islandZ - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-        int islandMaxZ = islandZ + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-
-        return playerPosX > islandMinX && playerPoxZ > islandMinZ && playerPosX < islandMaxX && playerPoxZ < islandMaxZ;
-    }
 
     public boolean shouldStopIslandInteraction(Player player) {
-        World world = player.getWorld();
-        boolean isTrustedPlayer = false;
+        var world = player.getWorld();
 
-        IslandRecord islandRecord = findCurrentIslandByPlayerPosition(player);
+        if (isOpOverride(player) || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
+            return false;
+        }
+
+        if (world.getName().equals("lobby")) {
+            return true;
+        }
+
+        var islandRecord = this.findCurrentIslandRecord(world.getName());
 
         // TODO: check this actually makes sense
         if (islandRecord == null) {
-            // would mean the current island or place has no owner so we move on
+            // would mean the current island or place has no owner, so we move on
             return false;
         }
 
-        for (String trustedPlayerUniqueId : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().toString().equals(trustedPlayerUniqueId)) {
-                isTrustedPlayer = true;
+        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
+            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
+                return false;
             }
         }
 
-        if (isTrustedPlayer) {
+        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
+    }
+
+    public boolean shouldStopNetherTeleport(Player player) {
+        var world = player.getWorld();
+
+        if (isOpOverride(player) || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 
-        return "void_skyblock".equals(world.getName()) && !this.isPlayerInOwnIsland(player) && !isOpOverride(player);
+        if (world.getName().equals("lobby")) {
+            return true;
+        }
+
+        var islandRecord = this.findCurrentIslandRecord(world.getName());
+        if (islandRecord == null) {
+            return true;
+        }
+
+        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
+            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
+                return false;
+            }
+        }
+
+        try {
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            if (island.isPrivate() || !island.isAllowNetherTeleport()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
     }
 
     private boolean isOpOverride(Player player) {
         return player.isOp() && this.opOverride;
     }
 
-    private IslandRecord findCurrentIslandByPlayerPosition(Player player) {
-        int playerPosX = player.getLocation().getBlockX();
-        int playerPosZ = player.getLocation().getBlockZ();
-
+    private IslandRecord findCurrentIslandRecord(String worldName) {
         for (IslandRecord islandRecord : this.islands.values()) {
-            int islandMinX = islandRecord.x() - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-            int islandMaxX = islandRecord.x() + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-            int islandMinZ = islandRecord.z() - ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-            int islandMaxZ = islandRecord.z() + ServerUtils.PLAYER_ISLAND_BORDER_RADIUS;
-
-            if (playerPosX >= islandMinX && playerPosX <= islandMaxX && playerPosZ >= islandMinZ && playerPosZ <= islandMaxZ) {
+            if (worldName.contains(islandRecord.owner().toString())) {
                 return islandRecord;
             }
         }

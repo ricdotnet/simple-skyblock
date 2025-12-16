@@ -1,13 +1,12 @@
 package dev.ricr.skyblock.gui;
 
-import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Island;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.enums.Buttons;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -18,17 +17,18 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final SimpleSkyblock plugin;
-    private final Dao<Island, String> islandDao;
     @Getter
     private final Inventory inventory;
 
     public IslandGUI(SimpleSkyblock plugin, Player player) {
         this.plugin = plugin;
-        this.islandDao = plugin.databaseManager.getIslandsDao();
         this.inventory = Bukkit.createInventory(this, 54, Component.text("Island menu"));
 
         this.openInventory(player);
@@ -52,69 +52,119 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case null -> {
             }
             case Buttons.IslandPrivacy -> this.handleIslandPrivacyClick(player);
-            case Buttons.BorderVisibility -> this.handleBorderVisibilityClick(player);
+            case Buttons.IslandAllowNetherTeleport -> this.handleAllowNetherTeleportClick(player);
+            case Buttons.IslandAllowOfflineVisits -> this.handleAllowOfflineVisits(player);
+            case Buttons.IslandShowSeed -> this.handleShowIslandSeedClick(player);
         }
     }
 
     private void openInventory(Player player) {
-        Dao<User, String> userDao = this.plugin.databaseManager.getUsersDao();
-        Dao<Island, String> islandDao = this.plugin.databaseManager.getIslandsDao();
+        var playersDao = this.plugin.databaseManager.getPlayersDao();
+        var islandsDao = this.plugin.databaseManager.getIslandsDao();
 
-        String playerUniqueId = player.getUniqueId()
+        var playerUniqueId = player.getUniqueId()
                 .toString();
 
-        Island userIsland = null;
+        IslandEntity playerIsland = null;
 
         try {
-            User user = userDao.queryForId(playerUniqueId);
-            userIsland = islandDao.queryForId(user.getUserId());
+            var playerEntity = playersDao.queryForId(playerUniqueId);
+            playerIsland = islandsDao.queryForId(playerEntity.getPlayerId());
         } catch (SQLException e) {
             // ignore for now
         }
 
-        if (userIsland == null) {
+        if (playerIsland == null) {
             this.plugin.getLogger()
                     .warning("Player " + player.getName() + " has no island");
             return;
         }
 
-        boolean isIslandPrivate = userIsland.isPrivate();
-        addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island is private", "Island is public");
+        var isIslandPrivate = playerIsland.isPrivate();
+        var islandPrivacyDescription = "Makes your island private and prevents other players from sending visit requests.";
+        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island privacy", islandPrivacyDescription, isIslandPrivate);
 
-        boolean isBorderOn = userIsland.isBorderVisible();
-        addBooleanButton(isBorderOn, 11, Buttons.BorderVisibility, "Border is visible", "Border is hidden");
+        var isIslandAllowNetherTeleport = playerIsland.isAllowNetherTeleport();
+        var islandAllowNetherTeleportDescription = "Prevents other players from teleporting to your nether island using your nether portal.";
+        this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Nether teleport", islandAllowNetherTeleportDescription, isIslandAllowNetherTeleport);
 
+        var islandAllowOfflineVisits = playerIsland.isAllowOfflineVisits();
+        var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
+        this.addBooleanButton(islandAllowOfflineVisits, 12, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription, islandAllowOfflineVisits);
+
+        var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
+        var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
+        var expansionSize = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getExpansionSize();
+        var totalSize = (defaultSize + expansionSize) * 2;
+        this.setItemSimpleMeta(islandSizeIcon, String.format("Island size: %sx%s", totalSize, totalSize), null);
+        this.inventory.setItem(14, islandSizeIcon);
+
+        var seedButton = new ItemStack(Material.FILLED_MAP);
+        var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
+
+        this.setItemSimpleMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
+        this.inventory.setItem(15, seedButton);
     }
 
-    private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons label, String nameOn, String nameOff) {
+    private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons buttonType, String label, String description, boolean state) {
         ItemStack booleanButton;
 
         if (isTrue) {
             booleanButton = new ItemStack(Material.GREEN_TERRACOTTA);
-            this.setItemMeta(booleanButton, nameOn, label);
+            this.setItemComplexMeta(booleanButton, label, description, state, buttonType);
         } else {
             booleanButton = new ItemStack(Material.RED_TERRACOTTA);
-            this.setItemMeta(booleanButton, nameOff, label);
+            this.setItemComplexMeta(booleanButton, label, description, state, buttonType);
         }
 
         this.inventory.setItem(inventoryPosition, booleanButton);
     }
 
-    private void setItemMeta(ItemStack item, String name, Buttons buttonType) {
+    private void setItemSimpleMeta(ItemStack item, String name, @Nullable Buttons buttonType) {
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text(name));
+
+        if (buttonType != null) {
+            meta.getPersistentDataContainer()
+                    .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING,
+                            buttonType.getLabel());
+        }
+
+        item.setItemMeta(meta);
+    }
+
+    private void setItemComplexMeta(ItemStack item, String label, String description, boolean state, Buttons buttonType) {
+        var meta = item.getItemMeta();
+        var itemMetaComponent = Component.text(label, NamedTextColor.LIGHT_PURPLE);
+
+        var listOfLore = new ArrayList<Component>();
+        listOfLore.addAll(
+                List.of(Component.empty(),
+                        Component.text("Enabled:", NamedTextColor.WHITE)
+                                .appendSpace()
+                                .append(Component.text(
+                                        String.valueOf(state),
+                                        state ? NamedTextColor.GREEN : NamedTextColor.RED
+                                )),
+                        Component.text("Click to change", NamedTextColor.GRAY),
+                        Component.empty()));
+        listOfLore.addAll(ServerUtils.wrapLore(description, 28, NamedTextColor.WHITE));
+
+        meta.displayName(itemMetaComponent);
+        meta.lore(listOfLore);
+
         meta.getPersistentDataContainer()
                 .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING,
                         buttonType.getLabel());
+
         item.setItemMeta(meta);
     }
 
     private void handleIslandPrivacyClick(Player player) {
         try {
-            Island island = this.islandDao.queryForId(player.getUniqueId()
-                    .toString());
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             island.setPrivate(!island.isPrivate());
-            islandDao.update(island);
+            this.plugin.databaseManager.getIslandsDao().update(island);
         } catch (SQLException e) {
             // ignore for now
         }
@@ -123,17 +173,51 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.openInventory(player);
     }
 
-    private void handleBorderVisibilityClick(Player player) {
+    private void handleAllowNetherTeleportClick(Player player) {
         try {
-            Island island = this.islandDao.queryForId(player.getUniqueId()
-                    .toString());
-            island.setBorderVisible(!island.isBorderVisible());
-            islandDao.update(island);
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            island.setAllowNetherTeleport(!island.isAllowNetherTeleport());
+            this.plugin.databaseManager.getIslandsDao().update(island);
         } catch (SQLException e) {
             // ignore for now
         }
 
         // refresh only
         this.openInventory(player);
+    }
+
+    private void handleAllowOfflineVisits(Player player) {
+        try {
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            island.setAllowOfflineVisits(!island.isAllowOfflineVisits());
+            this.plugin.databaseManager.getIslandsDao().update(island);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        // refresh only
+        this.openInventory(player);
+    }
+
+    private void handleShowIslandSeedClick(Player player) {
+        try {
+            var playerEntity = this.plugin.databaseManager.getPlayersDao().queryForId(player.getUniqueId().toString());
+            var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
+
+            if (playerEntity.getBalance() < showSeedPrice) {
+                player.sendMessage(Component.text("You don't have enough money to show the seed", NamedTextColor.RED));
+                return;
+            }
+
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            var seed = island.getSeed();
+
+            playerEntity.setBalance(playerEntity.getBalance() - showSeedPrice);
+            this.plugin.databaseManager.getPlayersDao().update(playerEntity);
+
+            player.sendMessage(Component.text("Seed:").appendSpace().append(Component.text(seed, NamedTextColor.GREEN)));
+        } catch (SQLException e) {
+            // ignore for now
+        }
     }
 }

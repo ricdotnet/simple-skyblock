@@ -19,6 +19,7 @@ public class InventoryClickListener implements Listener {
 
     public InventoryClickListener(SimpleSkyblock plugin) {
         this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     @EventHandler

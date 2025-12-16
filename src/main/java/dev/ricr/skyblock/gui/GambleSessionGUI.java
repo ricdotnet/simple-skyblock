@@ -1,10 +1,11 @@
 package dev.ricr.skyblock.gui;
 
-import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.Gamble;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.GambleEntity;
+import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.GambleType;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -21,7 +22,6 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.sql.SQLException;
 import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
@@ -48,8 +48,8 @@ public class GambleSessionGUI implements InventoryHolder {
         this.inventory = Bukkit.createInventory(this, 27, Component.text(String.format("Gamble session - %s",
                 this.host.getName())));
 
-        this.bossBar = Bukkit.createBossBar(String.format("Gamble end in %ss - Money pool: %s%s",
-                        this.countdownClock.get(), ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(this.amount)),
+        this.bossBar = Bukkit.createBossBar(String.format("Gamble end in %ss - Money pool: %s",
+                        this.countdownClock.get(), ServerUtils.formatMoneyValue(this.amount)),
                 BarColor.GREEN, BarStyle.SOLID);
         this.bossBar.setProgress(1.0);
         this.bossBar.setVisible(true);
@@ -89,50 +89,40 @@ public class GambleSessionGUI implements InventoryHolder {
         int randomIndex = new Random().nextInt(players.size());
         Player winner = players.toArray(Player[]::new)[randomIndex];
 
-        Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
-        Gamble gamble = new Gamble();
-
         for (Player player : players) {
-            if (player.getUniqueId() == winner.getUniqueId()) {
-                player.sendMessage(Component.text("You won the gamble!", NamedTextColor.GREEN));
+            var gamble = new GambleEntity();
+            var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
-                try {
-                    User user = usersDao.queryForId(player.getUniqueId()
-                            .toString());
-                    gamble.setUser(user);
-                    gamble.setAmount(this.amount);
-                    gamble.setType(GambleType.Won.toString());
-                } catch (SQLException e) {
-                    // ignore for now
-                }
+            if (player.getUniqueId() == winner.getUniqueId()) {
+                var message = Component.text("You won the gamble!", NamedTextColor.GREEN);
+
+                player.sendMessage(message);
+                PlayerUtils.showTitleMessage(this.plugin, player, message);
+
+                gamble.setPlayer(playerRecord);
+                gamble.setAmount(this.amount);
+                gamble.setType(GambleType.Won.toString());
 
                 updatePlayerBalance(player, this.amount);
 
                 player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1f, 1f);
             } else {
-                player.sendMessage(Component.text("You lost the gamble \uD83E\uDD40", NamedTextColor.RED));
+                var message = Component.text("You lost the gamble \uD83E\uDD40", NamedTextColor.RED);
+
+                player.sendMessage(message);
+                PlayerUtils.showTitleMessage(this.plugin, player, message);
                 player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()),
                         NamedTextColor.DARK_RED));
 
-                try {
-                    User user = usersDao.queryForId(player.getUniqueId()
-                            .toString());
-                    gamble.setUser(user);
-                    gamble.setAmount(this.originalAmount);
-                    gamble.setType(GambleType.Lost.toString());
-                } catch (SQLException e) {
-                    // ignore for now
-                }
+                gamble.setPlayer(playerRecord);
+                gamble.setAmount(this.originalAmount);
+                gamble.setType(GambleType.Lost.toString());
 
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 1f, 1f);
             }
-        }
 
-        try {
-            Dao<Gamble, Integer> gamblesDao = this.plugin.databaseManager.getGamblesDao();
-            gamblesDao.create(gamble);
-        } catch (SQLException e) {
-            // ignore for now
+            var gambleRecordAdd = new DatabaseChange.GambleRecordAdd(gamble);
+            this.plugin.databaseChangesAccumulator.add(gambleRecordAdd);
         }
 
         this.bossBar.removeAll();
@@ -156,20 +146,16 @@ public class GambleSessionGUI implements InventoryHolder {
     }
 
     public void updateCountdownClock(int seconds) {
-        this.bossBar.setTitle(String.format("Gamble end in %ss - Money pool: %s%s",
-                seconds, ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(this.amount)));
+        this.bossBar.setTitle(String.format("Gamble end in %ss - Money pool: %s",
+                seconds, ServerUtils.formatMoneyValue(this.amount)));
         this.bossBar.setProgress(1.0 - seconds / (double) ServerUtils.GAMBLE_COUNTDOWN);
     }
 
     private void updatePlayerBalance(Player player, double amount) {
-        try {
-            Dao<User, String> usersDao = this.plugin.databaseManager.getUsersDao();
-            User user = usersDao.queryForId(player.getUniqueId()
-                    .toString());
-            user.setBalance(user.getBalance() + amount);
-            usersDao.update(user);
-        } catch (SQLException e) {
-            // ignore for now
-        }
+        PlayerEntity hostPlayer = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        hostPlayer.setBalance(hostPlayer.getBalance() + amount);
+
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(hostPlayer);
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
     }
 }

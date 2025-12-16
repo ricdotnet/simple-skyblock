@@ -1,95 +1,89 @@
 package dev.ricr.skyblock.commands;
 
-import com.j256.ormlite.dao.Dao;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.User;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.utils.CommandUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Server;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-
-import java.sql.SQLException;
 
 @AllArgsConstructor
-public class PayCommand implements CommandExecutor {
+public class PayCommand implements ICommand {
     private final SimpleSkyblock plugin;
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-                             String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return true;
-        }
+    public void register() {
+        this.plugin.getLifecycleManager()
+                .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+                    LiteralCommandNode<CommandSourceStack> gamble = this.command();
 
-        if (args.length != 2) {
-            player.sendMessage(Component.text("Usage: /pay <player> <amount>", NamedTextColor.YELLOW));
-            return true;
-        }
+                    commands.registrar().register(gamble);
+                });
+    }
 
-        String targetPlayerName = args[0];
-        double amount = Double.parseDouble(args[1]);
+    private LiteralCommandNode<CommandSourceStack> command() {
+        return Commands.literal("pay")
+                .then(Commands.argument("player", ArgumentTypes.player())
+                        .suggests(CommandUtils::currentOnlinePlayers)
+                        .then(Commands.argument("amount", DoubleArgumentType.doubleArg(1))
+                                .executes(this::pay)
+                        )
+                )
+                .build();
+    }
 
-        if (amount < 0) {
-            player.sendMessage(Component.text("You are not allowed to pay negative money", NamedTextColor.RED));
-            return true;
-        }
+    private int pay(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
 
-        Server server = plugin.getServer();
-        Player targetPlayer = server.getPlayer(args[0]);
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
 
         if (targetPlayer == null) {
             player.sendMessage(Component.text("Player not found", NamedTextColor.RED));
-            return true;
+            return Command.SINGLE_SUCCESS;
         }
 
-        if (targetPlayer.getName().equals(player.getName())) {
+        if (player.getUniqueId().equals(targetPlayer.getUniqueId())) {
             player.sendMessage(Component.text("You cannot pay yourself", NamedTextColor.RED));
-            return true;
+            return Command.SINGLE_SUCCESS;
         }
 
-        Dao<User, String> usersDao = plugin.databaseManager.getUsersDao();
+        var amount = DoubleArgumentType.getDouble(ctx, "amount");
 
-        try {
-            User targetUser = usersDao.queryForId(targetPlayer.getUniqueId()
-                    .toString());
+        var targetPlayerRecord = this.plugin.onlinePlayers.getPlayer(targetPlayer.getUniqueId());
+        var senderPlayerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
-            if (player.isOp()) {
-                targetUser.setBalance(targetUser.getBalance() + amount);
-                usersDao.update(targetUser);
-            } else {
-                User userSender = usersDao.queryForId(player.getUniqueId()
-                        .toString());
-
-                if (userSender.getBalance() >= amount) {
-                    userSender.setBalance(userSender.getBalance() - amount);
-                    targetUser.setBalance(targetUser.getBalance() + amount);
-                } else {
-                    player.sendMessage(Component.text("You don't have enough money to pay that amount",
-                            NamedTextColor.RED));
-                    return true;
-                }
-
-                usersDao.update(userSender);
-                usersDao.update(targetUser);
-            }
-        } catch (SQLException e) {
-            // ignore for now
+        if (senderPlayerRecord.getBalance() >= amount) {
+            senderPlayerRecord.setBalance(senderPlayerRecord.getBalance() - amount);
+            targetPlayerRecord.setBalance(targetPlayerRecord.getBalance() + amount);
+        } else {
+            player.sendMessage(Component.text("You don't have enough money to pay that amount",
+                    NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
         }
 
-        player.sendMessage(Component.text(String.format("Paid %s%s to %s", ServerUtils.COIN_SYMBOL,
+        var playerCreateOrUpdateSender = new DatabaseChange.PlayerCreateOrUpdate(senderPlayerRecord);
+        var playerCreateOrUpdateTarget = new DatabaseChange.PlayerCreateOrUpdate(targetPlayerRecord);
+
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSender);
+        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateTarget);
+
+        player.sendMessage(Component.text(String.format("Paid %s to %s",
                 ServerUtils.formatMoneyValue(amount),
-                targetPlayerName), NamedTextColor.GREEN));
-        targetPlayer.sendMessage(Component.text(String.format("You received %s%s from %s",
-                ServerUtils.COIN_SYMBOL, ServerUtils.formatMoneyValue(amount), player.getName()),
+                targetPlayer.getName()), NamedTextColor.GREEN));
+        targetPlayer.sendMessage(Component.text(String.format("You received %s from %s",
+                        ServerUtils.formatMoneyValue(amount), player.getName()),
                 NamedTextColor.GREEN));
 
-        return true;
+        return Command.SINGLE_SUCCESS;
     }
 }

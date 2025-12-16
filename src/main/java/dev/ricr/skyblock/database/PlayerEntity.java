@@ -6,17 +6,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@DatabaseTable(tableName = "users")
+@DatabaseTable(tableName = "players")
 @NoArgsConstructor
 @Getter
 @Setter
-public class User {
+public class PlayerEntity {
     @DatabaseField(id = true)
-    private String userId;
+    private String playerId;
 
     @DatabaseField(unique = true)
     private String username;
 
     @DatabaseField(defaultValue = "0.0")
     private double balance;
+
+    // We should keep track of this here for keeping how big a player's island was in case they decide to delete it and recreate
+    @DatabaseField
+    private int expansionSize = 0;
 }

@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum CustomStructures {
     ISLAND("skyblock_island.nbt"),
-    STRONGHOLD("stronghold.nbt");
+    STRONGHOLD("stronghold.nbt"),
+    NETHER_ISLAND("nether_island.nbt");
 
     public final String label;
 

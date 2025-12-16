@@ -6,14 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@DatabaseTable(tableName = "island_user_trust_link")
+@DatabaseTable(tableName = "island_player_trust_link")
 @NoArgsConstructor
 @Getter
 @Setter
-public class IslandUserTrustLink {
+public class IslandPlayerTrustLinkEntity {
     @DatabaseField(foreign = true, foreignAutoRefresh = true, canBeNull = false)
-    private Island island;
+    private IslandEntity island;
 
     @DatabaseField(foreign = true, foreignAutoRefresh = true, canBeNull = false)
-    private User user;
+    private PlayerEntity player;
 }

@@ -11,6 +11,10 @@ blocks:
     name: 'Dirt'
     buy: 500.0
     sell: 5.0
+  - material: GRASS_BLOCK
+    name: 'Grass Block'
+    buy: 5000.0
+    sell: 5.0
   - material: SAND
     name: 'Sand'
     buy: 500.0
@@ -23,6 +27,14 @@ blocks:
     name: 'Obsidian'
     buy: 1000.0
     sell: 100.0
+  - material: PUMPKIN
+    name: 'Pumpkin'
+    buy: 10000.0
+    sell: 3.0
+  - material: MELON
+    name: 'Melon'
+    buy: 10000.0
+    sell: 10.0
 
 items:
   - material: BONE
@@ -40,4 +52,36 @@ items:
   - material: ARROW
     name: 'Arrow'
     buy: 10.0
+    sell: 0.5
+  - material: STRING
+    name: 'String'
+    buy: 25.0
+    sell: 1.0
+  - material: SPIDER_EYE
+    name: 'Spider Eye'
+    buy: 50.0
+    sell: 5.0
+  - material: REDSTONE
+    name: 'Redstone'
+    sell: 10.0
+  - material: LEATHER
+    name: 'Leather'
+    buy: 150.0
+    sell: 10.0
+  - material: CACTUS
+    name: 'Cactus'
+    sell: 1.0
+  - material: SUGAR_CANE
+    name: 'Sugar Cane'
+    sell: 1.0
+  - material: COAL
+    name: 'Coal'
+    buy: 250.0
+    sell: 20.0
+  - material: POPPY
+    name: 'Poppy'
+    buy: 1.0
+    sell: 1.0
+  - material: KELP
+    name: 'Kelp'
     sell: 0.5
