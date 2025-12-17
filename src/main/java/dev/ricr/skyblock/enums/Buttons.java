@@ -7,6 +7,7 @@ public enum Buttons {
     IslandPrivacy("island_privacy"),
     IslandAllowNetherTeleport("island_allow_nether_teleport"),
     IslandAllowOfflineVisits("island_allow_offline_visits"),
+    IslandAllowMobSpawning("island_allow_mob_spawning"),
     IslandShowSeed("island_show_seed");
 
     public final String label;

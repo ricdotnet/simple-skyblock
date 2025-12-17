@@ -8,6 +8,7 @@ import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.GameRule;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -54,6 +55,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case Buttons.IslandPrivacy -> this.handleIslandPrivacyClick(player);
             case Buttons.IslandAllowNetherTeleport -> this.handleAllowNetherTeleportClick(player);
             case Buttons.IslandAllowOfflineVisits -> this.handleAllowOfflineVisits(player);
+            case Buttons.IslandAllowMobSpawning -> {}
             case Buttons.IslandShowSeed -> this.handleShowIslandSeedClick(player);
         }
     }
@@ -80,6 +82,12 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
+        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
+        if (islandWorld == null) {
+            player.sendMessage(Component.text("You do not have an island to manage", NamedTextColor.RED));
+            return;
+        }
+
         var isIslandPrivate = playerIsland.isPrivate();
         var islandPrivacyDescription = "Makes your island private and prevents other players from sending visit requests.";
         this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island privacy", islandPrivacyDescription, isIslandPrivate);
@@ -91,6 +99,10 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var islandAllowOfflineVisits = playerIsland.isAllowOfflineVisits();
         var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
         this.addBooleanButton(islandAllowOfflineVisits, 12, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription, islandAllowOfflineVisits);
+
+        var isDoMobSpawn = islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING);
+        var islandDoMobSpawnDescription = "Allows mobs to spawn in your island.";
+        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 19, Buttons.IslandAllowMobSpawning, "Mob spawning", islandDoMobSpawnDescription, isDoMobSpawn);
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
