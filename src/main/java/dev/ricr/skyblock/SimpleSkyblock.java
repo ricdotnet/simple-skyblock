@@ -47,7 +47,7 @@ public class SimpleSkyblock extends JavaPlugin {
         this.createAndLoadServerShop();
 
         // Simple online players cache to help with batching PlayerEntity related db operations
-        this.onlinePlayers = new OnlinePlayers();
+        this.onlinePlayers = new OnlinePlayers(this);
 
         // Open managers
         this.databaseChangesAccumulator = new DatabaseChangesAccumulator(this);

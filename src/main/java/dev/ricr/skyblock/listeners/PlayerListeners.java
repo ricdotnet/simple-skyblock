@@ -27,6 +27,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -252,6 +253,14 @@ public class PlayerListeners implements Listener {
                     Component.text("You are not allowed to use this command", NamedTextColor.RED)
             );
         }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        var player = event.getEntity();
+        var playerScoreboard = this.plugin.onlinePlayers.getScoreboards().get(player.getUniqueId());
+
+        playerScoreboard.setDeathsObjective(player);
     }
 
     @EventHandler

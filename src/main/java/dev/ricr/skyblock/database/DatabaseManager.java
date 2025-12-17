@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.UUID;
 
 @Getter
 public class DatabaseManager {
@@ -109,7 +110,14 @@ public class DatabaseManager {
 
     private void applyChange(DatabaseChange change) throws SQLException {
         switch (change) {
-            case DatabaseChange.PlayerCreateOrUpdate(PlayerEntity player) -> this.playersDao.createOrUpdate(player);
+            case DatabaseChange.PlayerCreateOrUpdate(PlayerEntity player) -> {
+                this.playersDao.createOrUpdate(player);
+
+                var playerId = UUID.fromString(player.getPlayerId());
+                this.plugin.onlinePlayers.getScoreboards()
+                        .get(playerId)
+                        .setMoneyObjective(playerId);
+            }
             case DatabaseChange.GambleRecordAdd(GambleEntity gamble) -> this.gamblesDao.create(gamble);
             case DatabaseChange.AuctionHouseItemAdd(AuctionHouseItemEntity auctionHouseItem) ->
                     this.auctionHouseDao.create(auctionHouseItem);

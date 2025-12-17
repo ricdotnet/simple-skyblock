@@ -55,7 +55,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case Buttons.IslandPrivacy -> this.handleIslandPrivacyClick(player);
             case Buttons.IslandAllowNetherTeleport -> this.handleAllowNetherTeleportClick(player);
             case Buttons.IslandAllowOfflineVisits -> this.handleAllowOfflineVisits(player);
-            case Buttons.IslandAllowMobSpawning -> {}
+            case Buttons.IslandAllowMobSpawning -> this.handleMobSpawningClick(player);
             case Buttons.IslandShowSeed -> this.handleShowIslandSeedClick(player);
         }
     }
@@ -90,19 +90,19 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         var isIslandPrivate = playerIsland.isPrivate();
         var islandPrivacyDescription = "Makes your island private and prevents other players from sending visit requests.";
-        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island privacy", islandPrivacyDescription, isIslandPrivate);
+        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island privacy", islandPrivacyDescription);
 
         var isIslandAllowNetherTeleport = playerIsland.isAllowNetherTeleport();
         var islandAllowNetherTeleportDescription = "Prevents other players from teleporting to your nether island using your nether portal.";
-        this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Nether teleport", islandAllowNetherTeleportDescription, isIslandAllowNetherTeleport);
+        this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Nether teleport", islandAllowNetherTeleportDescription);
 
         var islandAllowOfflineVisits = playerIsland.isAllowOfflineVisits();
         var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
-        this.addBooleanButton(islandAllowOfflineVisits, 12, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription, islandAllowOfflineVisits);
+        this.addBooleanButton(islandAllowOfflineVisits, 12, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription);
 
         var isDoMobSpawn = islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING);
         var islandDoMobSpawnDescription = "Allows mobs to spawn in your island.";
-        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 19, Buttons.IslandAllowMobSpawning, "Mob spawning", islandDoMobSpawnDescription, isDoMobSpawn);
+        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 19, Buttons.IslandAllowMobSpawning, "Mob spawning", islandDoMobSpawnDescription);
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
@@ -118,15 +118,15 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.inventory.setItem(15, seedButton);
     }
 
-    private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons buttonType, String label, String description, boolean state) {
+    private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons buttonType, String label, String description) {
         ItemStack booleanButton;
 
         if (isTrue) {
             booleanButton = new ItemStack(Material.GREEN_TERRACOTTA);
-            this.setItemComplexMeta(booleanButton, label, description, state, buttonType);
+            this.setItemComplexMeta(booleanButton, label, description, true, buttonType);
         } else {
             booleanButton = new ItemStack(Material.RED_TERRACOTTA);
-            this.setItemComplexMeta(booleanButton, label, description, state, buttonType);
+            this.setItemComplexMeta(booleanButton, label, description, false, buttonType);
         }
 
         this.inventory.setItem(inventoryPosition, booleanButton);
@@ -231,5 +231,17 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         } catch (SQLException e) {
             // ignore for now
         }
+    }
+
+    private void handleMobSpawningClick(Player player) {
+        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
+        var isDoMobSpawn = islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING);
+
+        islandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, Boolean.FALSE.equals(isDoMobSpawn));
+
+        player.sendMessage(Component.text("Mob spawning has been " + (Boolean.FALSE.equals(isDoMobSpawn) ? "enabled" : "disabled")));
+
+        // refresh only
+        this.openInventory(player);
     }
 }
