@@ -1,6 +1,10 @@
 package dev.ricr.skyblock.enums;
 
 public enum TransactionType {
-    Buy,
-    Sell
+    ShopBuy,
+    ShopSell,
+    AuctionHouseBuy,
+    AuctionHouseSell,
+    SignShopTradeIn,
+    SignShopTradeOut
 }

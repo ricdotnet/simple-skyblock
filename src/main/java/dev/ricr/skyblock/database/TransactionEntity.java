@@ -6,22 +6,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@DatabaseTable(tableName = "auction_house_transaction")
+@DatabaseTable(tableName = "transactions")
 @NoArgsConstructor
 @Getter
 @Setter
-public class AuctionHouseTransactionEntity {
+public class TransactionEntity {
     @DatabaseField(generatedId = true)
     private int id;
 
     @DatabaseField(foreign = true, canBeNull = false)
     private PlayerEntity player;
 
-    @DatabaseField(foreign = true, canBeNull = false)
+    @DatabaseField(foreign = true)
     private PlayerEntity seller;
 
     @DatabaseField(canBeNull = false)
     private double price;
+
+    @DatabaseField(canBeNull = false)
+    private int quantity;
+
+    @DatabaseField(canBeNull = false)
+    private String type; // Buy or Sell
 
     @DatabaseField(canBeNull = false)
     private String item;

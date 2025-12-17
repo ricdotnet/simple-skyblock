@@ -2,9 +2,8 @@ package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouseItemEntity;
-import dev.ricr.skyblock.database.AuctionHouseTransactionEntity;
 import dev.ricr.skyblock.database.DatabaseChange;
-import dev.ricr.skyblock.database.SaleEntity;
+import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
@@ -47,20 +46,20 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         if (shopType == ShopType.AuctionHouse) {
             ItemStack confirmBuy = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1),
-                    pricePair.buyPrice(), TransactionType.Buy);
+                    pricePair.buyPrice(), TransactionType.ShopBuy);
             ItemStack cancel = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, 1),
-                    pricePair.sellPrice(), TransactionType.Sell);
+                    pricePair.sellPrice(), TransactionType.ShopSell);
 
             inventory.setItem(9, confirmBuy);
             inventory.setItem(17, cancel);
         } else {
             if (pricePair.buyPrice() >= 0) {
                 ItemStack buySingle = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1),
-                        pricePair.buyPrice(), TransactionType.Buy);
+                        pricePair.buyPrice(), TransactionType.ShopBuy);
                 ItemStack buyHalfStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
-                        itemStack.getMaxStackSize() / 2), pricePair.buyPrice(), TransactionType.Buy);
+                        itemStack.getMaxStackSize() / 2), pricePair.buyPrice(), TransactionType.ShopBuy);
                 ItemStack buyFullStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
-                        item.getMaxStackSize()), pricePair.buyPrice(), TransactionType.Buy);
+                        item.getMaxStackSize()), pricePair.buyPrice(), TransactionType.ShopBuy);
 
                 inventory.setItem(11, buySingle);
                 inventory.setItem(10, buyHalfStack);
@@ -69,11 +68,11 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
             if (pricePair.sellPrice() >= 0) {
                 ItemStack sellSingle = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, 1),
-                        pricePair.sellPrice(), TransactionType.Sell);
+                        pricePair.sellPrice(), TransactionType.ShopSell);
                 ItemStack sellHalfStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE,
-                        itemStack.getMaxStackSize() / 2), pricePair.sellPrice(), TransactionType.Sell);
+                        itemStack.getMaxStackSize() / 2), pricePair.sellPrice(), TransactionType.ShopSell);
                 ItemStack sellFullStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE,
-                        item.getMaxStackSize()), pricePair.sellPrice(), TransactionType.Sell);
+                        item.getMaxStackSize()), pricePair.sellPrice(), TransactionType.ShopSell);
 
                 int totalInPlayerInventory = PlayerUtils.getAllItemsInInventoryOfItem(player, item);
 
@@ -233,13 +232,13 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                         ServerUtils.getTextFromComponent(actionableItem.displayName()),
                         price);
 
-                var transaction = new AuctionHouseTransactionEntity();
+                var transaction = new TransactionEntity();
                 transaction.setPlayer(buyerPlayerRecord);
                 transaction.setSeller(auctionHouseItem.getPlayer());
                 transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
                 transaction.setPrice(price);
 
-                var auctionHouseTransactionAdd = new DatabaseChange.AuctionHouseTransactionAdd(transaction);
+                var auctionHouseTransactionAdd = new DatabaseChange.TransactionAdd(transaction);
                 this.plugin.databaseChangesAccumulator.add(auctionHouseTransactionAdd);
 
                 var auctionHouseItemRemove = new DatabaseChange.AuctionHouseItemRemove(auctionHouseItem);
@@ -303,22 +302,22 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         }
 
         double totalPrice;
-        double finalBalance = 0;
+        double finalBalance;
 
         TransactionType transactionType;
         if (clickedItemName.contains("Buy")) {
-            transactionType = TransactionType.Buy;
+            transactionType = TransactionType.ShopBuy;
         } else if (clickedItemName.contains("Sell")) {
-            transactionType = TransactionType.Sell;
+            transactionType = TransactionType.ShopSell;
         } else {
             player.sendMessage(Component.text("Something went wrong.", NamedTextColor.RED));
             return;
         }
 
         var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
-        var saleRecord = new SaleEntity();
+        var saleRecord = new TransactionEntity();
 
-        if (transactionType == TransactionType.Buy) {
+        if (transactionType == TransactionType.ShopBuy) {
             if (isPlayerInventoryFull(player)) {
                 player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
@@ -368,8 +367,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     ServerUtils.formatMoneyValue(totalPrice)), NamedTextColor.GREEN));
         }
 
-        saleRecord.setItem(material.name());
-        saleRecord.setValue(totalPrice);
+        saleRecord.setItem(ServerUtils.base64FromBytes(actionableItem.serializeAsBytes()));
+        saleRecord.setPrice(totalPrice);
         saleRecord.setQuantity(itemAmount);
         saleRecord.setPlayer(playerRecord);
         saleRecord.setType(transactionType.toString());
@@ -377,7 +376,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerRecord);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
-        var saleRecordAdd = new DatabaseChange.SaleRecordAdd(saleRecord);
+        var saleRecordAdd = new DatabaseChange.TransactionAdd(saleRecord);
         this.plugin.databaseChangesAccumulator.add(saleRecordAdd);
 
         plugin.getLogger()

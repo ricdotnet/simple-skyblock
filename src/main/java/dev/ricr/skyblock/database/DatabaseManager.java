@@ -21,10 +21,9 @@ public class DatabaseManager {
     private Dao<IslandPlayerTrustLinkEntity, String> islandPlayerTrustLinksDao;
     private Dao<PlayerEntity, String> playersDao;
     private Dao<IslandEntity, String> islandsDao;
-    private Dao<SaleEntity, Integer> salesDao;
     private Dao<GambleEntity, Integer> gamblesDao;
     private Dao<AuctionHouseItemEntity, Integer> auctionHouseDao;
-    private Dao<AuctionHouseTransactionEntity, Integer> auctionHouseTransactionsDao;
+    private Dao<TransactionEntity, Integer> transactionsDao;
 
     public DatabaseManager(SimpleSkyblock plugin, DatabaseChangesAccumulator accumulator) {
         this.plugin = plugin;
@@ -41,18 +40,17 @@ public class DatabaseManager {
             this.islandPlayerTrustLinksDao = DaoManager.createDao(connection, IslandPlayerTrustLinkEntity.class);
             this.playersDao = DaoManager.createDao(connection, PlayerEntity.class);
             this.islandsDao = DaoManager.createDao(connection, IslandEntity.class);
-            this.salesDao = DaoManager.createDao(connection, SaleEntity.class);
             this.gamblesDao = DaoManager.createDao(connection, GambleEntity.class);
             this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouseItemEntity.class);
-            this.auctionHouseTransactionsDao = DaoManager.createDao(connection, AuctionHouseTransactionEntity.class);
+            this.transactionsDao = DaoManager.createDao(connection, TransactionEntity.class);
 
             TableUtils.createTableIfNotExists(connection, IslandPlayerTrustLinkEntity.class);
             TableUtils.createTableIfNotExists(connection, PlayerEntity.class);
             TableUtils.createTableIfNotExists(connection, IslandEntity.class);
-            TableUtils.createTableIfNotExists(connection, SaleEntity.class);
+            TableUtils.createTableIfNotExists(connection, TransactionEntity.class);
             TableUtils.createTableIfNotExists(connection, GambleEntity.class);
             TableUtils.createTableIfNotExists(connection, AuctionHouseItemEntity.class);
-            TableUtils.createTableIfNotExists(connection, AuctionHouseTransactionEntity.class);
+            TableUtils.createTableIfNotExists(connection, TransactionEntity.class);
 
             plugin.getLogger()
                     .info("Successfully connected to database.");
@@ -113,13 +111,12 @@ public class DatabaseManager {
         switch (change) {
             case DatabaseChange.PlayerCreateOrUpdate(PlayerEntity player) -> this.playersDao.createOrUpdate(player);
             case DatabaseChange.GambleRecordAdd(GambleEntity gamble) -> this.gamblesDao.create(gamble);
-            case DatabaseChange.SaleRecordAdd(SaleEntity sale) -> this.salesDao.create(sale);
             case DatabaseChange.AuctionHouseItemAdd(AuctionHouseItemEntity auctionHouseItem) ->
                     this.auctionHouseDao.create(auctionHouseItem);
             case DatabaseChange.AuctionHouseItemRemove(AuctionHouseItemEntity auctionHouseItem) ->
                     this.auctionHouseDao.delete(auctionHouseItem);
-            case DatabaseChange.AuctionHouseTransactionAdd(AuctionHouseTransactionEntity auctionHouseTransaction) ->
-                    this.auctionHouseTransactionsDao.create(auctionHouseTransaction);
+            case DatabaseChange.TransactionAdd(TransactionEntity transaction) ->
+                    this.transactionsDao.create(transaction);
             case DatabaseChange.TrustedPlayerAdd(IslandEntity playerIsland, PlayerEntity targetPlayer) -> {
                 var islandPlayerTrustLink = new IslandPlayerTrustLinkEntity();
 

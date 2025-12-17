@@ -1,7 +1,11 @@
 package dev.ricr.skyblock.shop;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.PlayerEntity;
+import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.enums.SignShopType;
+import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -23,6 +27,8 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+
+import java.sql.SQLException;
 
 // left click is selling block or block to give or trade out
 // right click is buying block or block to take or trade in
@@ -79,7 +85,7 @@ public class SignShop {
                 return;
             }
 
-            this.handleSignShopTransaction();
+            this.handleSignShopTransaction(this.getShopOwner(this.sign));
             return;
         }
 
@@ -229,7 +235,7 @@ public class SignShop {
         this.player.sendMessage(shopMessage);
     }
 
-    private void handleSignShopTransaction() {
+    private void handleSignShopTransaction(PlayerEntity signShopOwner) {
         var attachedBlock = this.getAttachedChestBlock((WallSign) this.sign.getBlockData(), this.sign.getBlock());
         if (attachedBlock == null || !(attachedBlock.getState() instanceof Chest chestBlock)) {
             return;
@@ -273,9 +279,33 @@ public class SignShop {
             chestBlock.getInventory().removeItem(itemToTradeOut);
             this.player.getInventory().addItem(itemToTradeOut);
 
+            var playerBuyerEntity = this.plugin.onlinePlayers.getPlayer(this.player.getUniqueId());
+
             if (itemToTradeIn != null) {
                 chestBlock.getInventory().addItem(itemToTradeIn);
+
+                var signShopTransaction = new TransactionEntity();
+                signShopTransaction.setPrice(-1);
+                signShopTransaction.setQuantity(itemToTradeInTuple.getSecond());
+                signShopTransaction.setItem(ServerUtils.base64FromBytes(itemToTradeIn.serializeAsBytes()));
+                signShopTransaction.setPlayer(signShopOwner);
+                signShopTransaction.setSeller(playerBuyerEntity);
+                signShopTransaction.setType(TransactionType.SignShopTradeIn.toString());
+
+                var signShopTransactionIn = new DatabaseChange.TransactionAdd(signShopTransaction);
+                this.plugin.databaseChangesAccumulator.add(signShopTransactionIn);
             }
+
+            var signShopTransaction = new TransactionEntity();
+            signShopTransaction.setPrice(-1);
+            signShopTransaction.setQuantity(amountToTradeOut);
+            signShopTransaction.setItem(ServerUtils.base64FromBytes(itemToTradeOut.serializeAsBytes()));
+            signShopTransaction.setPlayer(playerBuyerEntity);
+            signShopTransaction.setSeller(signShopOwner);
+            signShopTransaction.setType(TransactionType.SignShopTradeOut.toString());
+
+            var signShopTransactionOut = new DatabaseChange.TransactionAdd(signShopTransaction);
+            this.plugin.databaseChangesAccumulator.add(signShopTransactionOut);
 
             this.player.sendMessage(Component.text("You have successfully traded out your items", NamedTextColor.GREEN));
         }
@@ -320,6 +350,23 @@ public class SignShop {
     private boolean isShopOwner(Sign sign) {
         var shopOwnerId = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OWNER, PersistentDataType.STRING);
         return shopOwnerId != null && shopOwnerId.equals(this.player.getUniqueId().toString());
+    }
+
+    private PlayerEntity getShopOwner(Sign sign) {
+        var shopOwnerId = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OWNER, PersistentDataType.STRING);
+        if (shopOwnerId == null) {
+            throw new IllegalStateException("Shop owner id is null");
+        }
+
+        PlayerEntity shopOwner;
+        try {
+            shopOwner = this.plugin.databaseManager.getPlayersDao().queryForId(shopOwnerId);
+        } catch (SQLException e) {
+            // ignore for now
+            throw new IllegalStateException("Failed to get shop owner");
+        }
+
+        return shopOwner;
     }
 
     private Block getAttachedChestBlock(WallSign wallSign, Block signBlock) {

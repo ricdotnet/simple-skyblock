@@ -2,7 +2,7 @@ package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.SaleEntity;
+import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.utils.PlayerUtils;
@@ -31,13 +31,13 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Dao<PlayerEntity, String> playersDao = plugin.databaseManager.getPlayersDao();
-            Dao<SaleEntity, Integer> saleDao = plugin.databaseManager.getSalesDao();
+            Dao<TransactionEntity, Integer> saleDao = plugin.databaseManager.getTransactionsDao();
 
             try {
                 List<PlayerEntity> playerEntities = playersDao.queryBuilder()
                         .orderBy("balance", false)
                         .query();
-                List<SaleEntity> sales = saleDao.queryForAll();
+                List<TransactionEntity> sales = saleDao.queryForAll();
 
                 double totalEconomyValue = playerEntities.stream()
                         .mapToDouble(PlayerEntity::getBalance)
@@ -45,14 +45,14 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 double totalServerBought =
                         sales.stream()
                                 .filter(sale -> sale.getType()
-                                        .equals(TransactionType.Buy.toString()))
-                                .mapToDouble(SaleEntity::getValue)
+                                        .equals(TransactionType.ShopBuy.toString()))
+                                .mapToDouble(TransactionEntity::getPrice)
                                 .sum();
                 double totalServerSold =
                         sales.stream()
                                 .filter(sale -> sale.getType()
-                                        .equals(TransactionType.Sell.toString()))
-                                .mapToDouble(SaleEntity::getValue)
+                                        .equals(TransactionType.ShopSell.toString()))
+                                .mapToDouble(TransactionEntity::getPrice)
                                 .sum();
 
                 for (PlayerEntity playerEntity : playerEntities) {
@@ -63,16 +63,16 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                                     .filter(sale -> sale.getPlayer()
                                             .getPlayerId()
                                             .equals(uuid.toString()) && sale.getType()
-                                            .equals(TransactionType.Buy.toString()))
-                                    .mapToDouble(SaleEntity::getValue)
+                                            .equals(TransactionType.ShopBuy.toString()))
+                                    .mapToDouble(TransactionEntity::getPrice)
                                     .sum();
                     double totalSold =
                             sales.stream()
                                     .filter(sale -> sale.getPlayer()
                                             .getPlayerId()
                                             .equals(uuid.toString()) && sale.getType()
-                                            .equals(TransactionType.Sell.toString()))
-                                    .mapToDouble(SaleEntity::getValue)
+                                            .equals(TransactionType.ShopSell.toString()))
+                                    .mapToDouble(TransactionEntity::getPrice)
                                     .sum();
 
                     ItemStack playerHead = PlayerUtils.getPlayerHead(uuid);

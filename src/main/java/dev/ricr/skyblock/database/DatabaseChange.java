@@ -3,9 +3,8 @@ package dev.ricr.skyblock.database;
 public sealed interface DatabaseChange permits
         DatabaseChange.AuctionHouseItemAdd,
         DatabaseChange.AuctionHouseItemRemove,
-        DatabaseChange.AuctionHouseTransactionAdd,
+        DatabaseChange.TransactionAdd,
         DatabaseChange.GambleRecordAdd,
-        DatabaseChange.SaleRecordAdd,
         DatabaseChange.TrustedPlayerAdd,
         DatabaseChange.TrustedPlayerRemove,
         DatabaseChange.PlayerCreateOrUpdate {
@@ -16,13 +15,10 @@ public sealed interface DatabaseChange permits
     record AuctionHouseItemRemove(AuctionHouseItemEntity auctionHouseItem) implements DatabaseChange {
     }
 
-    record AuctionHouseTransactionAdd(AuctionHouseTransactionEntity auctionHouseTransaction) implements DatabaseChange {
+    record TransactionAdd(TransactionEntity transaction) implements DatabaseChange {
     }
 
     record GambleRecordAdd(GambleEntity gamble) implements DatabaseChange {
-    }
-
-    record SaleRecordAdd(SaleEntity sale) implements DatabaseChange {
     }
 
     record TrustedPlayerAdd(IslandEntity island, PlayerEntity trustedPlayer) implements DatabaseChange {
