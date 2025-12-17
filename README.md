@@ -28,6 +28,7 @@ A simple Paper plugin for Minecraft `>1.21.10` that every player to have their o
 - Gamble system
 - Island trust and protection system
 - Island border and expansion system
+- Sign Trade shops (needs a tutorial)
 
 [//]: # (- Randomly select coordinates for a custom stronghold structure &#40;easily customizable&#41;)
 [//]: # (  - Always generates at Y -40)
