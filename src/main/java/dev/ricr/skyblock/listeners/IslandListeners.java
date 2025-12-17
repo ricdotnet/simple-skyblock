@@ -13,6 +13,7 @@ import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Sign;
@@ -155,6 +156,9 @@ public class IslandListeners implements Listener {
                 StructureUtils.placeStructure(this.plugin, new Location(netherWorld, -4, 61, -4), CustomStructures.NETHER_ISLAND);
                 island.setHasNether(true);
                 this.plugin.databaseManager.getIslandsDao().update(island);
+
+                netherWorld.setDifficulty(Difficulty.HARD);
+                netherWorld.save();
             }
 
             player.teleport(new Location(netherWorld, 0.5, 64, 0.5, 180f, 0f));

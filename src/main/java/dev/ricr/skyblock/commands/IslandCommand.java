@@ -26,6 +26,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -133,6 +134,8 @@ public class IslandCommand implements ICommand {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
         } else {
             var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+
+            newIslandWorld.setDifficulty(Difficulty.HARD);
 
             var radius = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
             var radiusWithOldExpansion = radius + playerRecord.getExpansionSize();
