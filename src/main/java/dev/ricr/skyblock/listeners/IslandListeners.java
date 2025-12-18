@@ -32,6 +32,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class IslandListeners implements Listener {
     private final SimpleSkyblock plugin;
@@ -147,10 +148,19 @@ public class IslandListeners implements Listener {
             return;
         }
 
+        var targetIslandId = from.getName()
+                .replace("islands/", "")
+                .replace("_nether", "");
+
         try {
-            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            var island = this.plugin.databaseManager.getIslandsDao().queryForId(targetIslandId);
             var seed = island.getSeed();
-            var netherWorld = ServerUtils.loadOrCreateWorld(event.getPlayer().getUniqueId(), World.Environment.NETHER, seed);
+            var netherWorld = ServerUtils.loadOrCreateWorld(UUID.fromString(targetIslandId), World.Environment.NETHER, seed);
+
+            if (!player.getUniqueId().toString().equals(targetIslandId) && !island.isHasNether()) {
+                player.sendMessage(Component.text("The island owner has not generated a Nether island yet", NamedTextColor.RED));
+                return;
+            }
 
             if (!island.isHasNether()) {
                 StructureUtils.placeStructure(this.plugin, new Location(netherWorld, -4, 61, -4), CustomStructures.NETHER_ISLAND);
@@ -167,6 +177,7 @@ public class IslandListeners implements Listener {
             player.sendMessage(Component.text("Something went wrong when trying to go to the Nether", NamedTextColor.RED));
         }
 
+        player.setNoDamageTicks(20 * 10);
         player.sendMessage(Component.text("Welcome to the Nether", NamedTextColor.GREEN));
     }
 

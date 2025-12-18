@@ -384,6 +384,7 @@ public class IslandCommand implements ICommand {
 
         // set the new tp location for when the player uses /is or /island
         currentWorld.setSpawnLocation(location);
+        player.sendMessage(Component.text("Your island teleport position has been updated", NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -482,6 +483,9 @@ public class IslandCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
+        player.sendMessage(Component.text("A visit request has been sent to", NamedTextColor.GREEN)
+                .appendSpace()
+                .append(Component.text(String.format("%s", targetPlayer.getName()), NamedTextColor.GOLD)));
         targetPlayer.sendMessage(base.appendSpace().append(reason).appendSpace().append(clickable));
 
         return Command.SINGLE_SUCCESS;

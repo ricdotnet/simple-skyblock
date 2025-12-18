@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -238,6 +239,18 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var isDoMobSpawn = islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING);
 
         islandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, Boolean.FALSE.equals(isDoMobSpawn));
+
+        try {
+            var islandEntity = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
+            if (islandEntity == null || !islandEntity.isHasNether()) {
+                return;
+            }
+
+            var netherIslandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NETHER, null);
+            netherIslandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, Boolean.FALSE.equals(isDoMobSpawn));
+        } catch (SQLException e) {
+            // ignore for now
+        }
 
         player.sendMessage(Component.text("Mob spawning has been " + (Boolean.FALSE.equals(isDoMobSpawn) ? "enabled" : "disabled")));
 
