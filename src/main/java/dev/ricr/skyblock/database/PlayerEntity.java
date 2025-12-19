@@ -1,6 +1,8 @@
 package dev.ricr.skyblock.database;
 
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,4 +25,7 @@ public class PlayerEntity {
     // We should keep track of this here for keeping how big a player's island was in case they decide to delete it and recreate
     @DatabaseField
     private int expansionSize = 0;
+
+    @ForeignCollectionField
+    private ForeignCollection<IslandPlayerTrustLinkEntity> playerWarps;
 }

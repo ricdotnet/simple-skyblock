@@ -1,6 +1,6 @@
 main: dev.ricr.skyblock.SimpleSkyblock
 name: SimpleSkyblock
-version: '0.0.7'
+version: '0.0.8-SNAPSHOT'
 api-version: '1.21'
 author: ricdotnet
 load: STARTUP
