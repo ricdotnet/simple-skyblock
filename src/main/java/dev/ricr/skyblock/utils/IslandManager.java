@@ -21,9 +21,6 @@ public class IslandManager {
 
     private final SimpleSkyblock plugin;
     private final Map<UUID, IslandRecord> islands;
-    @Setter
-    @Getter
-    private boolean opOverride = false;
 
     public IslandManager(SimpleSkyblock plugin) {
         this.plugin = plugin;
@@ -74,12 +71,10 @@ public class IslandManager {
         }
     }
 
-
-
     public boolean shouldStopIslandInteraction(Player player) {
         var world = player.getWorld();
 
-        if (isOpOverride(player) || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
+        if (player.isOp() && ServerUtils.isOpOverride() || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 
@@ -107,7 +102,7 @@ public class IslandManager {
     public boolean shouldStopNetherTeleport(Player player) {
         var world = player.getWorld();
 
-        if (isOpOverride(player) || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
+        if (player.isOp() && ServerUtils.isOpOverride() || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 
@@ -136,10 +131,6 @@ public class IslandManager {
         }
 
         return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
-    }
-
-    private boolean isOpOverride(Player player) {
-        return player.isOp() && this.opOverride;
     }
 
     private IslandRecord findCurrentIslandRecord(String worldName) {

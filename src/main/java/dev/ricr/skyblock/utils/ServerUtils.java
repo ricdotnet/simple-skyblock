@@ -5,6 +5,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.ricr.skyblock.SimpleSkyblock;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import lombok.Getter;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -60,6 +62,11 @@ public class ServerUtils {
     public static NamespacedKey SIGN_SHOP_OUT_ITEM;
     public static NamespacedKey SIGN_SHOP_IN_ITEM;
     public static NamespacedKey SIGN_SHOP_OWNER;
+
+    // server configs - TODO: refactor to a better solution
+    @Getter
+    @Setter
+    public static boolean opOverride = false;
 
     public static FileConfiguration loadConfig(SimpleSkyblock plugin) {
         File serverConfig = new File(plugin.getDataFolder(), "config.yml");

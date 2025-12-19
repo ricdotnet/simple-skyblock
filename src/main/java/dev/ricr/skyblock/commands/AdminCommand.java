@@ -50,10 +50,10 @@ public class AdminCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var isOpeOverride = this.plugin.islandManager.isOpOverride();
-        this.plugin.islandManager.setOpOverride(!isOpeOverride);
+        var isOpOverride = ServerUtils.isOpOverride();
+        ServerUtils.setOpOverride(!isOpOverride);
 
-        player.sendMessage(Component.text(String.format("Op override is now %s", this.plugin.islandManager.isOpOverride()), NamedTextColor.GREEN));
+        player.sendMessage(Component.text(String.format("Op override is now %s", ServerUtils.isOpOverride()), NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
     }

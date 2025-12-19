@@ -82,11 +82,17 @@ public class PlayerListeners implements Listener {
 
         if (!event.isBedSpawn()) {
             this.plugin.getLogger()
-                    .info(String.format("Player %s does not have a bed, sending to lobby", player.getName()));
+                    .info(String.format("Player %s does not have a bed, sending to island", player.getName()));
 
-            // TODO: if player has no island teleport to lobby then
-            var lobbyWorld = ServerUtils.loadOrCreateLobby();
-            event.setRespawnLocation(new Location(lobbyWorld, 0.5, 65, 0.5));
+            var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+            if (islandRecord == null) {
+                var lobbyWorld = ServerUtils.loadOrCreateLobby();
+                event.setRespawnLocation(new Location(lobbyWorld, 0.5, 65, 0.5));
+                return;
+            }
+
+            var islandLocation = PlayerUtils.getTpLocation(this.plugin, player.getUniqueId());
+            player.teleport(islandLocation);
         }
     }
 
@@ -246,6 +252,10 @@ public class PlayerListeners implements Listener {
     public void onCommand(PlayerCommandPreprocessEvent event) {
         String message = event.getMessage();
         Player player = event.getPlayer();
+
+        if (player.isOp() && ServerUtils.isOpOverride()) {
+            return;
+        }
 
         if (message.equalsIgnoreCase("/seed") || message.contains("/locate")) {
             event.setCancelled(true);
