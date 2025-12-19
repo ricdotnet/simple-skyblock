@@ -114,8 +114,8 @@ public class PlayerUtils {
                 .firstEmpty() == -1;
     }
 
-    public static boolean hasSpaceInInventory(Player player, ItemStack item, Integer amount) {
+    public static boolean hasEmptyInventorySlots(Player player) {
         long spaces = Arrays.stream(player.getInventory().getContents()).filter(Objects::nonNull).count();
-        return spaces * item.getMaxStackSize() >= amount;
+        return spaces > 0;
     }
 }

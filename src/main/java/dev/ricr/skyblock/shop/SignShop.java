@@ -89,15 +89,28 @@ public class SignShop {
             return;
         }
 
+        var itemStackOut = new ItemStack(this.materialInHand, 1);
+        var itemStackMaxStackSize = itemStackOut.getMaxStackSize();
+
         if (this.signShopType == SignShopType.Trade) {
             if (this.actionType.isLeftClick()) {
                 if (this.isOutItemSet(this.sign)) return;
 
                 var shopOutItem = this.sign.getPersistentDataContainer()
                         .get(ServerUtils.SIGN_SHOP_OUT_ITEM, PersistentDataType.STRING);
-
                 assert shopOutItem != null;
                 var amount = shopOutItem.split(":")[1];
+
+                if (Integer.parseInt(amount) > itemStackMaxStackSize) {
+                    player.sendMessage(Component.text("You can only trade out up to", NamedTextColor.RED)
+                            .appendSpace()
+                            .append(Component.text(String.valueOf(itemStackMaxStackSize), NamedTextColor.GOLD))
+                            .appendSpace()
+                            .append(Component.text("of this item, per transaction", NamedTextColor.RED))
+                    );
+                    return;
+                }
+
                 shopOutItem = shopOutItem.replace("{item}", this.materialInHand.toString());
 
                 this.sign.getPersistentDataContainer().set(
@@ -117,9 +130,22 @@ public class SignShop {
                 var shopInItem = this.sign.getPersistentDataContainer()
                         .get(ServerUtils.SIGN_SHOP_IN_ITEM, PersistentDataType.STRING);
 
-                if (shopInItem == null) return;
+                if (shopInItem == null) {
+                    return;
+                }
 
                 var amount = shopInItem.split(":")[1];
+
+                if (Integer.parseInt(amount) > itemStackMaxStackSize) {
+                    player.sendMessage(Component.text("You can only allow trade in up to", NamedTextColor.RED)
+                            .appendSpace()
+                            .append(Component.text(String.valueOf(itemStackMaxStackSize), NamedTextColor.GOLD))
+                            .appendSpace()
+                            .append(Component.text("of this item, per transaction", NamedTextColor.RED))
+                    );
+                    return;
+                }
+
                 shopInItem = shopInItem.replace("{item}", this.materialInHand.toString());
 
                 this.sign.getPersistentDataContainer().set(
@@ -255,10 +281,10 @@ public class SignShop {
 
             var itemToTradeOut = new ItemStack(materialToTradeOut, amountToTradeOut);
             var isInventoryFull = PlayerUtils.isInventoryFull(this.player);
-            var hasSpaceInInventory = PlayerUtils.hasSpaceInInventory(this.player, itemToTradeOut, amountToTradeOut);
+            var hasEmptyInventorySlots = PlayerUtils.hasEmptyInventorySlots(this.player);
 
-            if (isInventoryFull || !hasSpaceInInventory) {
-                this.player.sendMessage(Component.text("You have no space in your inventory", NamedTextColor.RED));
+            if (isInventoryFull || !hasEmptyInventorySlots) {
+                this.player.sendMessage(Component.text("You must have empty inventory slots to trade items", NamedTextColor.RED));
                 return;
             }
 
