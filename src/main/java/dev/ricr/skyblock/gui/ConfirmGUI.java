@@ -241,8 +241,9 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 var auctionHouseTransactionAdd = new DatabaseChange.TransactionAdd(transaction);
                 this.plugin.databaseChangesAccumulator.add(auctionHouseTransactionAdd);
 
-                var auctionHouseItemRemove = new DatabaseChange.AuctionHouseItemRemove(auctionHouseItem);
-                this.plugin.databaseChangesAccumulator.add(auctionHouseItemRemove);
+                // TODO: implement a ah cache similar to onlinePlayers for quick realtime updates
+//                var auctionHouseItemRemove = new DatabaseChange.AuctionHouseItemRemove(auctionHouseItem);
+//                this.plugin.databaseChangesAccumulator.add(auctionHouseItemRemove);
 
                 var playerCreateOrUpdateBuyer = new DatabaseChange.PlayerCreateOrUpdate(buyerPlayerRecord);
                 this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateBuyer);
@@ -267,6 +268,9 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     }
 
                     this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSeller);
+
+                    // TODO: remove when the ah cache is implemented
+                    this.plugin.databaseManager.getAuctionHouseDao().delete(auctionHouseItem);
                 } catch (SQLException e) {
                     // ignore for now
                 }
