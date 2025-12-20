@@ -74,6 +74,7 @@ public class PlayerListeners implements Listener {
         var player = event.getPlayer();
 
         this.plugin.onlinePlayers.removePlayer(player.getUniqueId());
+        // TODO: unload player islands - nether and overworld
     }
 
     @EventHandler

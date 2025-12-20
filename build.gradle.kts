@@ -24,6 +24,8 @@ repositories {
 
 dependencies {
     compileOnly(libs.io.papermc.paper.paper.api)
+    implementation("fr.mrmicky:fastboard:2.1.5")
+
     implementation("org.xerial:sqlite-jdbc:3.51.0.0")
     implementation("com.j256.ormlite:ormlite-core:6.1")
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
@@ -56,6 +58,8 @@ tasks {
         archiveClassifier.set("") // overwrite normal jar
         mergeServiceFiles()       // required for ORMLite/SQLite
         minimize()                // optional: remove unused classes
+
+        relocate("fr.mrmicky.fastboard", "dev.ricr.skyblock.fastboard")
     }
 
     build {
