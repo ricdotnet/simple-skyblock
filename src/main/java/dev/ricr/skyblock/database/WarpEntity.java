@@ -11,12 +11,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class WarpEntity {
-    @DatabaseField(id = true)
+    @DatabaseField(id = true, columnName = "warp_name")
     private String warpName;
 
     @DatabaseField(foreign = true, foreignAutoRefresh = true)
-    private PlayerEntity owner;
+    private PlayerEntity player;
 
-    @DatabaseField
+    @DatabaseField(columnName = "is_server")
     private boolean isServer = false;
+
+    @DatabaseField(canBeNull = false)
+    private String location;
 }

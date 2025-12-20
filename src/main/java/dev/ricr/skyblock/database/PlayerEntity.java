@@ -27,5 +27,5 @@ public class PlayerEntity {
     private int expansionSize = 0;
 
     @ForeignCollectionField
-    private ForeignCollection<IslandPlayerTrustLinkEntity> playerWarps;
+    private ForeignCollection<WarpEntity> playerWarps;
 }

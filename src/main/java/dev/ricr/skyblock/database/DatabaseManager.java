@@ -144,6 +144,8 @@ public class DatabaseManager {
                         .eq("player_id", trustedPlayerId);
                 deleteBuilder.delete();
             }
+            case DatabaseChange.WarpEntityCreateOrUpdate(WarpEntity warpEntity) ->
+                    this.warpsDao.createOrUpdate(warpEntity);
             default -> throw new IllegalStateException("Unexpected value: " + change);
         }
     }

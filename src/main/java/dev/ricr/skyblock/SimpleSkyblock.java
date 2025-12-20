@@ -23,6 +23,7 @@ import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,12 +41,15 @@ public class SimpleSkyblock extends JavaPlugin {
     public IslandGenerator islandGenerator;
     public DatabaseChangesAccumulator databaseChangesAccumulator;
     public OnlinePlayers onlinePlayers;
+    public MiniMessage miniMessage;
 
     @Override
     public void onEnable() {
         this.ensureDataFolderExists();
         this.createAndLoadServerConfig();
         this.createAndLoadServerShop();
+
+        this.miniMessage = MiniMessage.miniMessage();
 
         // Simple online players cache to help with batching PlayerEntity related db operations
         this.onlinePlayers = new OnlinePlayers(this);
