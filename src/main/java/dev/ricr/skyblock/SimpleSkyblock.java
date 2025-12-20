@@ -9,6 +9,7 @@ import dev.ricr.skyblock.commands.LeaderboardCommand;
 import dev.ricr.skyblock.commands.LobbyCommand;
 import dev.ricr.skyblock.commands.PayCommand;
 import dev.ricr.skyblock.commands.ShopCommand;
+import dev.ricr.skyblock.commands.WarpCommand;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
@@ -73,6 +74,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new IslandCommand(this).register();
         new GambleCommand(this).register();
         new PayCommand(this).register();
+        new WarpCommand(this).register();
 
         Objects.requireNonNull(this.getCommand("lobby"))
                 .setExecutor(new LobbyCommand(this));

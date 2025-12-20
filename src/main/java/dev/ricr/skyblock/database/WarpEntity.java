@@ -16,4 +16,7 @@ public class WarpEntity {
 
     @DatabaseField(foreign = true, foreignAutoRefresh = true)
     private PlayerEntity owner;
+
+    @DatabaseField
+    private boolean isServer = false;
 }
