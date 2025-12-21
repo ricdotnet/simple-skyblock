@@ -24,9 +24,9 @@ public class PayCommand implements ICommand {
     public void register() {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-                    LiteralCommandNode<CommandSourceStack> gamble = this.command();
+                    LiteralCommandNode<CommandSourceStack> pay = this.command();
 
-                    commands.registrar().register(gamble);
+                    commands.registrar().register(pay);
                 });
     }
 

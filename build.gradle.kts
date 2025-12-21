@@ -16,7 +16,6 @@ repositories {
     maven {
         url = uri("https://repo.papermc.io/repository/maven-public/")
     }
-
     maven {
         url = uri("https://repo.maven.apache.org/maven2/")
     }
@@ -24,6 +23,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.io.papermc.paper.paper.api)
+
     implementation("org.xerial:sqlite-jdbc:3.51.0.0")
     implementation("com.j256.ormlite:ormlite-core:6.1")
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
@@ -32,10 +32,12 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+
+    implementation("fr.mrmicky:fastboard:2.1.5")
 }
 
 group = "dev.ricr.skyblock"
-version = "0.0.7"
+version = "0.0.8-SNAPSHOT"
 description = "SimpleSkyblock"
 java.sourceCompatibility = JavaVersion.VERSION_21
 

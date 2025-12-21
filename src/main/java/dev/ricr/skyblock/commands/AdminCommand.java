@@ -2,11 +2,14 @@ package dev.ricr.skyblock.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.WarpEntity;
+import dev.ricr.skyblock.enums.InvalidWarpNames;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -17,6 +20,8 @@ import lombok.AllArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+
+import java.sql.SQLException;
 
 @AllArgsConstructor
 public class AdminCommand implements ICommand {
@@ -41,6 +46,11 @@ public class AdminCommand implements ICommand {
                                 .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
                                         .executes(this::giveMoney)
                                 )
+                        )
+                )
+                .then(Commands.literal("createWarp")
+                        .then(Commands.argument("warp", StringArgumentType.string())
+                                .executes(this::createWarp)
                         )
                 )
                 .build();
@@ -92,5 +102,54 @@ public class AdminCommand implements ICommand {
                 NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
+    }
+
+    private int createWarp(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var warpName = ctx.getArgument("warp", String.class).toLowerCase();
+        var warpEnum = InvalidWarpNames.getByName(warpName);
+
+        if (warpEnum != null && !warpEnum.isAdminOverride()) {
+            var message = String.format("<red>This warp name <gold>%s</gold> is marked as invalid and as non-overrideable", warpName);
+            player.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var warpExists = this.warpNameExists(warpName);
+        if (warpExists) {
+            var message = String.format("<red>Warp with name <gold>%s</gold> already exists", warpName);
+            player.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var location = player.getLocation();
+        var serializedLocation = ServerUtils.serializeLocation(location);
+
+        var warpEntity = new WarpEntity();
+        warpEntity.setWarpName(warpName);
+        warpEntity.setLocation(serializedLocation);
+        warpEntity.setServer(true);
+
+        var warpEntityCreateOrUpdate = new DatabaseChange.WarpEntityCreateOrUpdate(warpEntity);
+        this.plugin.databaseChangesAccumulator.add(warpEntityCreateOrUpdate);
+
+        var message = String.format("<green>New warp created <gold>%s", warpName);
+        sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private boolean warpNameExists(String warpName) {
+        try {
+            var warpEntity = this.plugin.databaseManager.getWarpsDao().queryForId(warpName);
+            return warpEntity != null;
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        // default to false if we get any error
+        return true;
     }
 }

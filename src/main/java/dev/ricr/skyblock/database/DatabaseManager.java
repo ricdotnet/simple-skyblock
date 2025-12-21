@@ -25,6 +25,7 @@ public class DatabaseManager {
     private Dao<GambleEntity, Integer> gamblesDao;
     private Dao<AuctionHouseItemEntity, Integer> auctionHouseDao;
     private Dao<TransactionEntity, Integer> transactionsDao;
+    private Dao<WarpEntity, String> warpsDao;
 
     public DatabaseManager(SimpleSkyblock plugin, DatabaseChangesAccumulator accumulator) {
         this.plugin = plugin;
@@ -44,6 +45,7 @@ public class DatabaseManager {
             this.gamblesDao = DaoManager.createDao(connection, GambleEntity.class);
             this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouseItemEntity.class);
             this.transactionsDao = DaoManager.createDao(connection, TransactionEntity.class);
+            this.warpsDao = DaoManager.createDao(connection, WarpEntity.class);
 
             TableUtils.createTableIfNotExists(connection, IslandPlayerTrustLinkEntity.class);
             TableUtils.createTableIfNotExists(connection, PlayerEntity.class);
@@ -52,6 +54,7 @@ public class DatabaseManager {
             TableUtils.createTableIfNotExists(connection, GambleEntity.class);
             TableUtils.createTableIfNotExists(connection, AuctionHouseItemEntity.class);
             TableUtils.createTableIfNotExists(connection, TransactionEntity.class);
+            TableUtils.createTableIfNotExists(connection, WarpEntity.class);
 
             plugin.getLogger()
                     .info("Successfully connected to database.");
@@ -114,9 +117,9 @@ public class DatabaseManager {
                 this.playersDao.createOrUpdate(player);
 
                 var playerId = UUID.fromString(player.getPlayerId());
-                this.plugin.onlinePlayers.getScoreboards()
+                this.plugin.onlinePlayers.getFastBoards()
                         .get(playerId)
-                        .setMoneyObjective(playerId);
+                        .updateMoney(player);
             }
             case DatabaseChange.GambleRecordAdd(GambleEntity gamble) -> this.gamblesDao.create(gamble);
             case DatabaseChange.AuctionHouseItemAdd(AuctionHouseItemEntity auctionHouseItem) ->
@@ -141,6 +144,8 @@ public class DatabaseManager {
                         .eq("player_id", trustedPlayerId);
                 deleteBuilder.delete();
             }
+            case DatabaseChange.WarpEntityCreateOrUpdate(WarpEntity warpEntity) ->
+                    this.warpsDao.createOrUpdate(warpEntity);
             default -> throw new IllegalStateException("Unexpected value: " + change);
         }
     }

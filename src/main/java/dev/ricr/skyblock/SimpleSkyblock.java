@@ -9,6 +9,7 @@ import dev.ricr.skyblock.commands.LeaderboardCommand;
 import dev.ricr.skyblock.commands.LobbyCommand;
 import dev.ricr.skyblock.commands.PayCommand;
 import dev.ricr.skyblock.commands.ShopCommand;
+import dev.ricr.skyblock.commands.WarpCommand;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
@@ -22,6 +23,7 @@ import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -39,12 +41,15 @@ public class SimpleSkyblock extends JavaPlugin {
     public IslandGenerator islandGenerator;
     public DatabaseChangesAccumulator databaseChangesAccumulator;
     public OnlinePlayers onlinePlayers;
+    public MiniMessage miniMessage;
 
     @Override
     public void onEnable() {
         this.ensureDataFolderExists();
         this.createAndLoadServerConfig();
         this.createAndLoadServerShop();
+
+        this.miniMessage = MiniMessage.miniMessage();
 
         // Simple online players cache to help with batching PlayerEntity related db operations
         this.onlinePlayers = new OnlinePlayers(this);
@@ -73,6 +78,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new IslandCommand(this).register();
         new GambleCommand(this).register();
         new PayCommand(this).register();
+        new WarpCommand(this).register();
 
         Objects.requireNonNull(this.getCommand("lobby"))
                 .setExecutor(new LobbyCommand(this));

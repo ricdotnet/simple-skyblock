@@ -242,12 +242,10 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         try {
             var islandEntity = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
-            if (islandEntity == null || !islandEntity.isHasNether()) {
-                return;
+            if (islandEntity != null && islandEntity.isHasNether()) {
+                var netherIslandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NETHER, null);
+                netherIslandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, Boolean.FALSE.equals(isDoMobSpawn));
             }
-
-            var netherIslandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NETHER, null);
-            netherIslandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, Boolean.FALSE.equals(isDoMobSpawn));
         } catch (SQLException e) {
             // ignore for now
         }

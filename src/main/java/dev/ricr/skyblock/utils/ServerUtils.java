@@ -26,8 +26,10 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -229,6 +231,27 @@ public class ServerUtils {
         }
 
         return lines;
+    }
+
+    public static String serializeLocation(Location location) {
+        var serialized = location.serialize();
+
+        return serialized.entrySet()
+                .stream()
+                .map(entry -> String.format("%s=%s", entry.getKey(), entry.getValue()))
+                .collect(java.util.stream.Collectors.joining(":"));
+    }
+
+    public static Location deserializeLocation(String serializedLocation) {
+        var parts = serializedLocation.split(":");
+
+        Map<String, Object> deserialized = new HashMap<>();
+        for (String part : parts) {
+            var keyValue = part.split("=");
+            deserialized.put(keyValue[0], keyValue[1]);
+        }
+
+        return Location.deserialize(deserialized);
     }
 
     public static ArmorStand armorStandText(World world, Location textDisplayLocation, Component message) {
