@@ -125,8 +125,9 @@ public class WarpCommand implements ICommand {
         }
 
         var playerWarpCount = playerEntity.getPlayerWarps().size();
-        if (playerWarpCount >= 3) {
-            var message = "<red>You cannot have more than 3 warps";
+        var maxPlayerWarps = this.plugin.serverConfig.getInt("max_player_warps", 3);
+        if (playerWarpCount >= maxPlayerWarps) {
+            var message = String.format("<red>You cannot have more than %s warps", maxPlayerWarps);
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }

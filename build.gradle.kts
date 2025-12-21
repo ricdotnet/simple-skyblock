@@ -4,6 +4,11 @@
  * This project uses @Incubating APIs which are subject to change.
  */
 
+group = "dev.ricr.skyblock"
+version = "0.1.0"
+description = "SimpleSkyblock"
+java.sourceCompatibility = JavaVersion.VERSION_21
+
 plugins {
     `java-library`
     `maven-publish`
@@ -35,11 +40,6 @@ dependencies {
 
     implementation("fr.mrmicky:fastboard:2.1.5")
 }
-
-group = "dev.ricr.skyblock"
-version = "0.0.8-SNAPSHOT"
-description = "SimpleSkyblock"
-java.sourceCompatibility = JavaVersion.VERSION_21
 
 publishing {
     publications.create<MavenPublication>("maven") {
