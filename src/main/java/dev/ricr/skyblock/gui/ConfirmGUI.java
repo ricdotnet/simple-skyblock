@@ -237,6 +237,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 transaction.setSeller(auctionHouseItem.getPlayer());
                 transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
                 transaction.setPrice(price);
+                transaction.setType(TransactionType.AuctionHouseBuy.toString());
 
                 var auctionHouseTransactionAdd = new DatabaseChange.TransactionAdd(transaction);
                 this.plugin.databaseChangesAccumulator.add(auctionHouseTransactionAdd);

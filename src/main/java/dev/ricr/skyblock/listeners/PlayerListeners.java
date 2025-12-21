@@ -83,12 +83,12 @@ public class PlayerListeners implements Listener {
 
         if (!event.isBedSpawn()) {
             this.plugin.getLogger()
-                    .info(String.format("Player %s does not have a bed, sending to island", player.getName()));
+                    .info(String.format("Player %s does not have a bed, sending to lobby", player.getName()));
 
             var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
             if (islandRecord == null) {
                 var lobbyWorld = ServerUtils.loadOrCreateLobby();
-                event.setRespawnLocation(new Location(lobbyWorld, 0.5, 65, 0.5));
+                player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
                 return;
             }
 
@@ -269,9 +269,13 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         var player = event.getEntity();
-        var playerScoreboard = this.plugin.onlinePlayers.getScoreboards().get(player.getUniqueId());
+        var playerFastBoard = this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId());
 
-        playerScoreboard.setDeathsObjective(player);
+        if (playerFastBoard == null) {
+            return;
+        }
+
+        playerFastBoard.updateDeaths(player);
     }
 
     @EventHandler

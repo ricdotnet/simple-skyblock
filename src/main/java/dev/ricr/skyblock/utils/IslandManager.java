@@ -130,7 +130,7 @@ public class IslandManager {
             // ignore for now
         }
 
-        return false;
+        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
     }
 
     private IslandRecord findCurrentIslandRecord(String worldName) {

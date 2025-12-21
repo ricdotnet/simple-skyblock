@@ -12,13 +12,15 @@ public class OnlinePlayers {
     @Getter
     private final Map<UUID, PlayerEntity> onlinePlayers;
     @Getter
-    private final Map<UUID, PlayerScoreboard> scoreboards;
+    private final Map<UUID, PlayerFastBoard> fastBoards;
 
     public OnlinePlayers(SimpleSkyblock plugin) {
         this.plugin = plugin;
 
         this.onlinePlayers = new ConcurrentHashMap<>();
-        this.scoreboards = new ConcurrentHashMap<>();
+        this.fastBoards = new ConcurrentHashMap<>();
+
+        this.fastBoardUpdater();
     }
 
     public void addPlayer(UUID uuid, PlayerEntity playerEntity) {
@@ -29,15 +31,30 @@ public class OnlinePlayers {
             this.plugin.getLogger().warning("Player " + uuid + " is not online");
             return;
         }
-        this.scoreboards.put(uuid, new PlayerScoreboard(this.plugin, player));
+
+        this.fastBoards.put(uuid, new PlayerFastBoard(this.plugin, player));
     }
 
     public void removePlayer(UUID uuid) {
         this.onlinePlayers.remove(uuid);
+        this.fastBoards.remove(uuid);
     }
 
     public PlayerEntity getPlayer(UUID uuid) {
         return this.onlinePlayers.get(uuid);
+    }
+
+    private void fastBoardUpdater() {
+        this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
+            for (var key : this.fastBoards.keySet()) {
+                var playerFastBoard = this.fastBoards.get(key);
+                var player = this.plugin.getServer().getPlayer(key);
+                if (player == null) {
+                    continue;
+                }
+                playerFastBoard.updateMoney(player);
+            }
+        }, 0, 20);
     }
 
 }
