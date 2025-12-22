@@ -154,13 +154,14 @@ public class IslandListeners implements Listener {
 
         try {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(targetIslandId);
-            var seed = island.getSeed();
-            var netherWorld = ServerUtils.loadOrCreateWorld(UUID.fromString(targetIslandId), World.Environment.NETHER, seed);
 
             if (!player.getUniqueId().toString().equals(targetIslandId) && !island.isHasNether()) {
                 player.sendMessage(Component.text("The island owner has not generated a Nether island yet", NamedTextColor.RED));
                 return;
             }
+
+            var seed = island.getSeed();
+            var netherWorld = this.plugin.worldManager.loadOrCreate(UUID.fromString(targetIslandId), World.Environment.NETHER, seed);
 
             if (!island.isHasNether()) {
                 StructureUtils.placeStructure(this.plugin, new Location(netherWorld, -4, 61, -4), CustomStructures.NETHER_ISLAND);

@@ -52,7 +52,7 @@ public class OnlinePlayers {
                 if (player == null) {
                     continue;
                 }
-                playerFastBoard.updateMoney(player);
+                playerFastBoard.updateMoney();
             }
         }, 0, 20);
     }

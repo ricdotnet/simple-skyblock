@@ -5,6 +5,7 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.GambleEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.GambleType;
+import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
@@ -36,7 +37,6 @@ public class GambleSessionGUI implements InventoryHolder {
     private final double originalAmount;
     private double amount;
 
-    private final BossBar bossBar;
     private final Inventory inventory;
 
     private final AtomicInteger countdownClock = new AtomicInteger(ServerUtils.GAMBLE_COUNTDOWN);
@@ -48,15 +48,9 @@ public class GambleSessionGUI implements InventoryHolder {
         this.inventory = Bukkit.createInventory(this, 27, Component.text(String.format("Gamble session - %s",
                 this.host.getName())));
 
-        this.bossBar = Bukkit.createBossBar(String.format("Gamble end in %ss - Money pool: %s",
-                        this.countdownClock.get(), ServerUtils.formatMoneyValue(this.amount)),
-                BarColor.GREEN, BarStyle.SOLID);
-        this.bossBar.setProgress(1.0);
-        this.bossBar.setVisible(true);
-
         this.addPlayer(host);
 
-        this.updateCountdownClock(countdownClock.get());
+        InventoryUtils.fillEmptySlots(inventory);
     }
 
     public void addPlayer(Player player) {
@@ -64,9 +58,6 @@ public class GambleSessionGUI implements InventoryHolder {
         this.amount += this.originalAmount;
 
         this.updatePlayerBalance(player, -originalAmount);
-
-        this.bossBar.setColor(BarColor.GREEN);
-        this.bossBar.addPlayer(player);
 
         this.refreshInventory();
     }
@@ -79,8 +70,10 @@ public class GambleSessionGUI implements InventoryHolder {
             hostPlayer.sendMessage(Component.text("Your gamble session has been voided, no other players joined.",
                     NamedTextColor.YELLOW));
 
+            var voidedMessage = "<gold>No winner, gamble session voided.";
+            PlayerUtils.showTitleMessage(this.plugin, hostPlayer, this.plugin.miniMessage.deserialize(voidedMessage));
+
             updatePlayerBalance(hostPlayer, this.originalAmount);
-            this.bossBar.removeAll();
             this.inventory.close();
 
             return;
@@ -125,8 +118,6 @@ public class GambleSessionGUI implements InventoryHolder {
             this.plugin.databaseChangesAccumulator.add(gambleRecordAdd);
         }
 
-        this.bossBar.removeAll();
-        this.bossBar.setVisible(false);
         this.inventory.close();
     }
 
@@ -143,12 +134,6 @@ public class GambleSessionGUI implements InventoryHolder {
 
             inventory.setItem(slot++, head);
         }
-    }
-
-    public void updateCountdownClock(int seconds) {
-        this.bossBar.setTitle(String.format("Gamble end in %ss - Money pool: %s",
-                seconds, ServerUtils.formatMoneyValue(this.amount)));
-        this.bossBar.setProgress(1.0 - seconds / (double) ServerUtils.GAMBLE_COUNTDOWN);
     }
 
     private void updatePlayerBalance(Player player, double amount) {

@@ -7,6 +7,7 @@ import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
+import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
@@ -95,6 +96,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             goBackButton.setItemMeta(meta);
             inventory.setItem(22, goBackButton);
         }
+
+        InventoryUtils.fillEmptySlots(inventory);
     }
 
     public ConfirmGUI(SimpleSkyblock plugin, ItemStack item, ShopType shopType) {
@@ -150,6 +153,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         inventory.setItem(17, confirmBuy);
         inventory.setItem(9, cancel);
+
+        InventoryUtils.fillEmptySlots(inventory);
     }
 
     @Override
