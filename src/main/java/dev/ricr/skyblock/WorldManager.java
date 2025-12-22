@@ -41,6 +41,15 @@ public class WorldManager {
         return world;
     }
 
+    public synchronized World load(String worldName) {
+        // TODO: maybe improve?
+        var world = Bukkit.getWorld(worldName);
+        if (world != null) {
+            this.activePlayerCount.merge(worldName, 1, Integer::sum);
+        }
+        return world;
+    }
+
     public synchronized void unload(World world) {
         var worldName = world.getName();
 

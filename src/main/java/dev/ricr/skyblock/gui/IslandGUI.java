@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.enums.Buttons;
 import dev.ricr.skyblock.utils.InventoryUtils;
@@ -224,7 +225,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     private void handleShowIslandSeedClick(Player player) {
         try {
-            var playerEntity = this.plugin.databaseManager.getPlayersDao().queryForId(player.getUniqueId().toString());
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
             var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
 
             if (playerEntity.getBalance() < showSeedPrice) {
@@ -236,7 +237,8 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             var seed = island.getSeed();
 
             playerEntity.setBalance(playerEntity.getBalance() - showSeedPrice);
-            this.plugin.databaseManager.getPlayersDao().update(playerEntity);
+            var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
+            this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
             var viewSeedMessage = String.format("Seed: <green>%s", seed);
             player.sendMessage(this.plugin.miniMessage.deserialize(viewSeedMessage));

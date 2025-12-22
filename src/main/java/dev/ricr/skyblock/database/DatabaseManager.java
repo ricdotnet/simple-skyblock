@@ -117,9 +117,11 @@ public class DatabaseManager {
                 this.playersDao.createOrUpdate(player);
 
                 var playerId = UUID.fromString(player.getPlayerId());
-                this.plugin.onlinePlayers.getFastBoards()
-                        .get(playerId)
-                        .updateMoney(player);
+
+                var playerFastBoard = this.plugin.onlinePlayers.getFastBoards().get(playerId);
+                if (playerFastBoard != null) {
+                    playerFastBoard.updateMoney();
+                }
             }
             case DatabaseChange.GambleRecordAdd(GambleEntity gamble) -> this.gamblesDao.create(gamble);
             case DatabaseChange.AuctionHouseItemAdd(AuctionHouseItemEntity auctionHouseItem) ->
