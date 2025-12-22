@@ -74,7 +74,13 @@ public class PlayerListeners implements Listener {
         var player = event.getPlayer();
 
         this.plugin.onlinePlayers.removePlayer(player.getUniqueId());
-        // TODO: unload player islands - nether and overworld
+
+        var world = player.getWorld();
+        if (world.getName().equals("lobby")) {
+            return;
+        }
+
+        this.plugin.worldManager.unload(world);
     }
 
     @EventHandler
@@ -100,14 +106,20 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
         var player = event.getPlayer();
-        var world = player.getWorld();
+        var worldFrom = event.getFrom();
+        var worldTo = player.getWorld();
 
-        if (world.getName().equals("lobby") || world.getEnvironment() == World.Environment.THE_END) {
+        if (worldTo.getName().equals("lobby") || worldTo.getEnvironment() == World.Environment.THE_END) {
+            var message = "<red>-= <gold>lobby island</gold> =-";
+            PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message), 20L);
+
+            // try to unload the world that the player teleported from
+            this.plugin.worldManager.unload(worldFrom);
             return;
         }
 
         IslandEntity playerIsland = null;
-        var islandId = world.getName()
+        var islandId = worldTo.getName()
                 .replace("islands/", "")
                 .replace("nether_", "");
         try {
@@ -116,17 +128,13 @@ public class PlayerListeners implements Listener {
             // ignore for now
         }
 
-        if (playerIsland == null) {
-            return;
+        if (playerIsland != null) {
+            var message = String.format("<green>-= <gold>%s's island</gold> =-", playerIsland.getPlayer().getUsername());
+            PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message), 20L);
         }
 
-        var message = Component.text("-=", NamedTextColor.GREEN)
-                .appendSpace()
-                .append(Component.text(String.format("%s's island", playerIsland.getPlayer().getUsername()), NamedTextColor.GOLD))
-                .appendSpace()
-                .append(Component.text("=-", NamedTextColor.GREEN));
-
-        PlayerUtils.showTitleMessage(this.plugin, player, message, 20L);
+        this.plugin.worldManager.loadOrCreate(player.getUniqueId(), worldTo.getEnvironment(), null);
+        this.plugin.worldManager.unload(worldFrom);
     }
 
     @EventHandler
@@ -275,7 +283,7 @@ public class PlayerListeners implements Listener {
             return;
         }
 
-        playerFastBoard.updateDeaths(player);
+        playerFastBoard.updateDeaths();
     }
 
     @EventHandler

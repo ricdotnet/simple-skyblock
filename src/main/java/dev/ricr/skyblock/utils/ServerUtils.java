@@ -129,26 +129,6 @@ public class ServerUtils {
         return lobbyWorld;
     }
 
-    public static World loadOrCreateWorld(UUID playerUniqueId, World.Environment environment, Long seed) {
-        var suffix = playerUniqueId.toString() + (environment == World.Environment.NETHER ? "_nether" : "");
-        var islandName = String.format("islands/%s", suffix);
-
-        var islandWorld = Bukkit.getWorld(islandName);
-        if (islandWorld == null) {
-            var worldCreator = new WorldCreator(islandName);
-            if (environment != null) {
-                worldCreator.environment(environment);
-            }
-            if (seed != null) {
-                worldCreator.seed(seed);
-            }
-            worldCreator.generator("SimpleSkyblock");
-            islandWorld = worldCreator.createWorld();
-        }
-
-        return islandWorld;
-    }
-
     public static Player ensureCommandSenderIsPlayer(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             throw new CommandException("This command can only be executed by players");

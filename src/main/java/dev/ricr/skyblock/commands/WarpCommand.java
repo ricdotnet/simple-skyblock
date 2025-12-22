@@ -135,7 +135,7 @@ public class WarpCommand implements ICommand {
         var warpName = ctx.getArgument("warp", String.class).toLowerCase();
         var warpEnum = InvalidWarpNames.getByName(warpName);
 
-        if (warpEnum != null && !warpEnum.isAdminOverride()) {
+        if (warpEnum != null) {
             var message = String.format("<red>Invalid warp name <gold>%s", warpName);
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;

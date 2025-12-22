@@ -6,6 +6,7 @@ public enum InvalidWarpNames {
     Warp("warp", false),
     Spawn("spawn", false),
     Shop("shop", true),
+    Trade("trade", true),
     TradeHall("trade_hall", true),
     PvPArena("pvp_arena", true),
     PvP("pvp", false),

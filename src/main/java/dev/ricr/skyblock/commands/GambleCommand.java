@@ -110,6 +110,7 @@ public class GambleCommand implements ICommand {
             onlinePlayer.sendMessage(globalMessage);
         }
 
+        this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateGamble(gambleSession);
         this.initiateGambleSessionCountdown(gambleSession);
 
         return Command.SINGLE_SUCCESS;
@@ -178,11 +179,15 @@ public class GambleCommand implements ICommand {
                     long remaining = gambleSession.getCountdownClock()
                             .decrementAndGet();
 
-                    if (remaining > 0 && remaining <= 3) {
-                        for (Player player : gambleSession.getPlayers()) {
+                    for (Player player : gambleSession.getPlayers()) {
+                        if (remaining > 0 && remaining <= 3) {
                             var message = Component.text(String.format("Gamble ends in: %s", remaining), NamedTextColor.RED);
                             PlayerUtils.showTitleMessage(plugin, player, message);
                         }
+
+                        this.plugin.onlinePlayers.getFastBoards()
+                                .get(player.getUniqueId())
+                                .updateGamble(gambleSession);
                     }
 
                     if (remaining <= 0) {
@@ -191,14 +196,15 @@ public class GambleCommand implements ICommand {
                         Bukkit.getGlobalRegionScheduler()
                                 .execute(plugin, () -> {
                                     gambleSession.chooseWinner();
-                                    gambleSessions.remove(gambleSession.getHost()
-                                            .getUniqueId());
+                                    gambleSessions.remove(gambleSession.getHost().getUniqueId());
+
+                                    // reset fastboard gamble lines
+                                    this.plugin.onlinePlayers.getFastBoards()
+                                            .get(gambleSession.getHost().getUniqueId())
+                                            .updateGamble(null);
                                 });
                         return;
                     }
-
-                    Bukkit.getGlobalRegionScheduler()
-                            .execute(plugin, () -> gambleSession.updateCountdownClock((int) remaining));
                 }, 1, 1, TimeUnit.SECONDS);
     }
 }

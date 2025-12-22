@@ -3,6 +3,7 @@ package dev.ricr.skyblock.gui;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.enums.Buttons;
+import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -80,14 +81,12 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         if (playerIsland == null) {
             this.plugin.getLogger()
                     .warning("Player " + player.getName() + " has no island");
+            var message = "<red>You do not have an island to manage";
+            player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return;
         }
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
-        if (islandWorld == null) {
-            player.sendMessage(Component.text("You do not have an island to manage", NamedTextColor.RED));
-            return;
-        }
+        var islandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
 
         var isIslandPrivate = playerIsland.isPrivate();
         var islandPrivacyDescription = "Makes your island private and prevents other players from sending visit requests.";
@@ -108,7 +107,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
         var expansionSize = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getExpansionSize();
-        var totalSize = (defaultSize + expansionSize) * 2;
+        var totalSize = (defaultSize + expansionSize) * 2 + 1;
         this.setItemSimpleMeta(islandSizeIcon, String.format("Island size: %sx%s", totalSize, totalSize), null);
         this.inventory.setItem(14, islandSizeIcon);
 
@@ -117,6 +116,8 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         this.setItemSimpleMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
         this.inventory.setItem(15, seedButton);
+
+        InventoryUtils.fillEmptySlots(this.inventory);
     }
 
     private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons buttonType, String label, String description) {
@@ -178,6 +179,9 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             island.setPrivate(!island.isPrivate());
             this.plugin.databaseManager.getIslandsDao().update(island);
+
+            var privacyUpdated = String.format("<white>Island has been made %s", island.isPrivate() ? "<green>private" : "<red>public");
+            player.sendMessage(this.plugin.miniMessage.deserialize(privacyUpdated));
         } catch (SQLException e) {
             // ignore for now
         }
@@ -191,6 +195,9 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             island.setAllowNetherTeleport(!island.isAllowNetherTeleport());
             this.plugin.databaseManager.getIslandsDao().update(island);
+
+            var netherTeleportUpdated = String.format("<white>Nether teleport has been %s", island.isAllowNetherTeleport() ? "<green>enabled" : "<red>disabled");
+            player.sendMessage(this.plugin.miniMessage.deserialize(netherTeleportUpdated));
         } catch (SQLException e) {
             // ignore for now
         }
@@ -204,6 +211,9 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             island.setAllowOfflineVisits(!island.isAllowOfflineVisits());
             this.plugin.databaseManager.getIslandsDao().update(island);
+
+            var offlineVisitsUpdated = String.format("<white>Offline visits have been %s", island.isAllowOfflineVisits() ? "<green>enabled" : "<red>disabled");
+            player.sendMessage(this.plugin.miniMessage.deserialize(offlineVisitsUpdated));
         } catch (SQLException e) {
             // ignore for now
         }
@@ -228,29 +238,31 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             playerEntity.setBalance(playerEntity.getBalance() - showSeedPrice);
             this.plugin.databaseManager.getPlayersDao().update(playerEntity);
 
-            player.sendMessage(Component.text("Seed:").appendSpace().append(Component.text(seed, NamedTextColor.GREEN)));
+            var viewSeedMessage = String.format("Seed: <green>%s", seed);
+            player.sendMessage(this.plugin.miniMessage.deserialize(viewSeedMessage));
         } catch (SQLException e) {
             // ignore for now
         }
     }
 
     private void handleMobSpawningClick(Player player) {
-        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
-        var isDoMobSpawn = islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING);
+        var islandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
+        var isDoMobSpawn = Boolean.TRUE.equals(islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING));
 
-        islandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, Boolean.FALSE.equals(isDoMobSpawn));
+        islandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, !isDoMobSpawn);
 
         try {
             var islandEntity = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             if (islandEntity != null && islandEntity.isHasNether()) {
-                var netherIslandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NETHER, null);
-                netherIslandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, Boolean.FALSE.equals(isDoMobSpawn));
+                var netherIslandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), World.Environment.NETHER, null);
+                netherIslandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, !isDoMobSpawn);
             }
         } catch (SQLException e) {
             // ignore for now
         }
 
-        player.sendMessage(Component.text("Mob spawning has been " + (Boolean.FALSE.equals(isDoMobSpawn) ? "enabled" : "disabled")));
+        var mobSpawningUpdated = String.format("<white>Mob spawning as been %s", !isDoMobSpawn ? "<green>enabled" : "<red>disabled");
+        player.sendMessage(this.plugin.miniMessage.deserialize(mobSpawningUpdated));
 
         // refresh only
         this.openInventory(player);
