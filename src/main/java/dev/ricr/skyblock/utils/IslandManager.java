@@ -102,7 +102,7 @@ public class IslandManager {
     public boolean shouldStopNetherTeleport(Player player) {
         var world = player.getWorld();
 
-        if (player.isOp() && ServerUtils.isOpOverride()) {
+        if (player.isOp() && ServerUtils.isOpOverride() || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
             return false;
         }
 

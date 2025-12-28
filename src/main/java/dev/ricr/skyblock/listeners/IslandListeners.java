@@ -24,6 +24,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -179,6 +180,13 @@ public class IslandListeners implements Listener {
 
         player.setNoDamageTicks(20 * 10);
         player.sendMessage(Component.text("Welcome to the Nether", NamedTextColor.GREEN));
+    }
+
+    @EventHandler
+    public void onPortalEntity(EntityPortalEvent event) {
+        event.setCancelled(true);
+
+        // TODO: implement entity teleport later
     }
 
 }
