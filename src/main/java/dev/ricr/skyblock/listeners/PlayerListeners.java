@@ -76,6 +76,7 @@ public class PlayerListeners implements Listener {
         var player = event.getPlayer();
 
         this.plugin.onlinePlayers.removePlayer(player.getUniqueId());
+        this.plugin.islandManager.removePlayerIsland(player.getUniqueId());
 
         var world = player.getWorld();
         if (world.getName().equals("lobby")) {
