@@ -67,6 +67,8 @@ public class PlayerListeners implements Listener {
 
         // always start in the lobby / spawn world
         player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
+
+        this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("lobby");
     }
 
     @EventHandler
@@ -115,6 +117,7 @@ public class PlayerListeners implements Listener {
 
             // try to unload the world that the player teleported from
             this.plugin.worldManager.unload(worldFrom);
+            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("lobby");
             return;
         }
 
@@ -129,8 +132,15 @@ public class PlayerListeners implements Listener {
         }
 
         if (playerIsland != null) {
-            var message = String.format("<green>-= <gold>%s's island</gold> =-", playerIsland.getPlayer().getUsername());
+            var islandOwnerUsername = playerIsland.getPlayer().getUsername();
+            var message = String.format("<green>-= <gold>%s's island</gold> =-", islandOwnerUsername);
+
+            var fastBoardWorldName = islandOwnerUsername.equals(player.getName()) ? "your island" : String.format("%s's island", islandOwnerUsername);
+            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld(fastBoardWorldName);
+
             PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message), 20L);
+        } else {
+            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("unknown");
         }
 
         this.plugin.worldManager.loadOrCreate(player.getUniqueId(), worldTo.getEnvironment(), null);

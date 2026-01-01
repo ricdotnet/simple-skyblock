@@ -100,15 +100,15 @@ public class WarpCommand implements ICommand {
                 return Command.SINGLE_SUCCESS;
             }
 
-            var location = ServerUtils.deserializeLocation(warpEntity.getLocation());
-            var targetWorld = this.plugin.worldManager.load(location.getWorld().getName());
-            if (targetWorld == null) {
-                var message = String.format("<red>Warp <gold>%s</gold> is in an invalid world", warpName);
-                player.sendMessage(this.plugin.miniMessage.deserialize(message));
-                return Command.SINGLE_SUCCESS;
-            }
+            var location = ServerUtils.deserializeLocation(this.plugin, warpEntity);
 
-            location.setWorld(targetWorld);
+//            if (targetWorld == null) {
+//                var message = String.format("<red>Warp <gold>%s</gold> is in an invalid world", warpName);
+//                player.sendMessage(this.plugin.miniMessage.deserialize(message));
+//                return Command.SINGLE_SUCCESS;
+//            }
+
+//            location.setWorld(targetWorld);
             player.teleport(location);
             var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
             PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
