@@ -125,7 +125,7 @@ public class PlayerListeners implements Listener {
         IslandEntity playerIsland = null;
         var islandId = worldTo.getName()
                 .replace("islands/", "")
-                .replace("nether_", "");
+                .replace("_nether", "");
         try {
             playerIsland = this.plugin.databaseManager.getIslandsDao().queryForId(islandId);
         } catch (SQLException e) {
