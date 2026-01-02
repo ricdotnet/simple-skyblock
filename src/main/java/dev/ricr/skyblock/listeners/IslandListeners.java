@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.enums.CustomStructures;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.gui.ConfirmGUI;
@@ -135,6 +136,22 @@ public class IslandListeners implements Listener {
 
         if (to.getEnvironment() == World.Environment.THE_END) {
             var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+            var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
+
+            if (playerEntity.getBalance() < endPortalPrice) {
+                event.setCancelled(true);
+
+                var noBalanceMessage = "<red>You don't have enough money to go through the end portal";
+                player.sendMessage(this.plugin.miniMessage.deserialize(noBalanceMessage));
+
+                return;
+            }
+
+            var newBalance = playerEntity.getBalance() - endPortalPrice;
+            playerEntity.setBalance(newBalance);
+
+            var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
+            this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
             return;
         }
