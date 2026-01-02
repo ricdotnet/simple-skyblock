@@ -133,16 +133,14 @@ public class IslandListeners implements Listener {
         var to = event.getTo().getWorld();
         var player = event.getPlayer();
 
-        // we want to block all portal interactions
-        event.setCancelled(true);
-
         if (to.getEnvironment() == World.Environment.THE_END) {
-            player.sendMessage(Component.text("The End", NamedTextColor.DARK_PURPLE)
-                    .appendSpace()
-                    .append(Component.text("is not supported yet", NamedTextColor.RED))
-            );
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+
             return;
         }
+
+        // we want to block all portal interactions
+        event.setCancelled(true);
 
         if (!from.getName().startsWith("islands/") || from.getEnvironment() != World.Environment.NORMAL || this.plugin.islandManager.shouldStopNetherTeleport(player)) {
             player.sendMessage(Component.text("You cannot go through portals here", NamedTextColor.RED));
