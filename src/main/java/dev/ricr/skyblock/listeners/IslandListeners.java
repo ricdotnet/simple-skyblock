@@ -141,8 +141,8 @@ public class IslandListeners implements Listener {
             if (playerEntity.getBalance() < endPortalPrice) {
                 event.setCancelled(true);
 
-                var noBalanceMessage = "<red>You don't have enough money to go through the end portal";
-                player.sendMessage(this.plugin.miniMessage.deserialize(noBalanceMessage));
+                var insufficientBalanceMessage = String.format("<red>You don't have enough money to go through the end portal. You need <gold>%s</gold> but you only have <gold>%s</gold>", ServerUtils.formatMoneyValue(endPortalPrice), ServerUtils.formatMoneyValue(playerEntity.getBalance()));
+                player.sendMessage(this.plugin.miniMessage.deserialize(insufficientBalanceMessage));
 
                 return;
             }

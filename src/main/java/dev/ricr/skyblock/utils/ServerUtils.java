@@ -240,7 +240,14 @@ public class ServerUtils {
         var worldName = deserialized.get("world").toString();
         var worldEnvironment = worldName.contains("_nether") ? World.Environment.NETHER : World.Environment.NORMAL;
 
-        var loadedWorld = plugin.worldManager.loadOrCreate(UUID.fromString(warpEntity.getPlayer().getPlayerId()), worldEnvironment, null);
+        World loadedWorld = null;
+
+        if (worldName.contains("_the_end")) {
+            loadedWorld = plugin.worldManager.load(worldName);
+        } else {
+            loadedWorld = plugin.worldManager.loadOrCreate(UUID.fromString(warpEntity.getPlayer().getPlayerId()), worldEnvironment, null);
+        }
+
         if (loadedWorld == null) {
             throw new RuntimeException("Could not load world with name " + worldName);
         } else {
