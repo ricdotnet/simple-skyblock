@@ -3,6 +3,7 @@ package dev.ricr.skyblock.gui;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.shop.ShopItems;
+import dev.ricr.skyblock.utils.InventoryUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -43,6 +44,8 @@ public class ShopTypeGUI implements InventoryHolder, ISimpleSkyblockGUI {
         inventory.setItem(0, blocksShop);
         inventory.setItem(1, itemsShop);
         inventory.setItem(8, closeButton);
+
+        InventoryUtils.fillEmptySlots(inventory);
     }
 
 

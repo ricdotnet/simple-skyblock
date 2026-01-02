@@ -3,6 +3,7 @@ package dev.ricr.skyblock.utils;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.WarpEntity;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import lombok.Getter;
@@ -26,6 +27,7 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -129,26 +131,6 @@ public class ServerUtils {
         return lobbyWorld;
     }
 
-    public static World loadOrCreateWorld(UUID playerUniqueId, World.Environment environment, Long seed) {
-        var suffix = playerUniqueId.toString() + (environment == World.Environment.NETHER ? "_nether" : "");
-        var islandName = String.format("islands/%s", suffix);
-
-        var islandWorld = Bukkit.getWorld(islandName);
-        if (islandWorld == null) {
-            var worldCreator = new WorldCreator(islandName);
-            if (environment != null) {
-                worldCreator.environment(environment);
-            }
-            if (seed != null) {
-                worldCreator.seed(seed);
-            }
-            worldCreator.generator("SimpleSkyblock");
-            islandWorld = worldCreator.createWorld();
-        }
-
-        return islandWorld;
-    }
-
     public static Player ensureCommandSenderIsPlayer(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             throw new CommandException("This command can only be executed by players");
@@ -242,8 +224,10 @@ public class ServerUtils {
                 .collect(java.util.stream.Collectors.joining(":"));
     }
 
-    public static Location deserializeLocation(String serializedLocation) {
-        var parts = serializedLocation.split(":");
+    public static Location deserializeLocation(SimpleSkyblock plugin, WarpEntity warpEntity) {
+        plugin.getLogger().info(String.format("Deserializing location: %s", warpEntity.getLocation()));
+
+        var parts = warpEntity.getLocation().split(":");
 
         Map<String, Object> deserialized = new HashMap<>();
         for (String part : parts) {
@@ -251,7 +235,31 @@ public class ServerUtils {
             deserialized.put(keyValue[0], keyValue[1]);
         }
 
-        return Location.deserialize(deserialized);
+        // TODO: extract this
+        // We need to try and load the world if it is not loaded
+        var worldName = deserialized.get("world").toString();
+        var worldEnvironment = worldName.contains("_nether") ? World.Environment.NETHER : World.Environment.NORMAL;
+
+        var loadedWorld = plugin.worldManager.loadOrCreate(UUID.fromString(warpEntity.getPlayer().getPlayerId()), worldEnvironment, null);
+        if (loadedWorld == null) {
+            throw new RuntimeException("Could not load world with name " + worldName);
+        } else {
+            plugin.getLogger().info("Loaded world is: " + loadedWorld.getName());
+        }
+
+        return new Location(loadedWorld,
+                NumberUtils.objectToDouble(deserialized.get("x")),
+                NumberUtils.objectToDouble(deserialized.get("y")),
+                NumberUtils.objectToDouble(deserialized.get("z")),
+                NumberUtils.objectToFloat(deserialized.get("yaw")),
+                NumberUtils.objectToFloat(deserialized.get("pitch"))
+        );
+    }
+
+    public static String longToTime(long time) {
+        int hours = (int) ((time / 1000 + 8) % 24);
+        int minutes = (int) (60 * (time % 1000) / 1000);
+        return String.format("%02d:%02d", hours, minutes);
     }
 
     public static ArmorStand armorStandText(World world, Location textDisplayLocation, Component message) {

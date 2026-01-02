@@ -5,6 +5,7 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.TransactionType;
+import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
@@ -132,6 +133,7 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 totalEconomy.setItemMeta(meta);
 
                 this.inventory.setItem(inventory.getSize() - 1, totalEconomy);
+                InventoryUtils.fillEmptySlots(this.inventory);
 
                 // Open async to allow all players to load without blocking the main thread with db operations
                 Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(this.getInventory()));

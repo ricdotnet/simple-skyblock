@@ -6,8 +6,6 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.IslandPlayerTrustLinkEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
-import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
@@ -71,6 +69,10 @@ public class IslandManager {
         }
     }
 
+    public void removePlayerIsland(UUID playerUniqueId) {
+        this.islands.remove(playerUniqueId);
+    }
+
     public boolean shouldStopIslandInteraction(Player player) {
         var world = player.getWorld();
 
@@ -130,7 +132,7 @@ public class IslandManager {
             // ignore for now
         }
 
-        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
+        return false;
     }
 
     private IslandRecord findCurrentIslandRecord(String worldName) {

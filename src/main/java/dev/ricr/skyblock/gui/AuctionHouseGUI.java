@@ -1,7 +1,6 @@
 package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;

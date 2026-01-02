@@ -42,6 +42,7 @@ public class SimpleSkyblock extends JavaPlugin {
     public DatabaseChangesAccumulator databaseChangesAccumulator;
     public OnlinePlayers onlinePlayers;
     public MiniMessage miniMessage;
+    public WorldManager worldManager;
 
     @Override
     public void onEnable() {
@@ -50,6 +51,7 @@ public class SimpleSkyblock extends JavaPlugin {
         this.createAndLoadServerShop();
 
         this.miniMessage = MiniMessage.miniMessage();
+        this.worldManager = new WorldManager(this);
 
         // Simple online players cache to help with batching PlayerEntity related db operations
         this.onlinePlayers = new OnlinePlayers(this);

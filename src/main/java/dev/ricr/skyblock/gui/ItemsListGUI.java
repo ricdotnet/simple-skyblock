@@ -3,6 +3,7 @@ package dev.ricr.skyblock.gui;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.shop.ShopItems;
+import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -75,6 +76,8 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
         meta.displayName(Component.text("Go back"));
         goBackButton.setItemMeta(meta);
         inventory.setItem(49, goBackButton);
+
+        InventoryUtils.fillEmptySlots(inventory);
     }
 
     @Override

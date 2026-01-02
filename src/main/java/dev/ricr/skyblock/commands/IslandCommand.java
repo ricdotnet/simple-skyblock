@@ -81,7 +81,8 @@ public class IslandCommand implements ICommand {
                 )
                 .then(Commands.literal("kick").executes(this::kickPlayersFromIsland))
                 .then(Commands.literal("trust")
-                        .then(Commands.argument("player", ArgumentTypes.player())
+                        .then(Commands.argument("player", StringArgumentType.string())
+                                .suggests(CommandUtils::currentOnlinePlayers)
                                 .executes(this::trustPlayerToOwnIsland)
                         )
                 )
@@ -123,12 +124,13 @@ public class IslandCommand implements ICommand {
         }
 
         if (this.playerIslandRecordExists(player)) {
-            player.sendMessage(Component.text("You already have an island, delete it before creating a new one", NamedTextColor.RED));
+            var message = "<red>You already have an island, delete it before creating a new one";
+            player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }
 
         var seed = NumberUtils.newSeed();
-        var newIslandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NORMAL, seed);
+        var newIslandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), World.Environment.NORMAL, seed);
 
         if (newIslandWorld == null) {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
@@ -220,8 +222,8 @@ public class IslandCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
-        var islandNetherWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), World.Environment.NETHER, null);
+        var islandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
+        var islandNetherWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), World.Environment.NETHER, null);
         var currentWorld = player.getWorld();
 
         var currentPlayersInIslandWorld = islandWorld.getPlayers()
@@ -289,7 +291,8 @@ public class IslandCommand implements ICommand {
         var player = ServerUtils.ensureCommandSenderIsPlayer(ctx.getSource().getSender());
 
         if (!this.playerIslandRecordExists(player)) {
-            player.sendMessage(Component.text("You do not have an island to teleport to", NamedTextColor.RED));
+            var message = "<red>You do not have an island to teleport to";
+            player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }
 
@@ -304,34 +307,49 @@ public class IslandCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
-        if (targetPlayer == null) {
+        var targetPlayerName = ctx.getArgument("player", String.class);
+        PlayerEntity targetPlayerEntity = null;
+
+        if (targetPlayerName.equals(player.getName())) {
+            var message = "<red>You cannot trust yourself to your own island";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }
 
-        if (targetPlayer.getUniqueId().equals(player.getUniqueId())) {
-            sender.sendMessage(Component.text("You cannot trust yourself", NamedTextColor.RED));
+        try {
+            targetPlayerEntity = this.playersDao.queryBuilder()
+                    .where()
+                    .eq("username", targetPlayerName)
+                    .queryForFirst();
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        if (targetPlayerEntity == null) {
+            var message = String.format("<gold>%s <red>does not exist in our database", targetPlayerName);
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        if (!this.playerIslandRecordExists(player)) {
+            var message = "<red>You do not have an island to trust players to";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }
 
         try {
             var playerIsland = islandsDao.queryForId(player.getUniqueId().toString());
-            var targetPlayerEntity = this.playersDao.queryForId(targetPlayer.getUniqueId().toString());
-
-            if (targetPlayerEntity == null) {
-                sender.sendMessage(Component.text(String.format("Player %s does not exist in our server database", targetPlayer.getName()), NamedTextColor.RED));
-                return Command.SINGLE_SUCCESS;
-            }
 
             var trustedPlayerAdd = new DatabaseChange.TrustedPlayerAdd(playerIsland, targetPlayerEntity);
             this.plugin.databaseChangesAccumulator.add(trustedPlayerAdd);
 
             var newIslandRecord = this.plugin.islandManager
                     .getIslandRecord(player.getUniqueId())
-                    .addTrustedPlayer(targetPlayer.getUniqueId().toString(), targetPlayer.getName());
+                    .addTrustedPlayer(targetPlayerEntity.getPlayerId(), targetPlayerEntity.getUsername());
             this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
 
-            player.sendMessage(Component.text(String.format("Player %s is now trusted", targetPlayer.getName()), NamedTextColor.GREEN));
+            var trustSuccessMessage = String.format("<green>Player <gold>%s</gold> is now trusted", targetPlayerEntity.getUsername());
+            player.sendMessage(this.plugin.miniMessage.deserialize(trustSuccessMessage));
         } catch (SQLException e) {
             // ignore for now
         }
@@ -345,6 +363,12 @@ public class IslandCommand implements ICommand {
 
         var targetPlayerName = ctx.getArgument("player", String.class);
         var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+        if (islandRecord == null) {
+            var message = "<red>You do not have an island to untrust players from";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
         String targetPlayerUniqueId = null;
 
         for (var trustedPlayerTuple : islandRecord.trustedPlayers()) {
@@ -393,7 +417,13 @@ public class IslandCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
+        if (!this.playerIslandRecordExists(player)) {
+            var message = "<red>You do not have an island to kick players from";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var islandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
         var currentPlayersInIsland = islandWorld.getPlayers();
         var lobbyWorld = ServerUtils.loadOrCreateLobby();
 
@@ -426,10 +456,8 @@ public class IslandCommand implements ICommand {
         }
 
         if (targetPlayerEntity == null) {
-            sender.sendMessage(Component.text(String.format("%s", targetPlayerName), NamedTextColor.RED)
-                    .appendSpace()
-                    .append(Component.text("is an unknown username", NamedTextColor.RED))
-            );
+            var message = String.format("<gold>%s <red>does not exist in our database", targetPlayerName);
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }
 
@@ -452,10 +480,8 @@ public class IslandCommand implements ICommand {
         }
 
         if (islandEntity == null) {
-            sender.sendMessage(Component.text(String.format("%s", targetPlayerEntity.getUsername()), NamedTextColor.GOLD)
-                    .appendSpace()
-                    .append(Component.text("does not have an island", NamedTextColor.RED))
-            );
+            var targetHasNoIslandMessage = String.format("<gold>%s <red>does not have an island", targetPlayerName);
+            sender.sendMessage(this.plugin.miniMessage.deserialize(targetHasNoIslandMessage));
             return Command.SINGLE_SUCCESS;
         }
 
@@ -467,19 +493,14 @@ public class IslandCommand implements ICommand {
         }
 
         if (targetPlayer == null) {
-            sender.sendMessage(Component.text(String.format("%s's", targetPlayerName), NamedTextColor.GOLD)
-                    .appendSpace()
-                    .append(Component.text("island is not open to offline visits or they are not online at the moment",
-                            NamedTextColor.RED))
-            );
+            var notOpenToOfflineVisitsMessage = String.format("<gold>%s <red>is not open to offline visits and they are not online at the moment", targetPlayerName);
+            sender.sendMessage(this.plugin.miniMessage.deserialize(notOpenToOfflineVisitsMessage));
             return Command.SINGLE_SUCCESS;
         }
 
         if (islandEntity.isPrivate()) {
-            sender.sendMessage(Component.text(String.format("%s's", targetPlayer.getName()), NamedTextColor.GOLD)
-                    .appendSpace()
-                    .append(Component.text("island is private and you cannot visit", NamedTextColor.RED))
-            );
+            var targetIslandIsPrivateMessage = String.format("<gold>%s's <red>island is private and you cannot visit", targetPlayerName);
+            sender.sendMessage(this.plugin.miniMessage.deserialize(targetIslandIsPrivateMessage));
             return Command.SINGLE_SUCCESS;
         }
 
@@ -495,12 +516,13 @@ public class IslandCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var islandWorld = ServerUtils.loadOrCreateWorld(player.getUniqueId(), null, null);
-        if (islandWorld == null) {
-            player.sendMessage(Component.text("You do not have an island to expand", NamedTextColor.RED));
+        if (!this.playerIslandRecordExists(player)) {
+            var message = "<red>You do not have an island to expand";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }
 
+        var islandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
         var blocksToExpand = ctx.getArgument("blocks", Integer.class);
         var worldBlocksToExpand = blocksToExpand * 2; // * 2 because otherwise we will expand half a block in all directions
         var priceToExpandPerBlock = this.plugin.serverConfig.getInt("island.expand_price", 10000);

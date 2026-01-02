@@ -100,8 +100,15 @@ public class WarpCommand implements ICommand {
                 return Command.SINGLE_SUCCESS;
             }
 
-            var location = ServerUtils.deserializeLocation(warpEntity.getLocation());
+            var location = ServerUtils.deserializeLocation(this.plugin, warpEntity);
 
+//            if (targetWorld == null) {
+//                var message = String.format("<red>Warp <gold>%s</gold> is in an invalid world", warpName);
+//                player.sendMessage(this.plugin.miniMessage.deserialize(message));
+//                return Command.SINGLE_SUCCESS;
+//            }
+
+//            location.setWorld(targetWorld);
             player.teleport(location);
             var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
             PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
@@ -135,7 +142,7 @@ public class WarpCommand implements ICommand {
         var warpName = ctx.getArgument("warp", String.class).toLowerCase();
         var warpEnum = InvalidWarpNames.getByName(warpName);
 
-        if (warpEnum != null && !warpEnum.isAdminOverride()) {
+        if (warpEnum != null) {
             var message = String.format("<red>Invalid warp name <gold>%s", warpName);
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
