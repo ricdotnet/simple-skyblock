@@ -8,6 +8,7 @@ import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.IslandProtectedBlocks;
 import dev.ricr.skyblock.enums.SignShopType;
 import dev.ricr.skyblock.shop.SignShop;
+import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
@@ -89,21 +90,19 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
+        var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
 
-        if (!event.isBedSpawn()) {
-            this.plugin.getLogger()
-                    .info(String.format("Player %s does not have a bed, sending to lobby", player.getName()));
-
-            var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
-            if (islandRecord == null) {
-                var lobbyWorld = ServerUtils.loadOrCreateLobby();
-                player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
-                return;
-            }
-
-            var islandLocation = PlayerUtils.getTpLocation(this.plugin, player.getUniqueId());
-            player.teleport(islandLocation);
+        if (!event.isBedSpawn() || islandRecord == null) {
+            var lobbyWorld = ServerUtils.loadOrCreateLobby();
+            player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
+            return;
         }
+
+        var playerIslandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
+        var islandLocation = PlayerUtils.getTpLocation(this.plugin, player.getUniqueId());
+        islandLocation.setWorld(playerIslandWorld);
+
+        player.teleport(islandLocation);
     }
 
     @EventHandler
@@ -112,13 +111,28 @@ public class PlayerListeners implements Listener {
         var worldFrom = event.getFrom();
         var worldTo = player.getWorld();
 
-        if (worldTo.getName().equals("lobby") || worldTo.getEnvironment() == World.Environment.THE_END) {
+        if (worldTo.getName().equals("lobby")) {
+            if (worldFrom.getEnvironment() == World.Environment.THE_END) {
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    player.teleport(new Location(worldTo, 0.5, 65, 0.5));
+                });
+            }
+
             var message = "<red>-= <gold>lobby island</gold> =-";
             PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message), 20L);
 
             // try to unload the world that the player teleported from
             this.plugin.worldManager.unload(worldFrom);
             this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("lobby");
+            return;
+        }
+
+        if (worldTo.getEnvironment() == World.Environment.THE_END) {
+            PlayerUtils.showTitleMessage(this.plugin, player, Messages.THE_END_ISLAND.component(this.plugin), 20L);
+
+            // try to unload the world that the player teleported from
+            this.plugin.worldManager.unload(worldFrom);
+            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("the end");
             return;
         }
 
@@ -157,17 +171,23 @@ public class PlayerListeners implements Listener {
 
         var shouldStopIslandInteraction = this.plugin.islandManager.shouldStopIslandInteraction(player);
 
+        if (clickedBlockMaterial == Material.DRAGON_EGG) {
+            event.setCancelled(true);
+            player.sendMessage(Messages.DRAGON_EGG_BELONGS_TO_SERVER.component(this.plugin));
+            return;
+        }
+
         if (event.getAction() == Action.PHYSICAL) {
             if (shouldStopIslandInteraction) {
                 event.setCancelled(true);
-                player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+                player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             }
             return;
         }
 
         if (IslandProtectedBlocks.BLOCKS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
             event.setCancelled(true);
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             return;
         }
 
@@ -238,7 +258,7 @@ public class PlayerListeners implements Listener {
         }
 
         if (shouldStopIslandInteraction) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
             return;
         }
@@ -263,7 +283,7 @@ public class PlayerListeners implements Listener {
         Player player = event.getPlayer();
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
         }
     }

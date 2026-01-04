@@ -10,6 +10,7 @@ import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
+import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
 import net.kyori.adventure.text.Component;
@@ -29,6 +30,7 @@ import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.persistence.PersistentDataType;
@@ -49,7 +51,7 @@ public class IslandListeners implements Listener {
         Player player = event.getPlayer();
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
         }
     }
@@ -71,7 +73,7 @@ public class IslandListeners implements Listener {
         }
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
         }
     }
@@ -109,7 +111,7 @@ public class IslandListeners implements Listener {
             }
             default -> {
                 if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-                    player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+                    player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
                     event.setCancelled(true);
                 }
             }
@@ -123,7 +125,7 @@ public class IslandListeners implements Listener {
         }
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
         }
     }
@@ -140,10 +142,7 @@ public class IslandListeners implements Listener {
 
             if (playerEntity.getBalance() < endPortalPrice) {
                 event.setCancelled(true);
-
-                var insufficientBalanceMessage = String.format("<red>You don't have enough money to go through the end portal. You need <gold>%s</gold> but you only have <gold>%s</gold>", ServerUtils.formatMoneyValue(endPortalPrice), ServerUtils.formatMoneyValue(playerEntity.getBalance()));
-                player.sendMessage(this.plugin.miniMessage.deserialize(insufficientBalanceMessage));
-
+                player.sendMessage(Messages.INSUFFICIENT_END_PORTAL_BALANCE.component(this.plugin, ServerUtils.formatMoneyValue(endPortalPrice - playerEntity.getBalance())));
                 return;
             }
 

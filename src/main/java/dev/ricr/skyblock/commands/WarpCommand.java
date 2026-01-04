@@ -10,6 +10,7 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
 import dev.ricr.skyblock.enums.InvalidWarpNames;
+import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -116,8 +117,7 @@ public class WarpCommand implements ICommand {
                 var playerBalance = playerEntity.getBalance();
 
                 if (playerBalance < endPortalPrice) {
-                    var insufficientFundsMessage = String.format("<red>You do not have enough money to use this warp. You need <gold>%s</gold> but you only have <gold>%s</gold>", ServerUtils.formatMoneyValue(endPortalPrice), ServerUtils.formatMoneyValue(playerBalance));
-                    player.sendMessage(this.plugin.miniMessage.deserialize(insufficientFundsMessage));
+                    player.sendMessage(Messages.INSUFFICIENT_END_PORTAL_BALANCE.component(this.plugin, ServerUtils.formatMoneyValue(endPortalPrice - playerBalance)));
                     return Command.SINGLE_SUCCESS;
                 }
 
