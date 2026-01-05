@@ -7,6 +7,7 @@ import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
+import dev.ricr.skyblock.utils.ConcurrentLocks;
 import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -192,93 +193,128 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             }
 
             if (clicked.getType() == Material.GREEN_STAINED_GLASS_PANE) {
-                if (auctionHouseItem.getOwnerName()
-                        .equals(player.getName())) {
-                    player.sendMessage(Component.text("You can't buy your own item.", NamedTextColor.RED));
-                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                    return;
-                }
+                var itemLock = ConcurrentLocks.getLock(auctionHouseItem.getId());
+                itemLock.lock();
 
-                if (isPlayerInventoryFull(player)) {
-                    player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
-                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                    return;
-                }
+                synchronized (itemLock) {
+                    try {
+                        var isAvailable = this.plugin.databaseManager.getAuctionHouseDao().queryForId(auctionHouseItem.getId());
+                        if (isAvailable == null) {
+                            var notAvailableMessage = "<red>The item has already been sold or removed from the auction house.";
+                            player.sendMessage(this.plugin.miniMessage.deserialize(notAvailableMessage));
+                            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
 
-                double price = auctionHouseItem.getPrice();
+                            itemLock.unlock();
+                            ConcurrentLocks.removeLock(auctionHouseItem.getId());
 
-                var buyerPlayerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+                            return;
+                        }
+                    } catch (SQLException e) {
+                        // ignore for now
+                    }
 
-                if (buyerPlayerRecord.getBalance() < price) {
-                    player.sendMessage(Component.text("You don't have enough money to buy this item.",
-                            NamedTextColor.RED));
-                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                    return;
-                }
+                    if (auctionHouseItem.getOwnerName()
+                            .equals(player.getName())) {
+                        player.sendMessage(Component.text("You can't buy your own item.", NamedTextColor.RED));
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
 
-                buyerPlayerRecord.setBalance(buyerPlayerRecord.getBalance() - price);
+                        itemLock.unlock();
+                        ConcurrentLocks.removeLock(auctionHouseItem.getId());
 
-                ItemStack itemToGive = actionableItem.clone();
-                ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
-                        .put(auctionHouseItem.getId(), itemToGive.getItemMeta());
+                        return;
+                    }
 
-                itemToGive.setItemMeta(originalMeta);
+                    if (isPlayerInventoryFull(player)) {
+                        player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
 
-                player.getInventory()
-                        .addItem(itemToGive);
+                        itemLock.unlock();
+                        ConcurrentLocks.removeLock(auctionHouseItem.getId());
 
-                player.sendMessage(Component.text(String.format("Bought %s %s from %s for %s",
-                        itemToGive.getAmount(),
-                        ServerUtils.getTextFromComponent(actionableItem.displayName()),
-                        auctionHouseItem.getOwnerName(),
-                        ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())), NamedTextColor.GREEN));
-                this.sendMessageToSeller(auctionHouseItem.getPlayer()
-                                .getPlayerId(), player,
-                        ServerUtils.getTextFromComponent(actionableItem.displayName()),
-                        price);
+                        return;
+                    }
 
-                var transaction = new TransactionEntity();
-                transaction.setPlayer(buyerPlayerRecord);
-                transaction.setSeller(auctionHouseItem.getPlayer());
-                transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
-                transaction.setPrice(price);
-                transaction.setType(TransactionType.AuctionHouseBuy.toString());
+                    double price = auctionHouseItem.getPrice();
+                    var buyerPlayerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
-                var auctionHouseTransactionAdd = new DatabaseChange.TransactionAdd(transaction);
-                this.plugin.databaseChangesAccumulator.add(auctionHouseTransactionAdd);
+                    if (buyerPlayerRecord.getBalance() < price) {
+                        player.sendMessage(Component.text("You don't have enough money to buy this item.",
+                                NamedTextColor.RED));
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
 
-                // TODO: implement a ah cache similar to onlinePlayers for quick realtime updates
+                        itemLock.unlock();
+                        ConcurrentLocks.removeLock(auctionHouseItem.getId());
+
+                        return;
+                    }
+
+                    buyerPlayerRecord.setBalance(buyerPlayerRecord.getBalance() - price);
+
+                    ItemStack itemToGive = actionableItem.clone();
+                    ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
+                            .put(auctionHouseItem.getId(), itemToGive.getItemMeta());
+
+                    itemToGive.setItemMeta(originalMeta);
+
+                    player.getInventory()
+                            .addItem(itemToGive);
+
+                    player.sendMessage(Component.text(String.format("Bought %s %s from %s for %s",
+                            itemToGive.getAmount(),
+                            ServerUtils.getTextFromComponent(actionableItem.displayName()),
+                            auctionHouseItem.getOwnerName(),
+                            ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())), NamedTextColor.GREEN));
+                    this.sendMessageToSeller(auctionHouseItem.getPlayer()
+                                    .getPlayerId(), player,
+                            ServerUtils.getTextFromComponent(actionableItem.displayName()),
+                            price);
+
+                    var transaction = new TransactionEntity();
+                    transaction.setPlayer(buyerPlayerRecord);
+                    transaction.setSeller(auctionHouseItem.getPlayer());
+                    transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
+                    transaction.setPrice(price);
+                    transaction.setType(TransactionType.AuctionHouseBuy.toString());
+
+                    var auctionHouseTransactionAdd = new DatabaseChange.TransactionAdd(transaction);
+                    this.plugin.databaseChangesAccumulator.add(auctionHouseTransactionAdd);
+
+                    // TODO: implement a ah cache similar to onlinePlayers for quick realtime updates
 //                var auctionHouseItemRemove = new DatabaseChange.AuctionHouseItemRemove(auctionHouseItem);
 //                this.plugin.databaseChangesAccumulator.add(auctionHouseItemRemove);
 
-                var playerCreateOrUpdateBuyer = new DatabaseChange.PlayerCreateOrUpdate(buyerPlayerRecord);
-                this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateBuyer);
+                    var playerCreateOrUpdateBuyer = new DatabaseChange.PlayerCreateOrUpdate(buyerPlayerRecord);
+                    this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateBuyer);
 
-                try {
-                    var sellerPlayerRecord = this.plugin.databaseManager
-                            .getPlayersDao()
-                            .queryForId(auctionHouseItem.getPlayer().getPlayerId());
+                    try {
+                        var sellerPlayerRecord = this.plugin.databaseManager
+                                .getPlayersDao()
+                                .queryForId(auctionHouseItem.getPlayer().getPlayerId());
 
-                    DatabaseChange.PlayerCreateOrUpdate playerCreateOrUpdateSeller;
+                        DatabaseChange.PlayerCreateOrUpdate playerCreateOrUpdateSeller;
 
-                    // Update the cached player instance if the seller is online
-                    var onlineSellerPlayerRecord = this.plugin.onlinePlayers.getPlayer(UUID.fromString(sellerPlayerRecord.getPlayerId()));
-                    if (onlineSellerPlayerRecord != null) {
-                        var newBalance = onlineSellerPlayerRecord.getBalance() + price;
-                        onlineSellerPlayerRecord.setBalance(newBalance);
-                        playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(onlineSellerPlayerRecord);
-                    } else {
-                        var newBalance = sellerPlayerRecord.getBalance() + price;
-                        sellerPlayerRecord.setBalance(newBalance);
-                        playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(sellerPlayerRecord);
+                        // Update the cached player instance if the seller is online
+                        var onlineSellerPlayerRecord = this.plugin.onlinePlayers.getPlayer(UUID.fromString(sellerPlayerRecord.getPlayerId()));
+                        if (onlineSellerPlayerRecord != null) {
+                            var newBalance = onlineSellerPlayerRecord.getBalance() + price;
+                            onlineSellerPlayerRecord.setBalance(newBalance);
+                            playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(onlineSellerPlayerRecord);
+                        } else {
+                            var newBalance = sellerPlayerRecord.getBalance() + price;
+                            sellerPlayerRecord.setBalance(newBalance);
+                            playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(sellerPlayerRecord);
+                        }
+
+                        this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSeller);
+
+                        // TODO: remove when the ah cache is implemented
+                        this.plugin.databaseManager.getAuctionHouseDao().delete(auctionHouseItem);
+                    } catch (SQLException e) {
+                        // ignore for now
+                    } finally {
+                        itemLock.unlock();
+                        ConcurrentLocks.removeLock(auctionHouseItem.getId());
                     }
-
-                    this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSeller);
-
-                    // TODO: remove when the ah cache is implemented
-                    this.plugin.databaseManager.getAuctionHouseDao().delete(auctionHouseItem);
-                } catch (SQLException e) {
-                    // ignore for now
                 }
             }
 

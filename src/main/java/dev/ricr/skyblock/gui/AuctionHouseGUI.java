@@ -2,6 +2,7 @@ package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
+import dev.ricr.skyblock.utils.ConcurrentLocks;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -138,45 +139,53 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         Integer itemId = meta.getPersistentDataContainer()
                 .get(ServerUtils.AUCTION_HOUSE_ITEM_ID, PersistentDataType.INTEGER);
 
-        if (player.getInventory()
-                .firstEmpty() == -1) {
-            player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            return;
-        }
+        var itemLock = ConcurrentLocks.getLock(itemId);
+        itemLock.lock();
 
-        try {
-            var auctionHouseItemEntity = this.plugin.databaseManager.getAuctionHouseDao()
-                    .queryForId(itemId);
-
-            if (auctionHouseItemEntity == null) {
+        synchronized (itemLock) {
+            if (player.getInventory()
+                    .firstEmpty() == -1) {
+                player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 return;
             }
 
-            if (!auctionHouseItemEntity.getPlayer()
-                    .getPlayerId()
-                    .equals(player.getUniqueId()
-                            .toString())) {
-                return;
+            try {
+                var auctionHouseItemEntity = this.plugin.databaseManager.getAuctionHouseDao()
+                        .queryForId(itemId);
+
+                if (auctionHouseItemEntity == null) {
+                    return;
+                }
+
+                if (!auctionHouseItemEntity.getPlayer()
+                        .getPlayerId()
+                        .equals(player.getUniqueId()
+                                .toString())) {
+                    return;
+                }
+
+                ItemStack itemToGive = item.clone();
+                ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
+                        .get(itemId);
+                itemToGive.setItemMeta(originalMeta);
+
+                this.plugin.databaseManager.getAuctionHouseDao()
+                        .delete(auctionHouseItemEntity);
+
+                player.getInventory()
+                        .addItem(itemToGive);
+
+                this.refreshInventory();
+
+                player.sendMessage(Component.text(String.format("You removed %s from the auction house",
+                        ServerUtils.getTextFromComponent(itemToGive.displayName())), NamedTextColor.GREEN));
+            } catch (SQLException e) {
+                // ignore for now
+            } finally {
+                itemLock.unlock();
+                ConcurrentLocks.removeLock(itemId);
             }
-
-            ItemStack itemToGive = item.clone();
-            ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
-                    .get(itemId);
-            itemToGive.setItemMeta(originalMeta);
-
-            this.plugin.databaseManager.getAuctionHouseDao()
-                    .delete(auctionHouseItemEntity);
-
-            player.getInventory()
-                    .addItem(itemToGive);
-
-            this.refreshInventory();
-
-            player.sendMessage(Component.text(String.format("You removed %s from the auction house",
-                    ServerUtils.getTextFromComponent(itemToGive.displayName())), NamedTextColor.GREEN));
-        } catch (SQLException e) {
-            // ignore for now
         }
     }
 }

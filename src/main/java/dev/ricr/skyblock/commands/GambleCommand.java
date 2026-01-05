@@ -12,13 +12,11 @@ import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
-import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
@@ -198,10 +196,12 @@ public class GambleCommand implements ICommand {
                                     gambleSession.chooseWinner();
                                     gambleSessions.remove(gambleSession.getHost().getUniqueId());
 
-                                    // reset fastboard gamble lines
-                                    this.plugin.onlinePlayers.getFastBoards()
-                                            .get(gambleSession.getHost().getUniqueId())
-                                            .updateGamble(null);
+                                    for (Player player : gambleSession.getPlayers()) {
+                                        // reset fastboard gamble lines
+                                        this.plugin.onlinePlayers.getFastBoards()
+                                                .get(player.getUniqueId())
+                                                .updateGamble(null);
+                                    }
                                 });
                         return;
                     }
