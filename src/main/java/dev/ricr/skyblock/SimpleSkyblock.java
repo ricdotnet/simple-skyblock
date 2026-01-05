@@ -24,8 +24,6 @@ import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Difficulty;
-import org.bukkit.GameRule;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -100,10 +98,6 @@ public class SimpleSkyblock extends JavaPlugin {
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);
 
-        var endWorld = this.getServer().getWorld("lobby_the_end");
-        endWorld.setDifficulty(Difficulty.HARD);
-        endWorld.setGameRule(GameRule.DO_MOB_SPAWNING, true);
-
         this.getLogger().info("SimpleSkyblock has been enabled!");
     }
 
@@ -123,7 +117,6 @@ public class SimpleSkyblock extends JavaPlugin {
 
     @Override
     public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, String id) {
-        this.getLogger().info(String.format("Chunk generator for %s is %s", id, worldName));
         return new VoidWorldGenerator();
     }
 

@@ -136,6 +136,10 @@ public class IslandListeners implements Listener {
         var player = event.getPlayer();
 
         if (to.getEnvironment() == World.Environment.THE_END) {
+            if (ServerUtils.isOpOverride() && player.isOp()) {
+                return;
+            }
+
             var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
             var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
 
