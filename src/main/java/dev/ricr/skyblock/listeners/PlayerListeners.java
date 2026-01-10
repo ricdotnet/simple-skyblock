@@ -13,7 +13,9 @@ import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -21,6 +23,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
@@ -281,10 +284,34 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
+        var itemInHand = player.getInventory().getItem(event.getHand());
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
+        }
+
+        // TODO: extract event
+        if(Material.NAME_TAG == itemInHand.getType() && (event.getRightClicked() instanceof LivingEntity targetEntity)) {
+            if (!itemInHand.hasItemMeta() || !itemInHand.getItemMeta().hasDisplayName()) {
+                return;
+            }
+
+            var tagName = itemInHand.getItemMeta().displayName();
+            var plain = PlainTextComponentSerializer.plainText().serialize(tagName);
+
+            if (!plain.equalsIgnoreCase("[silence]")) {
+                return;
+            }
+
+            event.setCancelled(true);
+            targetEntity.setSilent(true);
+
+            if (GameMode.SURVIVAL == player.getGameMode() || GameMode.ADVENTURE == player.getGameMode()) {
+                itemInHand.setAmount(itemInHand.getAmount() - 1);
+            }
+
+            return;
         }
     }
 
