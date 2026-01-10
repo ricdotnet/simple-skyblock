@@ -10,12 +10,14 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
 import dev.ricr.skyblock.enums.InvalidWarpNames;
+import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.AllArgsConstructor;
+import org.bukkit.World;
 
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
@@ -101,14 +103,30 @@ public class WarpCommand implements ICommand {
             }
 
             var location = ServerUtils.deserializeLocation(this.plugin, warpEntity);
+            var locationWorld = location.getWorld();
 
-//            if (targetWorld == null) {
-//                var message = String.format("<red>Warp <gold>%s</gold> is in an invalid world", warpName);
-//                player.sendMessage(this.plugin.miniMessage.deserialize(message));
-//                return Command.SINGLE_SUCCESS;
-//            }
+            if (locationWorld == null) {
+                var message = String.format("<red>Warp <gold>%s</gold> is in an invalid world", warpName);
+                player.sendMessage(this.plugin.miniMessage.deserialize(message));
+                return Command.SINGLE_SUCCESS;
+            }
 
-//            location.setWorld(targetWorld);
+            if (locationWorld.getEnvironment() == World.Environment.THE_END) {
+                var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
+                var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+                var playerBalance = playerEntity.getBalance();
+
+                if (playerBalance < endPortalPrice) {
+                    player.sendMessage(Messages.INSUFFICIENT_END_PORTAL_BALANCE.component(this.plugin, ServerUtils.formatMoneyValue(endPortalPrice - playerBalance)));
+                    return Command.SINGLE_SUCCESS;
+                }
+
+                playerEntity.setBalance(playerBalance - endPortalPrice);
+
+                var playerUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
+                this.plugin.databaseChangesAccumulator.add(playerUpdate);
+            }
+
             player.teleport(location);
             var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
             PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
@@ -125,7 +143,7 @@ public class WarpCommand implements ICommand {
         var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
 
         var currentWorld = player.getWorld();
-        if (currentWorld.getName().contains("lobby")) {
+        if (currentWorld.getName().equals("lobby") || currentWorld.getName().equals("lobby_nether")) {
             var message = "<red>You cannot create warps in the lobby world";
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
@@ -168,6 +186,13 @@ public class WarpCommand implements ICommand {
 
         var message = String.format("<green>New warp created <gold>%s", warpName);
         sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+
+        if (currentWorld.getEnvironment() == World.Environment.THE_END) {
+            var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
+            var endWarpMessage = String.format("<yellow>You will need to pay <gold>%s</gold> to use this warp", ServerUtils.formatMoneyValue(endPortalPrice));
+            player.sendMessage(this.plugin.miniMessage.deserialize(endWarpMessage));
+            return Command.SINGLE_SUCCESS;
+        }
 
         return Command.SINGLE_SUCCESS;
     }

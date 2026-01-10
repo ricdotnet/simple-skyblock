@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.enums.CustomStructures;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.gui.ConfirmGUI;
@@ -9,6 +10,7 @@ import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
+import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
 import net.kyori.adventure.text.Component;
@@ -48,7 +50,7 @@ public class IslandListeners implements Listener {
         Player player = event.getPlayer();
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
         }
     }
@@ -70,7 +72,7 @@ public class IslandListeners implements Listener {
         }
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
         }
     }
@@ -108,7 +110,7 @@ public class IslandListeners implements Listener {
             }
             default -> {
                 if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-                    player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+                    player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
                     event.setCancelled(true);
                 }
             }
@@ -122,7 +124,7 @@ public class IslandListeners implements Listener {
         }
 
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Component.text("You cannot do that here", NamedTextColor.RED));
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
         }
     }
@@ -133,16 +135,31 @@ public class IslandListeners implements Listener {
         var to = event.getTo().getWorld();
         var player = event.getPlayer();
 
-        // we want to block all portal interactions
-        event.setCancelled(true);
-
         if (to.getEnvironment() == World.Environment.THE_END) {
-            player.sendMessage(Component.text("The End", NamedTextColor.DARK_PURPLE)
-                    .appendSpace()
-                    .append(Component.text("is not supported yet", NamedTextColor.RED))
-            );
+            if (ServerUtils.isOpOverride() && player.isOp()) {
+                return;
+            }
+
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+            var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
+
+            if (playerEntity.getBalance() < endPortalPrice) {
+                event.setCancelled(true);
+                player.sendMessage(Messages.INSUFFICIENT_END_PORTAL_BALANCE.component(this.plugin, ServerUtils.formatMoneyValue(endPortalPrice - playerEntity.getBalance())));
+                return;
+            }
+
+            var newBalance = playerEntity.getBalance() - endPortalPrice;
+            playerEntity.setBalance(newBalance);
+
+            var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
+            this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
+
             return;
         }
+
+        // we want to block all portal interactions
+        event.setCancelled(true);
 
         if (!from.getName().startsWith("islands/") || from.getEnvironment() != World.Environment.NORMAL || this.plugin.islandManager.shouldStopNetherTeleport(player)) {
             player.sendMessage(Component.text("You cannot go through portals here", NamedTextColor.RED));

@@ -1,5 +1,6 @@
-package dev.ricr.skyblock;
+package dev.ricr.skyblock.utils;
 
+import dev.ricr.skyblock.SimpleSkyblock;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
@@ -42,15 +43,27 @@ public class WorldManager {
     }
 
     public synchronized World load(String worldName) {
-        // TODO: maybe improve?
         var world = Bukkit.getWorld(worldName);
-        if (world != null) {
-            this.activePlayerCount.merge(worldName, 1, Integer::sum);
+        if (world == null) {
+            var worldCreator = new WorldCreator(worldName);
+            if (!worldName.contains("_the_end")) {
+                worldCreator.generator("SimpleSkyblock");
+            } else {
+                worldCreator.environment(World.Environment.THE_END);
+            }
+            world = Bukkit.createWorld(worldCreator);
         }
+
+        this.activePlayerCount.merge(worldName, 1, Integer::sum);
+
         return world;
     }
 
     public synchronized void unload(World world) {
+        if (world.getEnvironment() == World.Environment.THE_END || world.getName().equals("lobby")) {
+            return;
+        }
+
         var worldName = world.getName();
 
         var currentActivePlayerCount = this.activePlayerCount.get(worldName);
