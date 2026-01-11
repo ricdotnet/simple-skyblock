@@ -5,4 +5,20 @@ max_player_warps: 3
 island:
   starting_border_radius: 60
   show_seed_price: 25000
-  expand_price: 10000 # price per block - 10 blocks means 10 * price
+  expand_price: 2000 # price per block - 10 blocks means 10 * price
+villager_shops:
+  - name: Trims
+    color: dark_purple
+    position:
+      x: 9
+      y: 64
+      z: 3
+    items:
+      - material: NETHERITE_UPGRADE_SMITHING_TEMPLATE
+        trade_in_item_1: BEACON
+        amount_item_1: 1
+        trade_in_item_2: DIAMOND
+        amount_item_2: 7
+      - material: DUNE_ARMOR_TRIM_SMITHING_TEMPLATE
+        trade_in_item_1: BEACON
+        amount_item_1: 1

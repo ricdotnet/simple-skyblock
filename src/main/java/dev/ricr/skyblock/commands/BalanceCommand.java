@@ -3,8 +3,6 @@ package dev.ricr.skyblock.commands;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

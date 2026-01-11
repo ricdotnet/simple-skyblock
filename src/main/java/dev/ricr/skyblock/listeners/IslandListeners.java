@@ -10,6 +10,7 @@ import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
+import dev.ricr.skyblock.gui.VillagerShopGUI;
 import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
@@ -107,6 +108,8 @@ public class IslandListeners implements Listener {
             case AuctionHouseGUI ignored -> {
             }
             case IslandGUI ignored -> {
+            }
+            case VillagerShopGUI ignored -> {
             }
             default -> {
                 if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {

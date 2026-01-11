@@ -44,6 +44,7 @@ public class SimpleSkyblock extends JavaPlugin {
     public OnlinePlayers onlinePlayers;
     public MiniMessage miniMessage;
     public WorldManager worldManager;
+    public VillagerShopManager villagerShopManager;
 
     @Override
     public void onEnable() {
@@ -105,6 +106,7 @@ public class SimpleSkyblock extends JavaPlugin {
     @Override
     public void onDisable() {
         ServerUtils.cleanUpTextDisplays(this);
+        this.villagerShopManager.removeVillagerShops();
 
         try {
             this.databaseManager.commitImmediately();
@@ -119,6 +121,10 @@ public class SimpleSkyblock extends JavaPlugin {
     @Override
     public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, String id) {
         return new VoidWorldGenerator();
+    }
+
+    public void loadVillagerShops() {
+        this.villagerShopManager = new VillagerShopManager(this);
     }
 
     private void ensureDataFolderExists() {

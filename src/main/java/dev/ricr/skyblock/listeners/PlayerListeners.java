@@ -7,6 +7,7 @@ import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.IslandProtectedBlocks;
 import dev.ricr.skyblock.enums.SignShopType;
+import dev.ricr.skyblock.gui.VillagerShopGUI;
 import dev.ricr.skyblock.shop.SignShop;
 import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.PlayerUtils;
@@ -26,6 +27,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -283,6 +285,10 @@ public class PlayerListeners implements Listener {
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+
         Player player = event.getPlayer();
         var itemInHand = player.getInventory().getItem(event.getHand());
 
@@ -347,6 +353,30 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onSignChangeEvent(SignChangeEvent event) {
         new SignShop(this.plugin, event);
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onVillagerShopInteract(PlayerInteractEntityEvent event) {
+        if (!(event.getRightClicked() instanceof Villager villager)) {
+            return;
+        }
+
+        var persistentDataContainer = villager.getPersistentDataContainer();
+        if (!persistentDataContainer.has(ServerUtils.VILLAGER_SHOP_NAME, PersistentDataType.STRING)) {
+            return;
+        }
+
+        var villagerShopUniqueId = villager.getUniqueId();
+        var villagerShop = this.plugin.villagerShopManager.getVillagerShop(villagerShopUniqueId);
+
+        if (villagerShop == null) {
+            this.plugin.getLogger().warning("Player interacted with a villager shop entity that does not exist as a runtime shop.");
+            return;
+        }
+
+        event.setCancelled(true);
+
+        new VillagerShopGUI(this.plugin, villagerShop.getName(), event.getPlayer(), villagerShop.getItems(), villagerShop.getColor());
     }
 
     private void createPlayerEntity(Player player) {

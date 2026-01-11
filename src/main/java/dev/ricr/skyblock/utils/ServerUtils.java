@@ -67,6 +67,8 @@ public class ServerUtils {
     public static NamespacedKey SIGN_SHOP_IN_ITEM;
     public static NamespacedKey SIGN_SHOP_OWNER;
 
+    public static NamespacedKey VILLAGER_SHOP_NAME;
+
     // server configs - TODO: refactor to a better solution
     @Getter
     @Setter
@@ -118,6 +120,7 @@ public class ServerUtils {
         SIGN_SHOP_OUT_ITEM = new NamespacedKey(plugin, "sign_shop_out_item");
         SIGN_SHOP_IN_ITEM = new NamespacedKey(plugin, "sign_shop_in_item");
         SIGN_SHOP_OWNER = new NamespacedKey(plugin, "sign_shop_owner");
+        VILLAGER_SHOP_NAME = new NamespacedKey(plugin, "villager_shop_name");
     }
 
     public static World loadOrCreateLobby() {
