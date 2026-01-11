@@ -72,7 +72,7 @@ public class PlayerListeners implements Listener {
         // always start in the lobby / spawn world
         player.teleport(new Location(lobbyWorld, 0.5, 65, 0.5));
 
-        this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("lobby");
+        this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getFastBoard().updateWorld("lobby");
     }
 
     @EventHandler
@@ -126,7 +126,7 @@ public class PlayerListeners implements Listener {
 
             // try to unload the world that the player teleported from
             this.plugin.worldManager.unload(worldFrom);
-            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("lobby");
+            this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getFastBoard().updateWorld("lobby");
             return;
         }
 
@@ -135,7 +135,7 @@ public class PlayerListeners implements Listener {
 
             // try to unload the world that the player teleported from
             this.plugin.worldManager.unload(worldFrom);
-            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("the end");
+            this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getFastBoard().updateWorld("the end");
             return;
         }
 
@@ -154,11 +154,11 @@ public class PlayerListeners implements Listener {
             var message = String.format("<green>-= <gold>%s's island</gold> =-", islandOwnerUsername);
 
             var fastBoardWorldName = islandOwnerUsername.equals(player.getName()) ? "your island" : String.format("%s's island", islandOwnerUsername);
-            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld(fastBoardWorldName);
+            this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getFastBoard().updateWorld(fastBoardWorldName);
 
             PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message), 20L);
         } else {
-            this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateWorld("unknown");
+            this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getFastBoard().updateWorld("unknown");
         }
 
         this.plugin.worldManager.loadOrCreate(player.getUniqueId(), worldTo.getEnvironment(), null);
@@ -292,7 +292,7 @@ public class PlayerListeners implements Listener {
         }
 
         // TODO: extract event
-        if(Material.NAME_TAG == itemInHand.getType() && (event.getRightClicked() instanceof LivingEntity targetEntity)) {
+        if (Material.NAME_TAG == itemInHand.getType() && (event.getRightClicked() instanceof LivingEntity targetEntity)) {
             if (!itemInHand.hasItemMeta() || !itemInHand.getItemMeta().hasDisplayName()) {
                 return;
             }
@@ -335,7 +335,7 @@ public class PlayerListeners implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         var player = event.getEntity();
-        var playerFastBoard = this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId());
+        var playerFastBoard = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getFastBoard();
 
         if (playerFastBoard == null) {
             return;
@@ -362,7 +362,7 @@ public class PlayerListeners implements Listener {
                         .info(String.format("Player %s already joined before. Skipping initialization of player entity.",
                                 player.getName()));
 
-                this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerEntity);
+                this.plugin.onlinePlayers.addPlayer(player, playerEntity);
                 return;
             }
 
@@ -371,7 +371,7 @@ public class PlayerListeners implements Listener {
             playerEntity.setUsername(player.getName());
             playerEntity.setBalance(100.0d);
 
-            this.plugin.onlinePlayers.addPlayer(playerUniqueId, playerEntity);
+            this.plugin.onlinePlayers.addPlayer(player, playerEntity);
 
             var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
             this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);

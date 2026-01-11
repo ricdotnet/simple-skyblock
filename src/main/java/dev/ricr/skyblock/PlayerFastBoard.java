@@ -16,14 +16,14 @@ public class PlayerFastBoard {
     @Getter
     private final FastBoard fastBoard;
 
-    public PlayerFastBoard(SimpleSkyblock plugin, Player player) {
+    public PlayerFastBoard(SimpleSkyblock plugin, Player player, PlayerEntity playerEntity) {
         this.plugin = plugin;
         this.fastBoard = new FastBoard(player);
 
         var title = "<gold>Simple Skyblock";
         fastBoard.updateTitle(this.plugin.miniMessage.deserialize(title));
 
-        this.updateMoney();
+        this.updateMoney(playerEntity);
         this.updateDeaths();
         this.updateGamble(null);
         this.updatePing();
@@ -44,7 +44,7 @@ public class PlayerFastBoard {
 
     public void updateMoney() {
         var player = this.fastBoard.getPlayer();
-        var playerEntity = this.plugin.onlinePlayers.getOnlinePlayers().get(player.getUniqueId());
+        var playerEntity = this.plugin.onlinePlayers.getOnlinePlayers().get(player.getUniqueId()).getPlayerEntity();
         var moneyLine = String.format("<gold>\uD83D\uDCB2 <white>Money <green>%s", ServerUtils.formatMoneyValue(playerEntity.getBalance()));
         this.fastBoard.updateLine(4, this.plugin.miniMessage.deserialize(moneyLine));
     }

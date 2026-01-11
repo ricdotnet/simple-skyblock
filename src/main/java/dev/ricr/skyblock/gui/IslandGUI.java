@@ -107,7 +107,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
-        var expansionSize = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getExpansionSize();
+        var expansionSize = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity().getExpansionSize();
         var totalSize = (defaultSize + expansionSize) * 2 + 1;
         this.setItemSimpleMeta(islandSizeIcon, String.format("Island size: %sx%s", totalSize, totalSize), null);
         this.inventory.setItem(14, islandSizeIcon);
@@ -225,7 +225,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     private void handleShowIslandSeedClick(Player player) {
         try {
-            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
             var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
 
             if (playerEntity.getBalance() < showSeedPrice) {

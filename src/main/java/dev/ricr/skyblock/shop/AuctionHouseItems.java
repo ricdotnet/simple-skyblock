@@ -17,8 +17,7 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -95,12 +94,8 @@ public class AuctionHouseItems {
     public void buildAndAddMeta(int itemId, ItemStack item, String ownerName, double price) {
         ItemMeta meta = item.getItemMeta();
         meta.lore(List.of(
-                Component.text("> " + ownerName + " <", NamedTextColor.YELLOW),
-                Component.empty(),
-                Component.text()
-                        .content("Price: ")
-                        .append(Component.text(String.format("%s", ServerUtils.formatMoneyValue(price)), NamedTextColor.GOLD))
-                        .build()
+                this.plugin.miniMessage.deserialize("<!italic><white>Price: <color:#23CC7A><price>", Placeholder.unparsed("price", ServerUtils.formatMoneyValue(price))),
+                this.plugin.miniMessage.deserialize("<!italic><white>Seller: <color:#23CC7A><seller>", Placeholder.unparsed("seller", ownerName))
         ));
 
         meta.getPersistentDataContainer()

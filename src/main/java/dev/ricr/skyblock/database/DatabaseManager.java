@@ -118,7 +118,7 @@ public class DatabaseManager {
 
                 var playerId = UUID.fromString(player.getPlayerId());
 
-                var playerFastBoard = this.plugin.onlinePlayers.getFastBoards().get(playerId);
+                var playerFastBoard = this.plugin.onlinePlayers.getPlayer(playerId).getFastBoard();
                 if (playerFastBoard != null) {
                     playerFastBoard.updateMoney();
                 }

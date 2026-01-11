@@ -135,12 +135,12 @@ public class IslandCommand implements ICommand {
         if (newIslandWorld == null) {
             player.sendMessage(Component.text("Unable to create a new island", NamedTextColor.RED));
         } else {
-            var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
 
             newIslandWorld.setDifficulty(Difficulty.HARD);
 
             var radius = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
-            var radiusWithOldExpansion = radius + playerRecord.getExpansionSize();
+            var radiusWithOldExpansion = radius + playerEntity.getExpansionSize();
 
             newIslandWorld.getWorldBorder().setSize(radiusWithOldExpansion * 2 + 1);
             newIslandWorld.getWorldBorder().setCenter(new Location(newIslandWorld, 0.5, 64, 0.5));
@@ -528,8 +528,8 @@ public class IslandCommand implements ICommand {
         var priceToExpandPerBlock = this.plugin.serverConfig.getInt("island.expand_price", 10000);
         var totalPriceToExpand = blocksToExpand * priceToExpandPerBlock;
 
-        var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
-        if (playerRecord.getBalance() < totalPriceToExpand) {
+        var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
+        if (playerEntity.getBalance() < totalPriceToExpand) {
             player.sendMessage(Component.text(String.format("You do not have enough money to expand your island by %d blocks", blocksToExpand),
                     NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
@@ -540,10 +540,10 @@ public class IslandCommand implements ICommand {
         worldBorder.setCenter(worldBorder.getCenter());
         islandWorld.save();
 
-        playerRecord.setBalance(playerRecord.getBalance() - totalPriceToExpand);
-        playerRecord.setExpansionSize(playerRecord.getExpansionSize() + blocksToExpand); // for keeping track, we keep the original number of blocks
+        playerEntity.setBalance(playerEntity.getBalance() - totalPriceToExpand);
+        playerEntity.setExpansionSize(playerEntity.getExpansionSize() + blocksToExpand); // for keeping track, we keep the original number of blocks
 
-        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerRecord);
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
         player.sendMessage(Component.text(String.format("Your island has been expanded by %d blocks", blocksToExpand), NamedTextColor.GREEN));

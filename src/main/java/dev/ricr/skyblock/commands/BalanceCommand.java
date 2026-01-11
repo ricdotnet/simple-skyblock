@@ -18,15 +18,10 @@ public class BalanceCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
                              String[] args) {
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+        var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
 
-        var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
-
-        player.sendMessage(Component.text("Your balance is:", NamedTextColor.GREEN)
-                .appendSpace()
-                .append(
-                        Component.text(String.format("%s", ServerUtils.formatMoneyValue(playerRecord.getBalance())),
-                                NamedTextColor.GOLD))
-        );
+        var message = String.format("<green>Your balance is <gold>%s", ServerUtils.formatMoneyValue(playerEntity.getBalance()));
+        player.sendMessage(this.plugin.miniMessage.deserialize(message));
 
         return true;
     }

@@ -113,7 +113,7 @@ public class WarpCommand implements ICommand {
 
             if (locationWorld.getEnvironment() == World.Environment.THE_END) {
                 var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
-                var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+                var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
                 var playerBalance = playerEntity.getBalance();
 
                 if (playerBalance < endPortalPrice) {
@@ -140,7 +140,7 @@ public class WarpCommand implements ICommand {
     private int createWarp(CommandContext<CommandSourceStack> ctx) {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
-        var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
 
         var currentWorld = player.getWorld();
         if (currentWorld.getName().equals("lobby") || currentWorld.getName().equals("lobby_nether")) {

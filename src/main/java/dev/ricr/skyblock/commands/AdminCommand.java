@@ -92,10 +92,10 @@ public class AdminCommand implements ICommand {
         var amount = ctx.getArgument("amount", Double.class);
         var onlinePlayer = Bukkit.getOfflinePlayer(targetPlayer.getUniqueId());
 
-        var targetPlayerRecord = this.plugin.onlinePlayers.getPlayer(onlinePlayer.getUniqueId());
-        targetPlayerRecord.setBalance(targetPlayerRecord.getBalance() + amount);
+        var targetPlayerEntity = this.plugin.onlinePlayers.getPlayer(onlinePlayer.getUniqueId()).getPlayerEntity();
+        targetPlayerEntity.setBalance(targetPlayerEntity.getBalance() + amount);
 
-        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(targetPlayerRecord);
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(targetPlayerEntity);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
         targetPlayer.sendMessage(Component.text(String.format("An admin sent you %s", ServerUtils.formatMoneyValue(amount)),

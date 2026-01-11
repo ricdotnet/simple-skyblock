@@ -62,13 +62,13 @@ public class AuctionHouseCommand implements CommandExecutor {
             return true;
         }
 
-        var playerSelling = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        var playerSellingEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
 
         var playerListingsCount = 0L;
         try {
             playerListingsCount = this.plugin.databaseManager.getAuctionHouseDao().queryBuilder()
                     .where()
-                    .eq("player_id", playerSelling.getPlayerId())
+                    .eq("player_id", playerSellingEntity.getPlayerId())
                     .countOf();
         } catch (SQLException e) {
             // ignore for now
@@ -81,7 +81,7 @@ public class AuctionHouseCommand implements CommandExecutor {
         }
 
         var auctionHouseItemEntity = new AuctionHouseItemEntity();
-        auctionHouseItemEntity.setPlayer(playerSelling);
+        auctionHouseItemEntity.setPlayer(playerSellingEntity);
         auctionHouseItemEntity.setOwnerName(player.getName());
         auctionHouseItemEntity.setPrice(price);
         auctionHouseItemEntity.setItem(ServerUtils.base64FromBytes(itemInHand.serializeAsBytes()));

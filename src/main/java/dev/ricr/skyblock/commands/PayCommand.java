@@ -59,20 +59,20 @@ public class PayCommand implements ICommand {
 
         var amount = DoubleArgumentType.getDouble(ctx, "amount");
 
-        var targetPlayerRecord = this.plugin.onlinePlayers.getPlayer(targetPlayer.getUniqueId());
-        var senderPlayerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        var targetPlayerEntity = this.plugin.onlinePlayers.getPlayer(targetPlayer.getUniqueId()).getPlayerEntity();
+        var senderPlayerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
 
-        if (senderPlayerRecord.getBalance() >= amount) {
-            senderPlayerRecord.setBalance(senderPlayerRecord.getBalance() - amount);
-            targetPlayerRecord.setBalance(targetPlayerRecord.getBalance() + amount);
+        if (senderPlayerEntity.getBalance() >= amount) {
+            senderPlayerEntity.setBalance(senderPlayerEntity.getBalance() - amount);
+            targetPlayerEntity.setBalance(targetPlayerEntity.getBalance() + amount);
         } else {
             player.sendMessage(Component.text("You don't have enough money to pay that amount",
                     NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
         }
 
-        var playerCreateOrUpdateSender = new DatabaseChange.PlayerCreateOrUpdate(senderPlayerRecord);
-        var playerCreateOrUpdateTarget = new DatabaseChange.PlayerCreateOrUpdate(targetPlayerRecord);
+        var playerCreateOrUpdateSender = new DatabaseChange.PlayerCreateOrUpdate(senderPlayerEntity);
+        var playerCreateOrUpdateTarget = new DatabaseChange.PlayerCreateOrUpdate(targetPlayerEntity);
 
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateSender);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateTarget);

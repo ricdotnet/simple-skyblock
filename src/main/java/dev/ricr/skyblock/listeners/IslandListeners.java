@@ -140,7 +140,7 @@ public class IslandListeners implements Listener {
                 return;
             }
 
-            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
             var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
 
             if (playerEntity.getBalance() < endPortalPrice) {

@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -48,22 +49,12 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
             ItemMeta meta = item.getItemMeta();
 
             if (meta != null) {
-                String sellPrice = priceOrNotAvailable(prices.sellPrice());
-                String buyPrice = priceOrNotAvailable(prices.buyPrice());
-
                 meta.displayName(Component.text(material.name()));
                 meta.lore(List.of(
-                        Component.empty(),
-                        Component.text()
-                                .content("Sell: ")
-                                .append(Component.text(sellPrice, "Not available".equals(sellPrice) ?
-                                        NamedTextColor.RED : NamedTextColor.GREEN))
-                                .build(),
-                        Component.text()
-                                .content("Buy: ")
-                                .append(Component.text(buyPrice, "Not available".equals(buyPrice) ?
-                                        NamedTextColor.RED : NamedTextColor.GREEN))
-                                .build()
+                        this.plugin.miniMessage.deserialize("<!italic><white>Sell: " +
+                                (prices.sellPrice() == -1 ? "<red>Not available" : "<color:#23CC7A>" + ServerUtils.formatMoneyValue(prices.sellPrice()))),
+                        this.plugin.miniMessage.deserialize("<!italic><white>Buy: " +
+                                (prices.buyPrice() == -1 ? "<red>Not available" : "<color:#E8A20C>" + ServerUtils.formatMoneyValue(prices.buyPrice())))
                 ));
                 item.setItemMeta(meta);
             }
@@ -116,13 +107,5 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
         int col = slot % inventoryWidth;
 
         return col == 0 || col == inventoryWidth - 1 || row == 0 || row == inventoryWidth - 1;
-    }
-
-    private String priceOrNotAvailable(double price) {
-        if (price == -1) {
-            return "Not available";
-        } else {
-            return String.format("%s", ServerUtils.formatMoneyValue(price));
-        }
     }
 }

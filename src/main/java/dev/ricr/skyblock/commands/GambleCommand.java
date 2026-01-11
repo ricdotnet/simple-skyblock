@@ -79,7 +79,8 @@ public class GambleCommand implements ICommand {
             return Command.SINGLE_SUCCESS;
         }
 
-        if (hostPlayer.getBalance() < amount) {
+        var hostPlayerEntity = hostPlayer.getPlayerEntity();
+        if (hostPlayerEntity.getBalance() < amount) {
             player.sendMessage(Component.text(String.format("Your balance is less than you tried to gamble for %s",
                     ServerUtils.formatMoneyValue(amount)), NamedTextColor.RED));
             return Command.SINGLE_SUCCESS;
@@ -89,26 +90,18 @@ public class GambleCommand implements ICommand {
         gambleSessions.put(player.getUniqueId(), gambleSession);
 
         player.openInventory(gambleSession.getInventory());
-        var globalMessage = Component.text(String.format("%s", player.getName()), NamedTextColor.GOLD)
-                .appendSpace()
-                .append(Component.text(String.format("started a gamble session with %s bets.",
-                                ServerUtils.formatMoneyValue(amount)),
-                        NamedTextColor.GREEN))
-                .appendNewline()
-                .append(Component.text("Type /gamble join <name> to join.", NamedTextColor.GREEN))
-                .appendSpace()
-                .append(Component.text("Or click here to join", NamedTextColor.AQUA)
-                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/gamble join " + player.getName()))
-                );
+        var globalMessage = "<green>" + player.getName() + "</green><head:" + player.getUniqueId() + "> <white>started a gambling session with " +
+                "<gold>" + ServerUtils.formatMoneyValue(amount) + "</gold> bets" +
+                "<newline>To join <click:run_command:gamble join " + player.getName() + "><aqua>click here<aqua></click> or type <green>/gamble join <name></green>";
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             if (onlinePlayer.getUniqueId() == player.getUniqueId()) {
                 continue;
             }
-            onlinePlayer.sendMessage(globalMessage);
+            onlinePlayer.sendMessage(this.plugin.miniMessage.deserialize(globalMessage));
         }
 
-        this.plugin.onlinePlayers.getFastBoards().get(player.getUniqueId()).updateGamble(gambleSession);
+        this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getFastBoard().updateGamble(gambleSession);
         this.initiateGambleSessionCountdown(gambleSession);
 
         return Command.SINGLE_SUCCESS;
@@ -158,12 +151,11 @@ public class GambleCommand implements ICommand {
 
             gambleSessionGUI.addPlayer(player);
 
-            hostPlayer.sendMessage(Component.text(String.format("%s joined your gamble session",
-                    player.getName()), NamedTextColor.AQUA));
+            var playerJoinedMessage = "<green>" + player.getName() + "<white><head:" + player.getUniqueId() + "> joined your gamble session";
+            hostPlayer.sendMessage(this.plugin.miniMessage.deserialize(playerJoinedMessage));
 
-            player.sendMessage(Component.text(String.format("You joined the gamble session of %s",
-                            hostPlayer.getName()),
-                    NamedTextColor.YELLOW));
+            var youJoinedMessage = "You joined the gamble session of <green>" + hostPlayer.getName() + "</green><head:" + hostPlayer.getUniqueId() + ">";
+            player.sendMessage(this.plugin.miniMessage.deserialize(youJoinedMessage));
         }
 
         player.openInventory(gambleSessionGUI.getInventory());
@@ -183,8 +175,9 @@ public class GambleCommand implements ICommand {
                             PlayerUtils.showTitleMessage(plugin, player, message);
                         }
 
-                        this.plugin.onlinePlayers.getFastBoards()
+                        this.plugin.onlinePlayers.getOnlinePlayers()
                                 .get(player.getUniqueId())
+                                .getFastBoard()
                                 .updateGamble(gambleSession);
                     }
 
@@ -198,8 +191,9 @@ public class GambleCommand implements ICommand {
 
                                     for (Player player : gambleSession.getPlayers()) {
                                         // reset fastboard gamble lines
-                                        this.plugin.onlinePlayers.getFastBoards()
+                                        this.plugin.onlinePlayers.getOnlinePlayers()
                                                 .get(player.getUniqueId())
+                                                .getFastBoard()
                                                 .updateGamble(null);
                                     }
                                 });

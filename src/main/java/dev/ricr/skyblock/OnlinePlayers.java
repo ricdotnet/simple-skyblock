@@ -1,7 +1,10 @@
 package dev.ricr.skyblock;
 
 import dev.ricr.skyblock.database.PlayerEntity;
+import fr.mrmicky.fastboard.FastBoard;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.bukkit.entity.Player;
 
 import java.util.Map;
 import java.util.UUID;
@@ -10,51 +13,54 @@ import java.util.concurrent.ConcurrentHashMap;
 public class OnlinePlayers {
     private final SimpleSkyblock plugin;
     @Getter
-    private final Map<UUID, PlayerEntity> onlinePlayers;
-    @Getter
-    private final Map<UUID, PlayerFastBoard> fastBoards;
+    private final Map<UUID, OnlinePlayer> onlinePlayers;
 
     public OnlinePlayers(SimpleSkyblock plugin) {
         this.plugin = plugin;
 
         this.onlinePlayers = new ConcurrentHashMap<>();
-        this.fastBoards = new ConcurrentHashMap<>();
 
         this.fastBoardUpdater();
     }
 
-    public void addPlayer(UUID uuid, PlayerEntity playerEntity) {
-        this.onlinePlayers.put(uuid, playerEntity);
+    public void addPlayer(Player player, PlayerEntity playerEntity) {
+        var playerUUID = player.getUniqueId();
 
-        var player = this.plugin.getServer().getPlayer(uuid);
-        if (player == null) {
-            this.plugin.getLogger().warning("Player " + uuid + " is not online");
-            return;
-        }
-
-        this.fastBoards.put(uuid, new PlayerFastBoard(this.plugin, player));
+        this.onlinePlayers.put(playerUUID, new OnlinePlayer(this.plugin, player, playerEntity));
     }
 
     public void removePlayer(UUID uuid) {
         this.onlinePlayers.remove(uuid);
-        this.fastBoards.remove(uuid);
     }
 
-    public PlayerEntity getPlayer(UUID uuid) {
+    public OnlinePlayer getPlayer(UUID uuid) {
         return this.onlinePlayers.get(uuid);
     }
 
     private void fastBoardUpdater() {
         this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
-            for (var key : this.fastBoards.keySet()) {
-                var playerFastBoard = this.fastBoards.get(key);
-                var player = this.plugin.getServer().getPlayer(key);
-                if (player == null) {
-                    continue;
-                }
+            for (var onlinePlayer : this.onlinePlayers.values()) {
+                var playerFastBoard = onlinePlayer.getFastBoard();
                 playerFastBoard.updateMoney();
             }
         }, 0, 20);
+    }
+
+    public static class OnlinePlayer {
+        private final SimpleSkyblock plugin;
+        @Getter
+        private final Player player;
+        @Getter
+        private final PlayerEntity playerEntity;
+        @Getter
+        private final PlayerFastBoard fastBoard;
+
+        public OnlinePlayer(SimpleSkyblock plugin, Player player, PlayerEntity playerEntity) {
+            this.plugin = plugin;
+            this.player = player;
+            this.playerEntity = playerEntity;
+            this.fastBoard = new PlayerFastBoard(this.plugin, player, playerEntity);
+        }
     }
 
 }

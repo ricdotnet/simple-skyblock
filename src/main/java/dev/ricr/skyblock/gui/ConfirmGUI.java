@@ -14,6 +14,7 @@ import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -81,8 +82,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 ItemStack sellAll = new ItemStack(Material.TNT, 1);
                 ItemMeta sellAllItemMeta = sellAll.getItemMeta();
                 sellAllItemMeta.displayName(Component.text("Sell all " + item.name()));
-                sellAllItemMeta.lore(List.of(Component.text(String.format("Total: %s",
-                        ServerUtils.formatMoneyValue(pricePair.sellPrice() * totalInPlayerInventory)))));
+                sellAllItemMeta.lore(List.of(
+                        this.plugin.miniMessage.deserialize("<!italic><white>Total: <color:#F23CC7A><price>",
+                                Placeholder.unparsed("price", ServerUtils.formatMoneyValue(pricePair.sellPrice() * totalInPlayerInventory)))
+                ));
                 sellAll.setItemMeta(sellAllItemMeta);
 
                 inventory.setItem(15, sellSingle);
@@ -133,13 +136,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         if (confirmBuyItemMeta != null) {
             confirmBuyItemMeta.displayName(Component.text("Confirm AH purchase"));
             confirmBuyItemMeta.lore(List.of(
-                    Component.empty(),
-                    Component.text()
-                            .content("Price: ")
-                            .append(Component.text(String.format("%s",
-                                            ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())),
-                                    NamedTextColor.GOLD))
-                            .build()
+                    this.plugin.miniMessage.deserialize("<!italic><white>Price: <color:#23CC7A><price>",
+                            Placeholder.unparsed("price", ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())))
             ));
             confirmBuy.setItemMeta(confirmBuyItemMeta);
         }
@@ -235,9 +233,9 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     }
 
                     double price = auctionHouseItem.getPrice();
-                    var buyerPlayerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+                    var buyerPlayerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
 
-                    if (buyerPlayerRecord.getBalance() < price) {
+                    if (buyerPlayerEntity.getBalance() < price) {
                         player.sendMessage(Component.text("You don't have enough money to buy this item.",
                                 NamedTextColor.RED));
                         player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
@@ -248,7 +246,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                         return;
                     }
 
-                    buyerPlayerRecord.setBalance(buyerPlayerRecord.getBalance() - price);
+                    buyerPlayerEntity.setBalance(buyerPlayerEntity.getBalance() - price);
 
                     ItemStack itemToGive = actionableItem.clone();
                     ItemMeta originalMeta = this.plugin.auctionHouseItems.getItemOriginalMeta()
@@ -270,7 +268,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                             price);
 
                     var transaction = new TransactionEntity();
-                    transaction.setPlayer(buyerPlayerRecord);
+                    transaction.setPlayer(buyerPlayerEntity);
                     transaction.setSeller(auctionHouseItem.getPlayer());
                     transaction.setItem(ServerUtils.base64FromBytes(itemToGive.serializeAsBytes()));
                     transaction.setPrice(price);
@@ -283,7 +281,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 //                var auctionHouseItemRemove = new DatabaseChange.AuctionHouseItemRemove(auctionHouseItem);
 //                this.plugin.databaseChangesAccumulator.add(auctionHouseItemRemove);
 
-                    var playerCreateOrUpdateBuyer = new DatabaseChange.PlayerCreateOrUpdate(buyerPlayerRecord);
+                    var playerCreateOrUpdateBuyer = new DatabaseChange.PlayerCreateOrUpdate(buyerPlayerEntity);
                     this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdateBuyer);
 
                     try {
@@ -294,11 +292,11 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                         DatabaseChange.PlayerCreateOrUpdate playerCreateOrUpdateSeller;
 
                         // Update the cached player instance if the seller is online
-                        var onlineSellerPlayerRecord = this.plugin.onlinePlayers.getPlayer(UUID.fromString(sellerPlayerRecord.getPlayerId()));
-                        if (onlineSellerPlayerRecord != null) {
-                            var newBalance = onlineSellerPlayerRecord.getBalance() + price;
-                            onlineSellerPlayerRecord.setBalance(newBalance);
-                            playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(onlineSellerPlayerRecord);
+                        var onlineSellerPlayer = this.plugin.onlinePlayers.getPlayer(UUID.fromString(sellerPlayerRecord.getPlayerId()));
+                        if (onlineSellerPlayer != null) {
+                            var newBalance = onlineSellerPlayer.getPlayerEntity().getBalance() + price;
+                            onlineSellerPlayer.getPlayerEntity().setBalance(newBalance);
+                            playerCreateOrUpdateSeller = new DatabaseChange.PlayerCreateOrUpdate(onlineSellerPlayer.getPlayerEntity());
                         } else {
                             var newBalance = sellerPlayerRecord.getBalance() + price;
                             sellerPlayerRecord.setBalance(newBalance);
@@ -360,7 +358,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
-        var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+        var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
         var saleRecord = new TransactionEntity();
 
         if (transactionType == TransactionType.ShopBuy) {
@@ -372,9 +370,9 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
             totalPrice = prices.buyPrice() * itemAmount;
 
-            if (playerRecord.getBalance() >= totalPrice) {
-                finalBalance = playerRecord.getBalance() - totalPrice;
-                playerRecord.setBalance(finalBalance);
+            if (playerEntity.getBalance() >= totalPrice) {
+                finalBalance = playerEntity.getBalance() - totalPrice;
+                playerEntity.setBalance(finalBalance);
 
                 player.getInventory()
                         .addItem(new ItemStack(material, itemAmount));
@@ -401,8 +399,8 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 return;
             }
 
-            finalBalance = playerRecord.getBalance() + totalPrice;
-            playerRecord.setBalance(finalBalance);
+            finalBalance = playerEntity.getBalance() + totalPrice;
+            playerEntity.setBalance(finalBalance);
 
             player.getInventory()
                     .removeItem(new ItemStack(material, itemAmount));
@@ -416,10 +414,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         saleRecord.setItem(ServerUtils.base64FromBytes(actionableItem.serializeAsBytes()));
         saleRecord.setPrice(totalPrice);
         saleRecord.setQuantity(itemAmount);
-        saleRecord.setPlayer(playerRecord);
+        saleRecord.setPlayer(playerEntity);
         saleRecord.setType(transactionType.toString());
 
-        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerRecord);
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
 
         var saleRecordAdd = new DatabaseChange.TransactionAdd(saleRecord);
@@ -440,7 +438,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         if (meta != null) {
             meta.displayName(Component.text(transactionType + " " + material.name()));
-            meta.lore(List.of(Component.text(String.format("Total: %s", ServerUtils.formatMoneyValue(price * stackSize)))));
+            meta.lore(List.of(
+                    this.plugin.miniMessage.deserialize("<!italic><white>Total: <color:#23CC7A><price>",
+                            Placeholder.unparsed("price", ServerUtils.formatMoneyValue(price * stackSize)))
+            ));
             meta.itemName(Component.text(transactionType.name()));
             itemStack.setItemMeta(meta);
         }

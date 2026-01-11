@@ -305,7 +305,7 @@ public class SignShop {
             chestBlock.getInventory().removeItem(itemToTradeOut);
             this.player.getInventory().addItem(itemToTradeOut);
 
-            var playerBuyerEntity = this.plugin.onlinePlayers.getPlayer(this.player.getUniqueId());
+            var playerBuyerEntity = this.plugin.onlinePlayers.getPlayer(this.player.getUniqueId()).getPlayerEntity();
 
             if (itemToTradeIn != null) {
                 chestBlock.getInventory().addItem(itemToTradeIn);

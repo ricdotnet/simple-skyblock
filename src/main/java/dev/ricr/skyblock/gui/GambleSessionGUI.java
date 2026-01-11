@@ -84,7 +84,7 @@ public class GambleSessionGUI implements InventoryHolder {
 
         for (Player player : players) {
             var gamble = new GambleEntity();
-            var playerRecord = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
 
             if (player.getUniqueId() == winner.getUniqueId()) {
                 var message = Component.text("You won the gamble!", NamedTextColor.GREEN);
@@ -92,7 +92,7 @@ public class GambleSessionGUI implements InventoryHolder {
                 player.sendMessage(message);
                 PlayerUtils.showTitleMessage(this.plugin, player, message);
 
-                gamble.setPlayer(playerRecord);
+                gamble.setPlayer(playerEntity);
                 gamble.setAmount(this.amount);
                 gamble.setType(GambleType.Won.toString());
 
@@ -107,7 +107,7 @@ public class GambleSessionGUI implements InventoryHolder {
                 player.sendMessage(Component.text(String.format("%s won this gamble session", winner.getName()),
                         NamedTextColor.DARK_RED));
 
-                gamble.setPlayer(playerRecord);
+                gamble.setPlayer(playerEntity);
                 gamble.setAmount(this.originalAmount);
                 gamble.setType(GambleType.Lost.toString());
 
@@ -137,10 +137,10 @@ public class GambleSessionGUI implements InventoryHolder {
     }
 
     private void updatePlayerBalance(Player player, double amount) {
-        PlayerEntity hostPlayer = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
-        hostPlayer.setBalance(hostPlayer.getBalance() + amount);
+        var hostPlayerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
+        hostPlayerEntity.setBalance(hostPlayerEntity.getBalance() + amount);
 
-        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(hostPlayer);
+        var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(hostPlayerEntity);
         this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
     }
 }
