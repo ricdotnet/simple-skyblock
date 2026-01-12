@@ -13,6 +13,7 @@ import dev.ricr.skyblock.commands.WarpCommand;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
+import dev.ricr.skyblock.listeners.BarterListener;
 import dev.ricr.skyblock.listeners.ChatListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
@@ -76,6 +77,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new PlayerListeners(this);
         new InventoryClickListener(this);
         new IslandListeners(this);
+        new BarterListener(this);
 
         // Register commands
         new AdminCommand(this).register();

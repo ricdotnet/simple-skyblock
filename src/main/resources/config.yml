@@ -10,15 +10,56 @@ villager_shops:
   - name: Trims
     color: dark_purple
     position:
-      x: 9
+      x: 7.5
       y: 64
-      z: 3
+      z: 7.5
     items:
       - material: NETHERITE_UPGRADE_SMITHING_TEMPLATE
-        trade_in_item_1: BEACON
-        amount_item_1: 1
-        trade_in_item_2: DIAMOND
-        amount_item_2: 7
-      - material: DUNE_ARMOR_TRIM_SMITHING_TEMPLATE
-        trade_in_item_1: BEACON
-        amount_item_1: 1
+        amount: 1
+        coin_amount: 12
+        trade_in_extra: DIAMOND
+        trade_in_extra_amount: 12
+  - name: Blocks
+    color: dark_gray
+    position:
+      x: 10.5
+      y: 64
+      z: 7.5
+    items:
+      - material: COPPER_ORE
+        amount: 5
+        coin_amount: 1
+  - name: Nature
+    color: dark_green
+    position:
+      x: 13.5
+      y: 64
+      z: 7.5
+    items:
+      - material: OAK_SAPLING
+        amount: 2
+        coin_amount: 1
+      - material: SPRUCE_SAPLING
+        amount: 1
+        coin_amount: 1
+      - material: BIRCH_SAPLING
+        amount: 1
+        coin_amount: 1
+      - material: JUNGLE_SAPLING
+        amount: 1
+        coin_amount: 2
+      - material: ACACIA_SAPLING
+        amount: 1
+        coin_amount: 4
+      - material: DARK_OAK_SAPLING
+        amount: 2
+        coin_amount: 4
+      - material: CHERRY_SAPLING
+        amount: 1
+        coin_amount: 4
+      - material: PALE_OAK_SAPLING
+        amount: 1
+        coin_amount: 4
+      - material: MANGROVE_PROPAGULE
+        amount: 1
+        coin_amount: 4

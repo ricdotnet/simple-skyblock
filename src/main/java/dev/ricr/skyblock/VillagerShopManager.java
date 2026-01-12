@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -38,13 +39,14 @@ public class VillagerShopManager {
     }
 
     public void removeVillagerShops() {
-        var world = this.plugin.getServer().getWorld("lobby");
+        var world = this.plugin.worldManager.load("lobby");
 
-        for (var villagerShop : this.villagerShops.keySet()) {
-            var villagerEntity = world.getEntity(villagerShop);
-            if (villagerEntity != null) {
-                this.plugin.getLogger().info(String.format("Removing villager shop %s", this.getVillagerShop(villagerShop).getName()));
-                villagerEntity.remove();
+        for (var entity : world.getEntitiesByClass(Villager.class)) {
+            var villagerShopEntity = this.villagerShops.get(entity.getUniqueId());
+
+            if (villagerShopEntity != null) {
+                this.plugin.getLogger().info(String.format("Removing villager shop %s", villagerShopEntity.getName()));
+                entity.remove();
             }
         }
     }
@@ -78,7 +80,12 @@ public class VillagerShopManager {
 
             for (Map<?, ?> item : (List<Map<?, ?>>) itemsList) {
                 var materialName = item.get("material").toString();
-                var price = NumberUtils.objectToDouble(item.get("price"));
+                var itemAmount = item.get("amount");
+
+                if (itemAmount == null) {
+                    this.plugin.getLogger().warning(String.format("Item %s in villager shop %s does not have an amount, will reset to 1", materialName, shopName));
+                    itemAmount = "1";
+                }
 
                 var material = Material.getMaterial(materialName);
                 if (material == null) {
@@ -86,22 +93,18 @@ public class VillagerShopManager {
                     continue;
                 }
 
-                var tradeInMaterial1 = Material.getMaterial(item.get("trade_in_item_1").toString());
-                var tradeInAmount1 = Integer.parseInt(item.get("amount_item_1").toString());
+                var coinAmount = Integer.parseInt(item.get("coin_amount").toString());
+                var tradeInExtra = item.get("trade_in_extra");
+                var tradeInExtraAmount = item.get("trade_in_extra_amount");
 
-                var tradeInItem2 = item.get("trade_in_item_2");
-                var tradeInAmount2 = item.get("amount_item_2");
+                var itemStack = new ItemStack(material, Integer.parseInt(itemAmount.toString()));
 
-                var itemStack = new ItemStack(material, 1);
-
-                if (tradeInItem2 != null && tradeInAmount2 != null) {
+                if (tradeInExtra != null && tradeInExtraAmount != null) {
                     villagerShop.addItem(
-                            new VillagerShopItem(
-                                    itemStack, price, tradeInMaterial1, Material.getMaterial(tradeInItem2.toString()), tradeInAmount1, Integer.parseInt(tradeInAmount2.toString())
-                            )
+                            new VillagerShopItem(itemStack, coinAmount, Material.getMaterial(tradeInExtra.toString()), Integer.parseInt(tradeInExtraAmount.toString()))
                     );
                 } else {
-                    villagerShop.addItem(new VillagerShopItem(itemStack, price, tradeInMaterial1, null, tradeInAmount1, null));
+                    villagerShop.addItem(new VillagerShopItem(itemStack, coinAmount, null, null));
                 }
             }
 
@@ -128,10 +131,15 @@ public class VillagerShopManager {
         villager.setVillagerLevel(1);
         villager.customName(Component.text(name, NamedTextColor.NAMES.value(color)));
         villager.setCustomNameVisible(true);
-        villager.setAI(false);
         villager.setInvulnerable(true);
         villager.setPersistent(true);
         villager.setRemoveWhenFarAway(false);
+        villager.setCollidable(false);
+
+        var speed = villager.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (speed != null) {
+            speed.setBaseValue(0.0D);
+        }
 
         return villager;
     }
@@ -142,7 +150,7 @@ public class VillagerShopManager {
         @Getter
         private final String name;
         @Getter
-        private String color = "white";
+        private String color;
         @Getter
         private final List<VillagerShopItem> items = new ArrayList<>();
 

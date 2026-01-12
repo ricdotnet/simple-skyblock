@@ -69,6 +69,8 @@ public class ServerUtils {
 
     public static NamespacedKey VILLAGER_SHOP_NAME;
 
+    public static double CREEPER_COIN_CHANCE = 4.0;
+
     // server configs - TODO: refactor to a better solution
     @Getter
     @Setter
