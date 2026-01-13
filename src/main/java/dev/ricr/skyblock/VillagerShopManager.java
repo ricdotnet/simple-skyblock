@@ -10,15 +10,13 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.File;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class VillagerShopManager {
     private final SimpleSkyblock plugin;
@@ -43,9 +41,20 @@ public class VillagerShopManager {
         return this.villagerShops.get(villagerShopId);
     }
 
+    public Optional<Map.Entry<UUID, VillagerShop>> getVillagerShop(String shopName) {
+        return this.villagerShops.entrySet()
+                .stream()
+                .filter(v -> shopName.equals(v.getValue().getName()))
+                .findFirst();
+    }
+
     // TODO: extract shop loading logic to allow for a in-memory loads
     private void loadVillagerShops() {
-        var shopsInConfig = this.plugin.serverConfig.getMapList("villager_shops");
+        var dataFolder = plugin.getDataFolder();
+        var shopConfigFile = new File(dataFolder, "shop.yml");
+        var shopConfig = YamlConfiguration.loadConfiguration(shopConfigFile);
+
+        var shopsInConfig = shopConfig.getMapList("villager_shops");
         List<VillagerShopEntity> villagerShopEntities = new ArrayList<>();
 
         try {
@@ -86,38 +95,65 @@ public class VillagerShopManager {
             }
 
             var villagerShop = new VillagerShop(UUID.fromString(villagerShopEntity.get().getVillagerShopId()), shopName, shop.get("color").toString());
-
-            for (Map<?, ?> item : (List<Map<?, ?>>) itemsList) {
-                var materialName = item.get("material").toString();
-                var itemAmount = item.get("amount");
-
-                if (itemAmount == null) {
-                    this.plugin.getLogger().warning(String.format("Item %s in villager shop %s does not have an amount, will reset to 1", materialName, shopName));
-                    itemAmount = "1";
-                }
-
-                var material = Material.getMaterial(materialName);
-                if (material == null) {
-                    this.plugin.getLogger().warning(String.format("Invalid material %s in villager shop %s", materialName, shopName));
-                    continue;
-                }
-
-                var coinAmount = Integer.parseInt(item.get("coin_amount").toString());
-                var tradeInExtra = item.get("trade_in_extra");
-                var tradeInExtraAmount = item.get("trade_in_extra_amount");
-
-                var itemStack = new ItemStack(material, Integer.parseInt(itemAmount.toString()));
-
-                if (tradeInExtra != null && tradeInExtraAmount != null) {
-                    villagerShop.addItem(
-                            new VillagerShopItem(itemStack, coinAmount, Material.getMaterial(tradeInExtra.toString()), Integer.parseInt(tradeInExtraAmount.toString()))
-                    );
-                } else {
-                    villagerShop.addItem(new VillagerShopItem(itemStack, coinAmount, null, null));
-                }
-            }
+            this.loadShopItems(shopName, villagerShop, (List<Map<?, ?>>) itemsList);
 
             this.addVillagerShop(villagerShop);
+        }
+    }
+
+    public void reloadVillagerShops() {
+        var dataFolder = plugin.getDataFolder();
+        var shopConfigFile = new File(dataFolder, "shop.yml");
+        var shopConfig = YamlConfiguration.loadConfiguration(shopConfigFile);
+
+        var shopsInConfig = shopConfig.getMapList("villager_shops");
+
+        for (Map<?, ?> shop : shopsInConfig) {
+            var shopName = shop.get("name").toString();
+            var itemsList = shop.get("items");
+
+            var villagerShopOptional = this.getVillagerShop(shopName);
+            if (villagerShopOptional.isEmpty()) {
+                this.plugin.getLogger().warning(String.format("Villager shop %s does not exist in memory. Maybe has not been loaded when the server started?", shopName));
+                continue;
+            }
+
+            var villagerShop = villagerShopOptional.get().getValue();
+            villagerShop.getItems().clear();
+
+            this.loadShopItems(shopName, villagerShop, (List<Map<?, ?>>) itemsList);
+        }
+    }
+
+    private void loadShopItems(String shopName, VillagerShop villagerShop, List<Map<?, ?>> itemsList) {
+        for (Map<?, ?> item : itemsList) {
+            var materialName = item.get("material").toString();
+            var itemAmount = item.get("amount");
+
+            if (itemAmount == null) {
+                this.plugin.getLogger().warning(String.format("Item %s in villager shop %s does not have an amount, will reset to 1", materialName, shopName));
+                itemAmount = "1";
+            }
+
+            var material = Material.getMaterial(materialName);
+            if (material == null) {
+                this.plugin.getLogger().warning(String.format("Invalid material %s in villager shop %s", materialName, shopName));
+                continue;
+            }
+
+            var coinAmount = Integer.parseInt(item.get("coin_amount").toString());
+            var tradeInExtra = item.get("trade_in_extra");
+            var tradeInExtraAmount = item.get("trade_in_extra_amount");
+
+            var itemStack = new ItemStack(material, Integer.parseInt(itemAmount.toString()));
+
+            if (tradeInExtra != null && tradeInExtraAmount != null) {
+                villagerShop.addItem(
+                        new VillagerShopItem(itemStack, coinAmount, Material.getMaterial(tradeInExtra.toString()), Integer.parseInt(tradeInExtraAmount.toString()))
+                );
+            } else {
+                villagerShop.addItem(new VillagerShopItem(itemStack, coinAmount, null, null));
+            }
         }
     }
 

@@ -85,3 +85,111 @@ items:
   - material: KELP
     name: 'Kelp'
     sell: 0.5
+
+villager_shops:
+  - name: Trims
+    color: dark_purple
+    position:
+      x: 7.5
+      y: 64
+      z: 7.5
+    items:
+      - material: NETHERITE_UPGRADE_SMITHING_TEMPLATE
+        amount: 1
+        coin_amount: 24
+        trade_in_extra: DIAMOND
+        trade_in_extra_amount: 4
+  - name: Blocks
+    color: dark_gray
+    position:
+      x: 10.5
+      y: 64
+      z: 7.5
+    items:
+      - material: COPPER_ORE
+        amount: 5
+        coin_amount: 1
+  - name: Nature
+    color: dark_green
+    position:
+      x: 13.5
+      y: 64
+      z: 7.5
+    items:
+      - material: OAK_SAPLING
+        amount: 2
+        coin_amount: 1
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 6
+      - material: SPRUCE_SAPLING
+        amount: 1
+        coin_amount: 1
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 12
+      - material: BIRCH_SAPLING
+        amount: 1
+        coin_amount: 1
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 6
+      - material: JUNGLE_SAPLING
+        amount: 1
+        coin_amount: 2
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: ACACIA_SAPLING
+        amount: 1
+        coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: DARK_OAK_SAPLING
+        amount: 2
+        coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: CHERRY_SAPLING
+        amount: 1
+        coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: PALE_OAK_SAPLING
+        amount: 1
+        coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: MANGROVE_PROPAGULE
+        amount: 1
+        coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+  - name: Seedy
+    color: yellow
+    position:
+      x: -6.5
+      y: 64
+      z: -5.5
+    items:
+      - material: WHEAT_SEEDS
+        amount: 1
+        coin_amount: 1
+      - material: BEETROOT_SEEDS
+        amount: 1
+        coin_amount: 2
+      - material: PUMPKIN_SEEDS
+        amount: 1
+        coin_amount: 2
+      - material: MELON_SEEDS
+        amount: 1
+        coin_amount: 2
+      - material: SWEET_BERRIES
+        amount: 1
+        coin_amount: 8
+  - name: Iteman
+    color: yellow
+    position:
+      x: 9.5
+      y: 64
+      z: -2.5
+    items:
+      - material: TURTLE_EGG
+        amount: 1
+        coin_amount: 32
