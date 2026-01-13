@@ -108,7 +108,6 @@ public class SimpleSkyblock extends JavaPlugin {
     @Override
     public void onDisable() {
         ServerUtils.cleanUpTextDisplays(this);
-        this.villagerShopManager.removeVillagerShops();
 
         try {
             this.databaseManager.commitImmediately();

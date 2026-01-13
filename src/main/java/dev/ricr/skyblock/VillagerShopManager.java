@@ -1,8 +1,9 @@
 package dev.ricr.skyblock;
 
+import com.j256.ormlite.dao.Dao;
+import dev.ricr.skyblock.database.VillagerShopEntity;
 import dev.ricr.skyblock.shop.VillagerShopItem;
 import dev.ricr.skyblock.utils.NumberUtils;
-import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -11,8 +12,8 @@ import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +24,13 @@ public class VillagerShopManager {
     private final SimpleSkyblock plugin;
     private final Map<UUID, VillagerShop> villagerShops;
 
+    private final Dao<VillagerShopEntity, String> villagerShopsDao;
+
     public VillagerShopManager(SimpleSkyblock plugin) {
         this.plugin = plugin;
         this.villagerShops = new HashMap<>();
+
+        this.villagerShopsDao = plugin.databaseManager.getVillagerShopsDao();
 
         this.loadVillagerShops();
     }
@@ -38,21 +43,16 @@ public class VillagerShopManager {
         return this.villagerShops.get(villagerShopId);
     }
 
-    public void removeVillagerShops() {
-        var world = this.plugin.worldManager.load("lobby");
-
-        for (var entity : world.getEntitiesByClass(Villager.class)) {
-            var villagerShopEntity = this.villagerShops.get(entity.getUniqueId());
-
-            if (villagerShopEntity != null) {
-                this.plugin.getLogger().info(String.format("Removing villager shop %s", villagerShopEntity.getName()));
-                entity.remove();
-            }
-        }
-    }
-
+    // TODO: extract shop loading logic to allow for a in-memory loads
     private void loadVillagerShops() {
         var shopsInConfig = this.plugin.serverConfig.getMapList("villager_shops");
+        List<VillagerShopEntity> villagerShopEntities = new ArrayList<>();
+
+        try {
+            villagerShopEntities = this.villagerShopsDao.queryForAll();
+        } catch (SQLException e) {
+            // ignore for now
+        }
 
         for (Map<?, ?> shop : shopsInConfig) {
             var shopName = shop.get("name").toString();
@@ -62,21 +62,30 @@ public class VillagerShopManager {
                 continue;
             }
 
-            var position = (Map<?, ?>) shop.get("position");
+            var villagerShopEntity = villagerShopEntities
+                    .stream()
+                    .filter(ve -> ve.getName().equals(shopName))
+                    .findFirst();
 
-            double x = NumberUtils.objectToDouble(position.get("x"));
-            double y = NumberUtils.objectToDouble(position.get("y"));
-            double z = NumberUtils.objectToDouble(position.get("z"));
+            if (villagerShopEntity.isEmpty()) {
+                var position = (Map<?, ?>) shop.get("position");
+                double x = NumberUtils.objectToDouble(position.get("x"));
+                double y = NumberUtils.objectToDouble(position.get("y"));
+                double z = NumberUtils.objectToDouble(position.get("z"));
 
-            var location = new Location(null, x, y, z, 90, 0);
-            var villagerEntity = this.loadOrCreateVillager(shopName, shop.get("color").toString(), location);
+                var location = new Location(null, x, y, z, 90, 0);
+                var villagerEntity = this.spawnNewVillager(shopName, shop.get("color").toString(), location);
 
-            if (villagerEntity == null) {
-                this.plugin.getLogger().severe(String.format("Could not load or create villager for shop %s", shopName));
-                continue;
+                try {
+                    assert villagerEntity != null;
+                    villagerShopEntity = java.util.Optional.of(new VillagerShopEntity(shopName, villagerEntity.getUniqueId().toString()));
+                    this.villagerShopsDao.create(villagerShopEntity.get());
+                } catch (SQLException e) {
+                    // ignore for now
+                }
             }
 
-            var villagerShop = new VillagerShop(villagerEntity.getUniqueId(), shopName, shop.get("color").toString());
+            var villagerShop = new VillagerShop(UUID.fromString(villagerShopEntity.get().getVillagerShopId()), shopName, shop.get("color").toString());
 
             for (Map<?, ?> item : (List<Map<?, ?>>) itemsList) {
                 var materialName = item.get("material").toString();
@@ -112,8 +121,8 @@ public class VillagerShopManager {
         }
     }
 
-    private Villager loadOrCreateVillager(String name, String color, Location spawnLocation) {
-        var world = this.plugin.getServer().getWorld("lobby");
+    private Villager spawnNewVillager(String name, String color, Location spawnLocation) {
+        var world = this.plugin.worldManager.load("lobby");
 
         if (world == null) {
             this.plugin.getLogger().severe("The world had not been loaded yet");
@@ -124,8 +133,9 @@ public class VillagerShopManager {
         this.plugin.getLogger().info(String.format("Creating villager shop %s", name));
 
         var villager = world.spawn(spawnLocation, Villager.class);
-        villager.getPersistentDataContainer()
-                .set(ServerUtils.VILLAGER_SHOP_NAME, PersistentDataType.STRING, name);
+        // There is an issue with the PDC in which it does not keep entity state when the server restarts
+//        villager.getPersistentDataContainer()
+//                .set(ServerUtils.VILLAGER_SHOP_NAME, PersistentDataType.STRING, name);
 
         villager.setProfession(Villager.Profession.NITWIT);
         villager.setVillagerLevel(1);
@@ -150,7 +160,7 @@ public class VillagerShopManager {
         @Getter
         private final String name;
         @Getter
-        private String color;
+        private final String color;
         @Getter
         private final List<VillagerShopItem> items = new ArrayList<>();
 

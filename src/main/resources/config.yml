@@ -39,27 +39,77 @@ villager_shops:
       - material: OAK_SAPLING
         amount: 2
         coin_amount: 1
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 6
       - material: SPRUCE_SAPLING
         amount: 1
         coin_amount: 1
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 12
       - material: BIRCH_SAPLING
         amount: 1
         coin_amount: 1
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 6
       - material: JUNGLE_SAPLING
         amount: 1
         coin_amount: 2
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
       - material: ACACIA_SAPLING
         amount: 1
         coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
       - material: DARK_OAK_SAPLING
         amount: 2
         coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
       - material: CHERRY_SAPLING
         amount: 1
         coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
       - material: PALE_OAK_SAPLING
         amount: 1
         coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
       - material: MANGROVE_PROPAGULE
         amount: 1
         coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: FLOWERING_AZALEA
+        amount: 1
+        coin_amount: 8
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: AZALEA
+        amount: 1
+        coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 16
+  - name: Seedy
+    color: yellow
+    position:
+      x: -6.5
+      y: 64
+      z: -5.5
+    items:
+      - material: WHEAT_SEEDS
+        amount: 1
+        coin_amount: 1
+      - material: BEETROOT_SEEDS
+        amount: 1
+        coin_amount: 2
+      - material: PUMPKIN_SEEDS
+        amount: 1
+        coin_amount: 2
+      - material: MELON_SEEDS
+        amount: 1
+        coin_amount: 2
+      - material: SWEET_BERRIES
+        amount: 1
+        coin_amount: 8

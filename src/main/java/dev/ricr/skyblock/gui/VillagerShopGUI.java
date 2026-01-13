@@ -7,14 +7,13 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Merchant;
 import org.bukkit.inventory.MerchantRecipe;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VillagerShopGUI implements ISimpleSkyblockGUI {
+public class VillagerShopGUI {
     private final SimpleSkyblock plugin;
     private final Merchant merchant;
     private final List<VillagerShopItem> shopItemsList;
@@ -28,11 +27,6 @@ public class VillagerShopGUI implements ISimpleSkyblockGUI {
         this.openMerchant(player);
     }
 
-    @Override
-    public void handleInventoryClick(InventoryClickEvent event, Player player) {
-        player.sendMessage("hello");
-    }
-
     private void openMerchant(Player player) {
         List<MerchantRecipe> recipes = new ArrayList<>();
 
@@ -40,6 +34,7 @@ public class VillagerShopGUI implements ISimpleSkyblockGUI {
             var recipe = new MerchantRecipe(item.itemStack(), 999);
 
             var creeperCoinItem = CustomItems.createCreeperCoinItem(this.plugin);
+            creeperCoinItem.setAmount(item.coinAmount());
             recipe.addIngredient(creeperCoinItem);
 
             if (item.tradeInExtra() != null && item.tradeInExtraAmount() != null) {

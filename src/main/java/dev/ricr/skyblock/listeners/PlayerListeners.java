@@ -361,21 +361,15 @@ public class PlayerListeners implements Listener {
             return;
         }
 
-        var persistentDataContainer = villager.getPersistentDataContainer();
-        if (!persistentDataContainer.has(ServerUtils.VILLAGER_SHOP_NAME, PersistentDataType.STRING)) {
-            return;
-        }
-
         var villagerShopUniqueId = villager.getUniqueId();
         var villagerShop = this.plugin.villagerShopManager.getVillagerShop(villagerShopUniqueId);
 
         if (villagerShop == null) {
-            this.plugin.getLogger().warning("Player interacted with a villager shop entity that does not exist as a runtime shop.");
+            // we ignore any non shop villagers
             return;
         }
 
         event.setCancelled(true);
-
         new VillagerShopGUI(this.plugin, villagerShop.getName(), event.getPlayer(), villagerShop.getItems(), villagerShop.getColor());
     }
 
