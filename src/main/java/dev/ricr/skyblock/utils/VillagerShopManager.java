@@ -1,9 +1,9 @@
-package dev.ricr.skyblock;
+package dev.ricr.skyblock.utils;
 
 import com.j256.ormlite.dao.Dao;
+import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.VillagerShopEntity;
 import dev.ricr.skyblock.shop.VillagerShopItem;
-import dev.ricr.skyblock.utils.NumberUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
