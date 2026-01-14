@@ -228,10 +228,10 @@ villager_shops:
         coin_amount: 4
         trade_in_extra: GRASS_BLOCK
         trade_in_extra_amount: 16
-  - name: Seedy
+  - name: Farmer
     color: yellow
     position:
-      x: -6
+      x: -5.8
       y: 64
       z: -5.5
     items:
