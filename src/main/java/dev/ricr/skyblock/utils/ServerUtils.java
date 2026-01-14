@@ -27,7 +27,6 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -176,7 +175,7 @@ public class ServerUtils {
     }
 
     public static void cleanUpTextDisplays(SimpleSkyblock plugin) {
-        plugin.getServer().getLogger().info("Cleaning up end portal text displays...");
+        plugin.getLogger().info("Cleaning up end portal text displays");
 
         // TODO: refactor later with a list of text displays with ephemeral and dynamic displays if needed
         plugin.getServer().getWorlds().forEach(world -> world.getEntitiesByClass(TextDisplay.class).forEach(Display::remove));

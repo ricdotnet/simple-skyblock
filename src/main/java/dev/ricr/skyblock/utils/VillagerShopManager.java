@@ -203,9 +203,6 @@ public class VillagerShopManager {
         this.plugin.getLogger().info(String.format("Creating villager shop %s", name));
 
         var villager = world.spawn(spawnLocation, Villager.class);
-        // There is an issue with the PDC in which it does not keep entity state when the server restarts
-//        villager.getPersistentDataContainer()
-//                .set(ServerUtils.VILLAGER_SHOP_NAME, PersistentDataType.STRING, name);
 
         villager.setProfession(Villager.Profession.NITWIT);
         villager.setVillagerLevel(1);

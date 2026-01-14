@@ -1,8 +1,6 @@
 package dev.ricr.skyblock;
 
 import dev.ricr.skyblock.database.PlayerEntity;
-import fr.mrmicky.fastboard.FastBoard;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 
@@ -17,9 +15,7 @@ public class OnlinePlayers {
 
     public OnlinePlayers(SimpleSkyblock plugin) {
         this.plugin = plugin;
-
         this.onlinePlayers = new ConcurrentHashMap<>();
-
         this.fastBoardUpdater();
     }
 

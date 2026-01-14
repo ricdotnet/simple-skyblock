@@ -14,13 +14,11 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.gui.IslandGUI;
-import dev.ricr.skyblock.utils.CommandUtils;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -77,7 +75,7 @@ public class IslandCommand implements ICommand {
                 .then(Commands.literal("kick").executes(this::kickPlayersFromIsland))
                 .then(Commands.literal("trust")
                         .then(Commands.argument("player", StringArgumentType.string())
-                                .suggests(CommandUtils::currentOnlinePlayers)
+                                .suggests(dev.ricr.skyblock.commands.Commands::currentOnlinePlayers)
                                 .executes(this::trustPlayerToOwnIsland)
                         )
                 )
@@ -88,7 +86,7 @@ public class IslandCommand implements ICommand {
                 ))
                 .then(Commands.literal("visit")
                         .then(Commands.argument("player", StringArgumentType.string())
-                                .suggests(CommandUtils::currentOnlinePlayers)
+                                .suggests(dev.ricr.skyblock.commands.Commands::currentOnlinePlayers)
                                 .executes(this::visitPlayerIsland)
                         )
                 )
