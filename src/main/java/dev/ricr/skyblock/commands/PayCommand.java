@@ -24,7 +24,6 @@ public class PayCommand implements ICommand {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> pay = this.command();
-
                     commands.registrar().register(pay);
                 });
     }
@@ -32,7 +31,7 @@ public class PayCommand implements ICommand {
     private LiteralCommandNode<CommandSourceStack> command() {
         return Commands.literal("pay")
                 .then(Commands.argument("player", ArgumentTypes.player())
-                        .suggests(dev.ricr.skyblock.commands.Commands::currentOnlinePlayers)
+                        .suggests(PluginCommands::currentOnlinePlayers)
                         .then(Commands.argument("amount", DoubleArgumentType.doubleArg(1))
                                 .executes(this::pay)
                         )

@@ -1,6 +1,6 @@
 package dev.ricr.skyblock;
 
-import dev.ricr.skyblock.commands.Commands;
+import dev.ricr.skyblock.commands.PluginCommands;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
@@ -17,8 +17,12 @@ import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.VillagerShopManager;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
 import dev.ricr.skyblock.utils.WorldManager;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Registry;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +41,8 @@ public class SimpleSkyblock extends JavaPlugin {
     public MiniMessage miniMessage;
     public WorldManager worldManager;
     public VillagerShopManager villagerShopManager;
+
+    public static final Registry<Enchantment> ENCHANTMENTS = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
 
     @Override
     public void onEnable() {
@@ -71,7 +77,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new BarterListener(this);
 
         // Register commands
-        Commands.register(this);
+        PluginCommands.register(this);
 
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);

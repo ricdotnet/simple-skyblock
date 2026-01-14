@@ -2,6 +2,7 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.enchantments.PluginEnchantments;
 import dev.ricr.skyblock.enums.CustomStructures;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.gui.ConfirmGUI;
@@ -18,6 +19,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
@@ -33,6 +35,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
@@ -75,6 +78,19 @@ public class IslandListeners implements Listener {
         if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
             player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             event.setCancelled(true);
+            return;
+        }
+
+        var tool = event.getPlayer().getInventory().getItemInMainHand();
+
+        if (event.getBlock().getType() != Material.STONE || !tool.containsEnchantment(PluginEnchantments.get(PluginEnchantments.LUCKY_ENCHANTMENT))) {
+            return;
+        }
+
+        if (Math.random() < 0.02) {
+            Material[] ores = {Material.COAL, Material.RAW_IRON, Material.RAW_COPPER, Material.RAW_GOLD, Material.DIAMOND};
+            Material ore = ores[(int) (Math.random() * ores.length)];
+            event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(ore));
         }
     }
 

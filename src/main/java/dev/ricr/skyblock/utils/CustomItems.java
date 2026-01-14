@@ -12,7 +12,10 @@ public class CustomItems {
         var creeperCoin = new ItemStack(Material.PAPER, 1);
         var itemMeta = creeperCoin.getItemMeta();
 
-        itemMeta.getCustomModelDataComponent().setFloats(List.of(1F));
+        var customModel = itemMeta.getCustomModelDataComponent();
+        customModel.setFloats(List.of(1F));
+
+        itemMeta.setCustomModelDataComponent(customModel);
         itemMeta.displayName(plugin.miniMessage.deserialize("<!italic><green>Creeper Coin"));
         itemMeta.lore(List.of(
             plugin.miniMessage.deserialize("<!italic><white>Use this coin to trade in the trade shops.")

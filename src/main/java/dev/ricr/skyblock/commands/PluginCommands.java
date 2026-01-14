@@ -10,7 +10,7 @@ import org.bukkit.Bukkit;
 
 import java.util.concurrent.CompletableFuture;
 
-public class Commands {
+public class PluginCommands {
 
     public static void register(SimpleSkyblock plugin) {
         new AdminCommand(plugin).register();
