@@ -44,7 +44,7 @@ public class BarterListener implements Listener {
     private int coinAmount() {
         double r = Math.random();
         if (r < 0.05) return 3;
-        if (r < 0.05 + 0.25) return 2;
+        if (r < 0.05 + 0.20) return 2;
         return 1;
     }
 }

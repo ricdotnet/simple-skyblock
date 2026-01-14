@@ -85,6 +85,12 @@ items:
   - material: KELP
     name: 'Kelp'
     sell: 0.5
+  - material: GLOW_INK_SAC
+    name: 'Glow Ink Sac'
+    sell: 0.5
+  - material: TROPICAL_FISH
+    name: 'Tropical Fish'
+    sell: 0.5
 
 villager_shops:
   - name: Trims
@@ -96,19 +102,70 @@ villager_shops:
     items:
       - material: NETHERITE_UPGRADE_SMITHING_TEMPLATE
         amount: 1
-        coin_amount: 24
+        coin_amount: 32
         trade_in_extra: DIAMOND
         trade_in_extra_amount: 4
-  - name: Blocks
+  - name: Miner
     color: dark_gray
     position:
       x: 10.5
       y: 64
       z: 7.5
     items:
-      - material: COPPER_ORE
-        amount: 5
+      - material: COAL_ORE
+        amount: 3
         coin_amount: 1
+      - material: COPPER_ORE
+        amount: 3
+        coin_amount: 1
+      - material: IRON_ORE
+        amount: 3
+        coin_amount: 1
+      - material: GOLD_ORE
+        amount: 1
+        coin_amount: 3
+      - material: LAPIS_ORE
+        amount: 1
+        coin_amount: 3
+      - material: REDSTONE_ORE
+        amount: 4
+        coin_amount: 12
+      - material: EMERALD_ORE
+        amount: 1
+        coin_amount: 12
+      - material: DIAMOND_ORE
+        amount: 1
+        coin_amount: 32
+      - material: DEEPSLATE_COAL_ORE
+        amount: 1
+        coin_amount: 3
+      - material: DEEPSLATE_COPPER_ORE
+        amount: 1
+        coin_amount: 3
+      - material: DEEPSLATE_IRON_ORE
+        amount: 1
+        coin_amount: 3
+      - material: DEEPSLATE_GOLD_ORE
+        amount: 1
+        coin_amount: 3
+      - material: DEEPSLATE_LAPIS_ORE
+        amount: 1
+        coin_amount: 3
+      - material: DEEPSLATE_REDSTONE_ORE
+        amount: 2
+        coin_amount: 12
+      - material: DEEPSLATE_EMERALD_ORE
+        amount: 1
+        coin_amount: 24
+      - material: DEEPSLATE_DIAMOND_ORE
+        amount: 1
+        coin_amount: 32
+      - material: ANCIENT_DEBRIS
+        amount: 2
+        coin_amount: 64
+      - material: BUDDING_AMETHYST
+        amount: 1
+        coin_amount: 32
   - name: Nature
     color: dark_green
     position:
@@ -161,10 +218,20 @@ villager_shops:
         coin_amount: 4
         trade_in_extra: GRASS_BLOCK
         trade_in_extra_amount: 32
+      - material: FLOWERING_AZALEA
+        amount: 1
+        coin_amount: 8
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 32
+      - material: AZALEA
+        amount: 1
+        coin_amount: 4
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 16
   - name: Seedy
     color: yellow
     position:
-      x: -6.5
+      x: -6
       y: 64
       z: -5.5
     items:
@@ -191,5 +258,8 @@ villager_shops:
       z: -2.5
     items:
       - material: TURTLE_EGG
+        amount: 1
+        coin_amount: 32
+      - material: FROGSPAWN
         amount: 1
         coin_amount: 32
