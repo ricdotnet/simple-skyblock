@@ -2,27 +2,25 @@ package dev.ricr.skyblock.commands;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
-import lombok.AllArgsConstructor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import dev.ricr.skyblock.utils.ServerUtils;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 
-@AllArgsConstructor
-public class ShopCommand implements CommandExecutor {
+public class ShopCommand implements BasicCommand {
     private final SimpleSkyblock plugin;
 
+    public ShopCommand(SimpleSkyblock plugin) {
+        this.plugin = plugin;
+
+        this.plugin.registerCommand("shop", this);
+    }
+
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return true;
-        }
+    public void execute(CommandSourceStack commandSourceStack, String[] args) {
+        var sender = commandSourceStack.getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
         ShopTypeGUI shopTypeGUI = new ShopTypeGUI(this.plugin);
         player.openInventory(shopTypeGUI.getInventory());
-
-        return true;
     }
 }

@@ -30,7 +30,6 @@ public class WarpCommand implements ICommand {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> warp = this.command();
-
                     commands.registrar().register(warp);
                 });
     }

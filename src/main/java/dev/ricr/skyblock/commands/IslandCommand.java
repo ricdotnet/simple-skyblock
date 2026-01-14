@@ -35,6 +35,7 @@ import org.codehaus.plexus.util.FileUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -54,13 +55,7 @@ public class IslandCommand implements ICommand {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> island = this.command();
-
-                    commands.registrar().register(island);
-                    commands.registrar().register(Commands.literal("is")
-                            .executes(this::teleportPlayerToOwnIsland)
-                            .redirect(island)
-                            .build()
-                    );
+                    commands.registrar().register(island, List.of("is"));
                 });
     }
 

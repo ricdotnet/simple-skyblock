@@ -31,7 +31,6 @@ public class AdminCommand implements ICommand {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> admin = this.command();
-
                     commands.registrar().register(admin);
                 });
     }

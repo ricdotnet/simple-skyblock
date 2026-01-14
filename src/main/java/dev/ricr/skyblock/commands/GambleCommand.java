@@ -39,7 +39,6 @@ public class GambleCommand implements ICommand {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> gamble = this.command();
-
                     commands.registrar().register(gamble);
                 });
     }

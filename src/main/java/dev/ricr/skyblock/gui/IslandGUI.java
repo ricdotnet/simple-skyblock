@@ -10,7 +10,7 @@ import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
+import org.bukkit.GameRules;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -101,7 +101,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
         this.addBooleanButton(islandAllowOfflineVisits, 12, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription);
 
-        var isDoMobSpawn = islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING);
+        var isDoMobSpawn = islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS);
         var islandDoMobSpawnDescription = "Allows mobs to spawn in your island.";
         this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 19, Buttons.IslandAllowMobSpawning, "Mob spawning", islandDoMobSpawnDescription);
 
@@ -249,15 +249,15 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     private void handleMobSpawningClick(Player player) {
         var islandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
-        var isDoMobSpawn = Boolean.TRUE.equals(islandWorld.getGameRuleValue(GameRule.DO_MOB_SPAWNING));
+        var isDoMobSpawn = Boolean.TRUE.equals(islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS));
 
-        islandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, !isDoMobSpawn);
+        islandWorld.setGameRule(GameRules.SPAWN_MOBS, !isDoMobSpawn);
 
         try {
             var islandEntity = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
             if (islandEntity != null && islandEntity.isHasNether()) {
                 var netherIslandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), World.Environment.NETHER, null);
-                netherIslandWorld.setGameRule(GameRule.DO_MOB_SPAWNING, !isDoMobSpawn);
+                netherIslandWorld.setGameRule(GameRules.SPAWN_MOBS, !isDoMobSpawn);
             }
         } catch (SQLException e) {
             // ignore for now

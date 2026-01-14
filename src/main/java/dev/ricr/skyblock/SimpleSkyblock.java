@@ -1,15 +1,6 @@
 package dev.ricr.skyblock;
 
-import dev.ricr.skyblock.commands.AdminCommand;
-import dev.ricr.skyblock.commands.AuctionHouseCommand;
-import dev.ricr.skyblock.commands.BalanceCommand;
-import dev.ricr.skyblock.commands.GambleCommand;
-import dev.ricr.skyblock.commands.IslandCommand;
-import dev.ricr.skyblock.commands.LeaderboardCommand;
-import dev.ricr.skyblock.commands.LobbyCommand;
-import dev.ricr.skyblock.commands.PayCommand;
-import dev.ricr.skyblock.commands.ShopCommand;
-import dev.ricr.skyblock.commands.WarpCommand;
+import dev.ricr.skyblock.commands.Commands;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
@@ -34,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.sql.SQLException;
-import java.util.Objects;
 
 public class SimpleSkyblock extends JavaPlugin {
     public FileConfiguration serverConfig;
@@ -81,24 +71,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new BarterListener(this);
 
         // Register commands
-        new AdminCommand(this).register();
-        new IslandCommand(this).register();
-        new GambleCommand(this).register();
-        new PayCommand(this).register();
-        new WarpCommand(this).register();
-
-        Objects.requireNonNull(this.getCommand("lobby"))
-                .setExecutor(new LobbyCommand(this));
-        Objects.requireNonNull(this.getCommand("balance"))
-                .setExecutor(new BalanceCommand(this));
-        Objects.requireNonNull(this.getCommand("shop"))
-                .setExecutor(new ShopCommand(this));
-        Objects.requireNonNull(this.getCommand("leaderboard"))
-                .setExecutor(new LeaderboardCommand(this));
-
-        // TODO: refactor into command tree
-        Objects.requireNonNull(this.getCommand("auctionhouse"))
-                .setExecutor(new AuctionHouseCommand(this));
+        Commands.register(this);
 
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);

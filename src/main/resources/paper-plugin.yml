@@ -1,0 +1,13 @@
+main: dev.ricr.skyblock.SimpleSkyblock
+name: SimpleSkyblock
+version: '0.3.0'
+api-version: '1.21.11'
+dependencies:
+  bootstrap:
+    # Let's say that RegistryPlugin registers some data that your plugin needs to use
+    # We don't need this during runtime, so it's not required in the server section.
+    # However, can be added to both if needed
+    RegistryPlugin:
+      load: BEFORE
+      required: true
+      join-classpath: true # Defaults to true
