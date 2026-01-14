@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.InventoryHolder;
 
 public class InventoryClickListener implements Listener {
@@ -28,8 +29,12 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        InventoryHolder inventoryHolder = event.getInventory()
-                .getHolder(false);
+        var inventory = event.getInventory();
+        InventoryHolder inventoryHolder = inventory.getHolder(false);
+
+        if (inventory.getType() == InventoryType.MERCHANT) {
+            return;
+        }
 
         switch (inventoryHolder) {
             case null -> this.plugin.getLogger()

@@ -13,6 +13,7 @@ import dev.ricr.skyblock.commands.WarpCommand;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
+import dev.ricr.skyblock.listeners.BarterListener;
 import dev.ricr.skyblock.listeners.ChatListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
@@ -22,6 +23,7 @@ import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
+import dev.ricr.skyblock.utils.VillagerShopManager;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
 import dev.ricr.skyblock.utils.WorldManager;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -44,6 +46,7 @@ public class SimpleSkyblock extends JavaPlugin {
     public OnlinePlayers onlinePlayers;
     public MiniMessage miniMessage;
     public WorldManager worldManager;
+    public VillagerShopManager villagerShopManager;
 
     @Override
     public void onEnable() {
@@ -75,6 +78,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new PlayerListeners(this);
         new InventoryClickListener(this);
         new IslandListeners(this);
+        new BarterListener(this);
 
         // Register commands
         new AdminCommand(this).register();
@@ -119,6 +123,10 @@ public class SimpleSkyblock extends JavaPlugin {
     @Override
     public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, String id) {
         return new VoidWorldGenerator();
+    }
+
+    public void loadVillagerShops() {
+        this.villagerShopManager = new VillagerShopManager(this);
     }
 
     private void ensureDataFolderExists() {

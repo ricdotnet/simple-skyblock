@@ -26,6 +26,7 @@ public class DatabaseManager {
     private Dao<AuctionHouseItemEntity, Integer> auctionHouseDao;
     private Dao<TransactionEntity, Integer> transactionsDao;
     private Dao<WarpEntity, String> warpsDao;
+    private Dao<VillagerShopEntity, String> villagerShopsDao;
 
     public DatabaseManager(SimpleSkyblock plugin, DatabaseChangesAccumulator accumulator) {
         this.plugin = plugin;
@@ -46,6 +47,7 @@ public class DatabaseManager {
             this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouseItemEntity.class);
             this.transactionsDao = DaoManager.createDao(connection, TransactionEntity.class);
             this.warpsDao = DaoManager.createDao(connection, WarpEntity.class);
+            this.villagerShopsDao = DaoManager.createDao(connection, VillagerShopEntity.class);
 
             TableUtils.createTableIfNotExists(connection, IslandPlayerTrustLinkEntity.class);
             TableUtils.createTableIfNotExists(connection, PlayerEntity.class);
@@ -55,6 +57,7 @@ public class DatabaseManager {
             TableUtils.createTableIfNotExists(connection, AuctionHouseItemEntity.class);
             TableUtils.createTableIfNotExists(connection, TransactionEntity.class);
             TableUtils.createTableIfNotExists(connection, WarpEntity.class);
+            TableUtils.createTableIfNotExists(connection, VillagerShopEntity.class);
 
             plugin.getLogger()
                     .info("Successfully connected to database.");

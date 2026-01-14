@@ -5,4 +5,4 @@ max_player_warps: 3
 island:
   starting_border_radius: 60
   show_seed_price: 25000
-  expand_price: 10000 # price per block - 10 blocks means 10 * price
+  expand_price: 2000 # price per block - 10 blocks means 10 * price

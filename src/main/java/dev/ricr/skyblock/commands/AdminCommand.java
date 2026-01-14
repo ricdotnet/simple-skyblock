@@ -41,6 +41,8 @@ public class AdminCommand implements ICommand {
                 .requires(sender -> sender.getSender().isOp())
                 .then(Commands.literal("opOverride").executes(this::opOverride))
                 .then(Commands.literal("reloadShop").executes(this::reloadShop))
+                .then(Commands.literal("reloadVillagerShops").executes(this::reloadVillagerShops))
+                .then(Commands.literal("resetVillagerShops").executes(this::resetVillagerShops))
                 .then(Commands.literal("giveMoney")
                         .then(Commands.argument("player", ArgumentTypes.player())
                                 .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
@@ -74,6 +76,26 @@ public class AdminCommand implements ICommand {
 
         ShopItems.loadShop(this.plugin);
         player.sendMessage(Component.text("Shop reloaded successfully!", NamedTextColor.GREEN));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int reloadVillagerShops(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        this.plugin.villagerShopManager.reloadVillagerShops();
+        player.sendMessage(Component.text("Villager shops reloaded successfully!", NamedTextColor.GREEN));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int resetVillagerShops(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        this.plugin.villagerShopManager.resetVillagerShops();
+        player.sendMessage(Component.text("Villager shops reset successfully!", NamedTextColor.GREEN));
 
         return Command.SINGLE_SUCCESS;
     }
