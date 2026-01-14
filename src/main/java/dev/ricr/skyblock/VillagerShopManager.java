@@ -7,6 +7,7 @@ import dev.ricr.skyblock.utils.NumberUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -48,7 +49,6 @@ public class VillagerShopManager {
                 .findFirst();
     }
 
-    // TODO: extract shop loading logic to allow for a in-memory loads
     private void loadVillagerShops() {
         var dataFolder = plugin.getDataFolder();
         var shopConfigFile = new File(dataFolder, "shop.yml");
@@ -123,6 +123,40 @@ public class VillagerShopManager {
 
             this.loadShopItems(shopName, villagerShop, (List<Map<?, ?>>) itemsList);
         }
+    }
+
+    public void resetVillagerShops() {
+        List<VillagerShopEntity> villagerShopEntities;
+        try {
+            villagerShopEntities = this.villagerShopsDao.queryForAll();
+        } catch (SQLException e) {
+            // ignore for now
+            throw new RuntimeException("Could not load villager shop entities:" + e.getMessage());
+        }
+
+        var lobbyWorld = Bukkit.getWorld("lobby");
+
+        for (var villagerShopEntity : villagerShopEntities) {
+            var villagerEntity = lobbyWorld.getEntity(UUID.fromString(villagerShopEntity.getVillagerShopId()));
+            if (villagerEntity == null) {
+                this.plugin.getLogger().warning(String.format("Villager entity for villager shop %s was not found in the world", villagerShopEntity.getName()));
+                continue;
+            }
+
+            try {
+                this.villagerShopsDao.delete(villagerShopEntity);
+                villagerEntity.remove();
+            } catch (SQLException | UnsupportedOperationException e) {
+                // ignore for now
+                this.plugin.getLogger().severe(
+                        String.format("Could not delete or remove villager shop / villager entity %s:" + e.getMessage(),
+                                villagerShopEntity.getName())
+                );
+                continue;
+            }
+        }
+
+        this.loadVillagerShops();
     }
 
     private void loadShopItems(String shopName, VillagerShop villagerShop, List<Map<?, ?>> itemsList) {
