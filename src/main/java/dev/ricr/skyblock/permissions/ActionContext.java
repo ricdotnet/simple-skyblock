@@ -8,6 +8,5 @@ import org.jetbrains.annotations.Nullable;
 public record ActionContext(
         SimpleSkyblock plugin,
         Player player,
-        @Nullable Cancellable cancellable,
-        boolean shouldNotify
+        @Nullable Cancellable cancellable
 ) {}

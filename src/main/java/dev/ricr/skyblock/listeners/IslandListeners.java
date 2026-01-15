@@ -1,19 +1,11 @@
 package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.enums.CustomStructures;
-import dev.ricr.skyblock.gui.AuctionHouseGUI;
-import dev.ricr.skyblock.gui.ConfirmGUI;
-import dev.ricr.skyblock.gui.GambleSessionGUI;
-import dev.ricr.skyblock.gui.IslandGUI;
-import dev.ricr.skyblock.gui.ItemsListGUI;
-import dev.ricr.skyblock.gui.LeaderBoardGUI;
-import dev.ricr.skyblock.gui.ShopTypeGUI;
-import dev.ricr.skyblock.gui.VillagerShopGUI;
+import dev.ricr.skyblock.enums.EventCancellationReasons;
 import dev.ricr.skyblock.permissions.ActionContext;
+import dev.ricr.skyblock.permissions.EventCancellations;
 import dev.ricr.skyblock.permissions.Policies;
-import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
 import net.kyori.adventure.text.Component;
@@ -23,17 +15,10 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityPortalEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.sql.SQLException;
@@ -47,13 +32,14 @@ public class IslandListeners implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onShopSignBreak(BlockBreakEvent event) {
         var player = event.getPlayer();
         var brokenBlock = event.getBlock();
 
-        var actionContext = new ActionContext(this.plugin, player, event, false);
+        var actionContext = new ActionContext(this.plugin, player, event);
         if (!Policies.BREAK_BLOCKS.test(actionContext)) {
+            EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
             return;
         }
 
@@ -73,48 +59,6 @@ public class IslandListeners implements Listener {
     }
 
     @EventHandler
-    public void onInventoryOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) {
-            return;
-        }
-
-        Inventory inventory = event.getInventory();
-        InventoryType inventoryType = inventory.getType();
-        InventoryHolder inventoryHolder = inventory.getHolder();
-
-        if (inventoryType == InventoryType.PLAYER) {
-            return;
-        }
-
-        switch (inventoryHolder) {
-            case null -> {
-            }
-            case ShopTypeGUI ignored -> {
-            }
-            case ItemsListGUI ignored -> {
-            }
-            case ConfirmGUI ignored -> {
-            }
-            case LeaderBoardGUI ignored -> {
-            }
-            case GambleSessionGUI ignored -> {
-            }
-            case AuctionHouseGUI ignored -> {
-            }
-            case IslandGUI ignored -> {
-            }
-            case VillagerShopGUI ignored -> {
-            }
-            default -> {
-                if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-                    player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
-                    event.setCancelled(true);
-                }
-            }
-        }
-    }
-
-    @EventHandler
     public void onUseNetherPortal(PlayerPortalEvent event) {
         var from = event.getFrom().getWorld();
         var to = event.getFrom().getWorld();
@@ -126,6 +70,11 @@ public class IslandListeners implements Listener {
         if (!from.getName().startsWith("islands/")) return;
         if (from.getEnvironment() != World.Environment.NORMAL) return;
         if (to.getEnvironment() == World.Environment.THE_END) return;
+
+        var actionContext = new ActionContext(this.plugin, player, event);
+        if (!Policies.PORTAL_TRAVEL.test(actionContext)) {
+            return;
+        }
 
         var targetIslandId = from.getName()
                 .replace("islands/", "")

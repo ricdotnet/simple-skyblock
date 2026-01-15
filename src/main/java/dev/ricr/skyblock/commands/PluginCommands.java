@@ -22,7 +22,7 @@ public class PluginCommands {
         new BalanceCommand(plugin);
         new ShopCommand(plugin);
         new LeaderboardCommand(plugin);
-        new AuctionHouseCommand(plugin);
+        new AuctionHouseCommand(plugin).register();
     }
 
     public static CompletableFuture<Suggestions> currentOnlinePlayers(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {

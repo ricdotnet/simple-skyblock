@@ -5,12 +5,16 @@ import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.listeners.BarterListener;
+import dev.ricr.skyblock.listeners.BaseListeners;
 import dev.ricr.skyblock.listeners.ChatListener;
+import dev.ricr.skyblock.listeners.FeedbackListeners;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
 import dev.ricr.skyblock.listeners.LuckyEnchantmentListener;
 import dev.ricr.skyblock.listeners.PlayerListeners;
 import dev.ricr.skyblock.listeners.ServerLoadListener;
+import dev.ricr.skyblock.listeners.SilenceMobListener;
+import dev.ricr.skyblock.listeners.VillagerShopInteractListener;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
@@ -70,13 +74,17 @@ public class SimpleSkyblock extends JavaPlugin {
         this.islandGenerator = new IslandGenerator(this);
 
         // Register listeners
-        new ServerLoadListener(this);
-        new ChatListener(this);
+        new FeedbackListeners(this);
+        new BaseListeners(this);
         new PlayerListeners(this);
-        new InventoryClickListener(this);
         new IslandListeners(this);
+        new ChatListener(this);
+        new ServerLoadListener(this);
+        new InventoryClickListener(this);
         new BarterListener(this);
-        new LuckyEnchantmentListener();
+        new LuckyEnchantmentListener(this);
+        new VillagerShopInteractListener(this);
+        new SilenceMobListener(this);
 
         // Register commands
         PluginCommands.register(this);

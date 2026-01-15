@@ -1,27 +1,35 @@
 package dev.ricr.skyblock.listeners;
 
+import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enchantments.LuckyEnchantment;
 import dev.ricr.skyblock.enchantments.PluginEnchantments;
+import dev.ricr.skyblock.enums.EventCancellationReasons;
 import dev.ricr.skyblock.permissions.ActionContext;
+import dev.ricr.skyblock.permissions.EventCancellations;
 import dev.ricr.skyblock.permissions.Policies;
-import lombok.AllArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class LuckyEnchantmentListener implements Listener {
+    private final SimpleSkyblock plugin;
 
-    @EventHandler(ignoreCancelled = true)
+    public LuckyEnchantmentListener(SimpleSkyblock plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         var player = event.getPlayer();
         var tool = event.getPlayer().getInventory().getItemInMainHand();
 
-        var actionContext = new ActionContext(null, player, event, false);
+        var actionContext = new ActionContext(null, player, event);
         if (!Policies.BREAK_BLOCKS.test(actionContext)) {
+            EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
             return;
         }
 

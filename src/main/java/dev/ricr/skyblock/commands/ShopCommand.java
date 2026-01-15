@@ -11,7 +11,6 @@ public class ShopCommand implements BasicCommand {
 
     public ShopCommand(SimpleSkyblock plugin) {
         this.plugin = plugin;
-
         this.plugin.registerCommand("shop", this);
     }
 

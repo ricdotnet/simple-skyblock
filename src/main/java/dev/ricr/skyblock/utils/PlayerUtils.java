@@ -1,6 +1,9 @@
 package dev.ricr.skyblock.utils;
 
+import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.PlayerEntity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Bukkit;
@@ -14,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
@@ -21,6 +25,37 @@ import java.util.logging.Logger;
 
 public class PlayerUtils {
     static final Logger logger = Logger.getLogger("SimpleSkyblock");
+
+    public static void createPlayerEntity(SimpleSkyblock plugin, Player player) {
+        Dao<PlayerEntity, String> playersDao = plugin.databaseManager.getPlayersDao();
+
+        var playerUniqueId = player.getUniqueId();
+
+        try {
+            var playerEntity = playersDao.queryForId(playerUniqueId.toString());
+
+            if (playerEntity != null) {
+                plugin.getLogger()
+                        .info(String.format("Player %s already joined before. Skipping initialization of player entity.",
+                                player.getName()));
+
+                plugin.onlinePlayers.addPlayer(player, playerEntity);
+                return;
+            }
+
+            playerEntity = new PlayerEntity();
+            playerEntity.setPlayerId(playerUniqueId.toString());
+            playerEntity.setUsername(player.getName());
+            playerEntity.setBalance(100.0d);
+
+            plugin.onlinePlayers.addPlayer(player, playerEntity);
+
+            var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
+            plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
+        } catch (SQLException e) {
+            // ignore for now
+        }
+    }
 
     public static ItemStack getPlayerHead(UUID playerUniqueId, String... name) {
         logger.info("Getting player head for " + playerUniqueId);
