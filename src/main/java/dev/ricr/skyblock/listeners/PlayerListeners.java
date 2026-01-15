@@ -279,7 +279,6 @@ public class PlayerListeners implements Listener {
                 clickedBlock.setType(Material.AIR);
                 player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1f, 1f);
             }
-
         }
     }
 

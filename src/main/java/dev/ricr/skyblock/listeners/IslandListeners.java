@@ -11,6 +11,8 @@ import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
 import dev.ricr.skyblock.gui.VillagerShopGUI;
+import dev.ricr.skyblock.permissions.ActionContext;
+import dev.ricr.skyblock.permissions.Policies;
 import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.StructureUtils;
@@ -25,7 +27,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
@@ -46,36 +47,28 @@ public class IslandListeners implements Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
+    @EventHandler(ignoreCancelled = true)
+    public void onShopSignBreak(BlockBreakEvent event) {
+        var player = event.getPlayer();
+        var brokenBlock = event.getBlock();
 
-        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-
-        if ((event.getBlock().getBlockData() instanceof WallSign)) {
-            var sign = (Sign) event.getBlock().getState();
-            var shopOwnerId = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OWNER, PersistentDataType.STRING);
-
-            var isShop = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_TYPE, PersistentDataType.STRING) != null;
-            var isShopOwner = shopOwnerId != null && shopOwnerId.equals(player.getUniqueId().toString());
-
-            if (isShop && isShopOwner) {
-                player.sendMessage(Component.text("Your Sign Trade shop has been destroyed", NamedTextColor.GREEN));
-            }
-        }
-
-        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
-            event.setCancelled(true);
+        var actionContext = new ActionContext(this.plugin, player, event, false);
+        if (!Policies.BREAK_BLOCKS.test(actionContext)) {
             return;
+        }
+
+        if (!(brokenBlock.getBlockData() instanceof WallSign)) {
+            return;
+        }
+
+        var sign = (Sign) event.getBlock().getState();
+        var shopOwnerId = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_OWNER, PersistentDataType.STRING);
+
+        var isShop = sign.getPersistentDataContainer().get(ServerUtils.SIGN_SHOP_TYPE, PersistentDataType.STRING) != null;
+        var isShopOwner = shopOwnerId != null && shopOwnerId.equals(player.getUniqueId().toString());
+
+        if (isShop && isShopOwner) {
+            player.sendMessage(Component.text("Your Sign Trade shop has been destroyed", NamedTextColor.GREEN));
         }
     }
 
@@ -122,53 +115,17 @@ public class IslandListeners implements Listener {
     }
 
     @EventHandler
-    public void onDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) {
-            return;
-        }
-
-        if (this.plugin.islandManager.shouldStopIslandInteraction(player)) {
-            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onPortal(PlayerPortalEvent event) {
+    public void onUseNetherPortal(PlayerPortalEvent event) {
         var from = event.getFrom().getWorld();
-        var to = event.getTo().getWorld();
+        var to = event.getFrom().getWorld();
         var player = event.getPlayer();
 
-        if (to.getEnvironment() == World.Environment.THE_END) {
-            if (ServerUtils.isOpOverride() && player.isOp()) {
-                return;
-            }
-
-            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
-            var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
-
-            if (playerEntity.getBalance() < endPortalPrice) {
-                event.setCancelled(true);
-                player.sendMessage(Messages.INSUFFICIENT_END_PORTAL_BALANCE.component(this.plugin, ServerUtils.formatMoneyValue(endPortalPrice - playerEntity.getBalance())));
-                return;
-            }
-
-            var newBalance = playerEntity.getBalance() - endPortalPrice;
-            playerEntity.setBalance(newBalance);
-
-            var playerCreateOrUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
-            this.plugin.databaseChangesAccumulator.add(playerCreateOrUpdate);
-
-            return;
-        }
-
-        // we want to block all portal interactions
+        // we want to block all portal interactions regardless if the user has permissions or not
         event.setCancelled(true);
 
-        if (!from.getName().startsWith("islands/") || from.getEnvironment() != World.Environment.NORMAL || this.plugin.islandManager.shouldStopNetherTeleport(player)) {
-            player.sendMessage(Component.text("You cannot go through portals here", NamedTextColor.RED));
-            return;
-        }
+        if (!from.getName().startsWith("islands/")) return;
+        if (from.getEnvironment() != World.Environment.NORMAL) return;
+        if (to.getEnvironment() == World.Environment.THE_END) return;
 
         var targetIslandId = from.getName()
                 .replace("islands/", "")
@@ -198,17 +155,11 @@ public class IslandListeners implements Listener {
         } catch (SQLException e) {
             // ignore for now
             player.sendMessage(Component.text("Something went wrong when trying to go to the Nether", NamedTextColor.RED));
+            return;
         }
 
         player.setNoDamageTicks(20 * 10);
         player.sendMessage(Component.text("Welcome to the Nether", NamedTextColor.GREEN));
-    }
-
-    @EventHandler
-    public void onPortalEntity(EntityPortalEvent event) {
-        event.setCancelled(true);
-
-        // TODO: implement entity teleport later
     }
 
 }
