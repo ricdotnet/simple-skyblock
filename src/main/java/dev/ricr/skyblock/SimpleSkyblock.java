@@ -8,6 +8,7 @@ import dev.ricr.skyblock.listeners.BarterListener;
 import dev.ricr.skyblock.listeners.ChatListener;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
+import dev.ricr.skyblock.listeners.LuckyEnchantmentListener;
 import dev.ricr.skyblock.listeners.PlayerListeners;
 import dev.ricr.skyblock.listeners.ServerLoadListener;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
@@ -75,6 +76,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new InventoryClickListener(this);
         new IslandListeners(this);
         new BarterListener(this);
+        new LuckyEnchantmentListener();
 
         // Register commands
         PluginCommands.register(this);
