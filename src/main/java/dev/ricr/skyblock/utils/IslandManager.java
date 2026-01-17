@@ -3,9 +3,12 @@ package dev.ricr.skyblock.utils;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.ForeignCollection;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.IslandBlockedPlayersEntity;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.IslandPlayerTrustLinkEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
+import dev.ricr.skyblock.permissions.IslandPermissions;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
@@ -48,22 +51,41 @@ public class IslandManager {
         Dao<IslandEntity, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
 
         try {
-            IslandEntity playerIsland = islandsDao.queryForId(playerUniqueId.toString());
+            var playerIsland = islandsDao.queryForId(playerUniqueId.toString());
 
             if (playerIsland == null) {
                 return;
             }
 
+            if (playerIsland.getPermissions() == null) {
+                playerIsland.setPermissions(new IslandPermissions().toString());
+
+                var islandRecordUpdate = new DatabaseChange.IslandRecordUpdate(playerIsland);
+                this.plugin.databaseChangesAccumulator.add(islandRecordUpdate);
+            }
+
             int islandX = (int) playerIsland.getPositionX();
             int islandZ = (int) playerIsland.getPositionZ();
             ForeignCollection<IslandPlayerTrustLinkEntity> trustedPlayers = playerIsland.getTrustedPlayers();
+            ForeignCollection<IslandBlockedPlayersEntity> blockedPlayers = playerIsland.getBlockedPlayers();
 
             List<Tuple<String, String>> trustedPlayersId = trustedPlayers.stream().map(
                     trustedPlayer -> new Tuple<>(trustedPlayer.getPlayer()
                             .getPlayerId(), trustedPlayer.getPlayer().getUsername())
             ).collect(ArrayList::new, List::add, List::addAll);
 
-            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedPlayersId));
+            List<Tuple<String, String>> blockedPlayersId = blockedPlayers.stream().map(
+                    blockedPlayer -> new Tuple<>(blockedPlayer.getPlayer()
+                            .getPlayerId(), blockedPlayer.getPlayer().getUsername())
+            ).collect(ArrayList::new, List::add, List::addAll);
+
+            var islandPermissions = new IslandPermissions(playerIsland.getPermissions());
+
+            this.islands.put(playerUniqueId,
+                    new IslandRecord(
+                            playerUniqueId, islandX, islandZ, islandPermissions, trustedPlayersId, blockedPlayersId
+                    )
+            );
         } catch (SQLException e) {
             // ignore for now
         }

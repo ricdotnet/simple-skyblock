@@ -14,6 +14,7 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.gui.IslandGUI;
+import dev.ricr.skyblock.permissions.IslandPermissions;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -90,6 +91,17 @@ public class IslandCommand implements ICommand {
                                 .executes(this::visitPlayerIsland)
                         )
                 )
+                .then(Commands.literal("block")
+                        .then(Commands.argument("player", StringArgumentType.string())
+                                .suggests(PluginCommands::currentOnlinePlayers)
+                                .executes(this::blockPlayerFromIsland)
+                        )
+                )
+                .then(Commands.literal("unblock").then(
+                        Commands.argument("player", StringArgumentType.string())
+                                .suggests(this::getBlockedPlayersList)
+                                .executes(this::unblockPlayerFromIsland)
+                ))
                 .build();
     }
 
@@ -179,6 +191,8 @@ public class IslandCommand implements ICommand {
             // Using multiple island worlds means we always start at 0 64 0
             island.setPositionX(0.0d);
             island.setPositionZ(0.0d);
+
+            island.setPermissions(new IslandPermissions().toString());
 
             IslandEntity finalIsland = island;
             Bukkit.getAsyncScheduler().runNow(this.plugin, (task) -> {
@@ -567,6 +581,114 @@ public class IslandCommand implements ICommand {
         islandRecord.trustedPlayers().stream()
                 .filter(trustedPlayerTuple -> trustedPlayerTuple.getSecond().toLowerCase().startsWith(remaining))
                 .forEach(trustedPlayerTuple -> builder.suggest(trustedPlayerTuple.getSecond()));
+
+        return builder.buildFuture();
+    }
+
+    private int blockPlayerFromIsland(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayerName = ctx.getArgument("player", String.class);
+        PlayerEntity targetPlayerEntity = null;
+
+        if (targetPlayerName.equals(player.getName())) {
+            var message = "<red>You cannot block yourself from your own";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        try {
+            targetPlayerEntity = this.playersDao.queryBuilder()
+                    .where()
+                    .eq("username", targetPlayerName)
+                    .queryForFirst();
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        if (targetPlayerEntity == null) {
+            var message = String.format("<gold>%s <red>does not exist in our database", targetPlayerName);
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        if (!this.playerIslandRecordExists(player)) {
+            var message = "<red>You do not have an island to block players from";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        try {
+            var playerIsland = islandsDao.queryForId(player.getUniqueId().toString());
+
+            var blockedPlayerAdd = new DatabaseChange.BlockedPlayerAdd(playerIsland, targetPlayerEntity);
+            this.plugin.databaseChangesAccumulator.add(blockedPlayerAdd);
+
+            var newIslandRecord = this.plugin.islandManager
+                    .getIslandRecord(player.getUniqueId())
+                    .addBlockedPlayer(targetPlayerEntity.getPlayerId(), targetPlayerEntity.getUsername());
+            this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
+
+            var blockSuccessMessage = String.format("<green>Player <gold>%s</gold> has been blocked from your island", targetPlayerEntity.getUsername());
+            player.sendMessage(this.plugin.miniMessage.deserialize(blockSuccessMessage));
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int unblockPlayerFromIsland(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayerName = ctx.getArgument("player", String.class);
+        var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+        if (islandRecord == null) {
+            var message = "<red>You do not have an island to unblock players from";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        String targetPlayerUniqueId = null;
+
+        for (var blockedPlayerTuple : islandRecord.blockedPlayers()) {
+            if (blockedPlayerTuple.getSecond().equals(targetPlayerName)) {
+                targetPlayerUniqueId = blockedPlayerTuple.getFirst();
+                break;
+            }
+        }
+
+        if (targetPlayerUniqueId == null) {
+            sender.sendMessage(Component.text(String.format("Player %s is not blocked from your island", targetPlayerName), NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var blockedPlayerRemove = new DatabaseChange.BlockedPlayerRemove(player.getUniqueId().toString(), targetPlayerUniqueId);
+        this.plugin.databaseChangesAccumulator.add(blockedPlayerRemove);
+
+        var newIslandRecord = islandRecord.removeBlockedPlayer(targetPlayerName);
+        this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
+
+        sender.sendMessage(Component.text(String.format("Player %s is no longer blocked from your island", targetPlayerName), NamedTextColor.GREEN));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private CompletableFuture<Suggestions> getBlockedPlayersList(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+        if (islandRecord == null) {
+            return builder.buildFuture();
+        }
+
+        var remaining = builder.getRemaining().toLowerCase();
+        islandRecord.blockedPlayers().stream()
+                .filter(blockedPlayerTuple -> blockedPlayerTuple.getSecond().toLowerCase().startsWith(remaining))
+                .forEach(blockedPlayerTuple -> builder.suggest(blockedPlayerTuple.getSecond()));
 
         return builder.buildFuture();
     }

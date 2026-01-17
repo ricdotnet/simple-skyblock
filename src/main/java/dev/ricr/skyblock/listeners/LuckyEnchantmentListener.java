@@ -27,7 +27,7 @@ public class LuckyEnchantmentListener implements Listener {
         var player = event.getPlayer();
         var tool = event.getPlayer().getInventory().getItemInMainHand();
 
-        var actionContext = new ActionContext(null, player, event);
+        var actionContext = new ActionContext(this.plugin, player, event);
         if (!Policies.BREAK_BLOCKS.test(actionContext)) {
             EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
             return;

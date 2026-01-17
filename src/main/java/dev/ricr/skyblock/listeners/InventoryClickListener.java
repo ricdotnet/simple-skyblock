@@ -7,6 +7,7 @@ import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.gui.ConfirmGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
+import dev.ricr.skyblock.gui.PlayersListGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -46,6 +47,7 @@ public class InventoryClickListener implements Listener {
             case GambleSessionGUI ignored -> event.setCancelled(true);
             case AuctionHouseGUI auctionHouseGUI -> auctionHouseGUI.handleInventoryClick(event, player);
             case IslandGUI islandGUI -> islandGUI.handleInventoryClick(event, player);
+            case PlayersListGUI<?> playersListGUI -> playersListGUI.handleInventoryClick(event);
             default -> {/* */}
         }
     }

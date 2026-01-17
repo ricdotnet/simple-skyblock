@@ -117,12 +117,9 @@ public class PlayerListeners implements Listener {
             return;
         }
 
-        if (event.getAction() == Action.PHYSICAL) {
-            if (shouldStopIslandInteraction) {
-                event.setCancelled(true);
-                player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
-            }
-            return;
+        switch (event.getAction()) {
+            case Action.PHYSICAL, Action.RIGHT_CLICK_BLOCK, Action.LEFT_CLICK_AIR, Action.RIGHT_CLICK_AIR,
+                 Action.LEFT_CLICK_BLOCK: return;
         }
 
         if (IslandProtectedBlocks.BLOCKS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {

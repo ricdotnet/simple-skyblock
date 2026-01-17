@@ -9,6 +9,7 @@ import dev.ricr.skyblock.gui.GambleSessionGUI;
 import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
+import dev.ricr.skyblock.gui.PlayersListGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
 import dev.ricr.skyblock.gui.VillagerShopGUI;
 import dev.ricr.skyblock.permissions.ActionContext;
@@ -155,6 +156,8 @@ public class BaseListeners implements Listener {
             EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
             return;
         }
+
+        event.getDamager().sendMessage("attacked the zombie");
     }
 
     @EventHandler
@@ -225,6 +228,8 @@ public class BaseListeners implements Listener {
             case IslandGUI ignored -> {
             }
             case VillagerShopGUI ignored -> {
+            }
+            case PlayersListGUI<?> ignored -> {
             }
             default -> {
                 var actionContext = new ActionContext(this.plugin, player, event);

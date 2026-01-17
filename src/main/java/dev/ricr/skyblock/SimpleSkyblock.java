@@ -33,6 +33,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 
 public class SimpleSkyblock extends JavaPlugin {
@@ -65,6 +66,14 @@ public class SimpleSkyblock extends JavaPlugin {
         this.databaseChangesAccumulator = new DatabaseChangesAccumulator(this);
 
         this.databaseManager = new DatabaseManager(this, this.databaseChangesAccumulator);
+        try {
+            this.databaseManager.runMigrations(this.getFile());
+        } catch (IOException e) {
+            this.getLogger().severe(
+                    String.format("Failed when trying to close the jar file after running migrations: %s", e.getMessage())
+            );
+        }
+
         this.islandManager = new IslandManager(this);
 
         // Open an auction house class with fast access Dao

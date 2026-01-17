@@ -60,6 +60,8 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case Buttons.IslandAllowOfflineVisits -> this.handleAllowOfflineVisits(player);
             case Buttons.IslandAllowMobSpawning -> this.handleMobSpawningClick(player);
             case Buttons.IslandShowSeed -> this.handleShowIslandSeedClick(player);
+            case Buttons.IslandTrustedPlayersList -> this.handleIslandTrustedPlayersClick(player);
+            case Buttons.IslandBlockedPlayersList -> this.handleIslandBlockedPlayersClick(player);
         }
     }
 
@@ -114,9 +116,16 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         var seedButton = new ItemStack(Material.FILLED_MAP);
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
-
         this.setItemSimpleMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
         this.inventory.setItem(15, seedButton);
+
+        var trustedPlayersListButton = new ItemStack(Material.ENDER_EYE);
+        this.setItemSimpleMeta(trustedPlayersListButton, "See trusted players", Buttons.IslandTrustedPlayersList);
+        this.inventory.setItem(37, trustedPlayersListButton);
+
+        var blockedPlayersListButton = new ItemStack(Material.FIRE_CHARGE);
+        this.setItemSimpleMeta(blockedPlayersListButton, "See blocked players", Buttons.IslandBlockedPlayersList);
+        this.inventory.setItem(38, blockedPlayersListButton);
 
         InventoryUtils.fillEmptySlots(this.inventory);
     }
@@ -268,5 +277,19 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         // refresh only
         this.openInventory(player);
+    }
+
+    private void handleIslandTrustedPlayersClick(Player player) {
+        var playerUniqueId = player.getUniqueId();
+        var playerIslandRecord = this.plugin.islandManager.getIslandRecord(playerUniqueId);
+
+        new PlayersListGUI<>(player, playerIslandRecord.trustedPlayers(), "Trusted Players");
+    }
+
+    private void handleIslandBlockedPlayersClick(Player player) {
+        var playerUniqueId = player.getUniqueId();
+        var playerIslandRecord = this.plugin.islandManager.getIslandRecord(playerUniqueId);
+
+        new PlayersListGUI<>(player, playerIslandRecord.blockedPlayers(), "Blocked Players");
     }
 }
