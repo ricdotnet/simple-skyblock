@@ -473,11 +473,12 @@ public class IslandCommand implements ICommand {
         OfflinePlayer offlinePlayer = this.plugin.getServer().getOfflinePlayer(UUID.fromString(targetPlayerEntity.getPlayerId()));
         var targetPlayer = offlinePlayer.getPlayer();
 
+        var finalTargetPlayerEntity = targetPlayerEntity;
         var base = Component.text(String.format("%s", senderName), NamedTextColor.GOLD);
         var reason = Component.text("wants to visit your island.", NamedTextColor.GREEN);
         var clickable = Component.text("Click here to accept", NamedTextColor.AQUA)
                 .clickEvent(ClickEvent.callback(audience -> {
-                    var locationToTp = PlayerUtils.getTpLocation(plugin, offlinePlayer.getUniqueId());
+                    var locationToTp = PlayerUtils.getTpLocation(plugin, UUID.fromString(finalTargetPlayerEntity.getPlayerId()));
                     player.teleport(locationToTp);
                 }));
 

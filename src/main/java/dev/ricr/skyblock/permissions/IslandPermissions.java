@@ -3,6 +3,8 @@ package dev.ricr.skyblock.permissions;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
+import dev.ricr.skyblock.enums.SoundType;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,6 +39,7 @@ public class IslandPermissions {
 
     public void switchPermission(Policies.PoliciesEnum permission) {
         this.permissions.compute(permission, (policyEnum, permissionValue) -> Boolean.FALSE.equals(permissionValue));
+        var player = this.plugin.getServer().getPlayer(this.islandUniqueId);
 
         IslandEntity islandEntity;
         try {
@@ -44,6 +47,7 @@ public class IslandPermissions {
         } catch (SQLException e) {
             this.permissions.compute(permission, (policyEnum, permissionValue) -> Boolean.FALSE.equals(permissionValue));
             this.plugin.getLogger().severe(String.format("Failed when trying to switch a permission for island id %s", islandUniqueId));
+            PlayerUtils.playSound(player, SoundType.NEGATIVE);
             return;
         }
 
@@ -51,6 +55,8 @@ public class IslandPermissions {
 
         var islandRecordUpdate = new DatabaseChange.IslandRecordUpdate(islandEntity);
         this.plugin.databaseChangesAccumulator.add(islandRecordUpdate);
+
+        PlayerUtils.playSound(player, SoundType.POSITIVE);
     }
 
     public void deserialize(String permissions) {

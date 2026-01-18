@@ -2,12 +2,8 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.IslandEntity;
-import dev.ricr.skyblock.enums.EventCancellationReasons;
 import dev.ricr.skyblock.enums.IslandProtectedBlocks;
 import dev.ricr.skyblock.enums.SignShopType;
-import dev.ricr.skyblock.permissions.ActionContext;
-import dev.ricr.skyblock.permissions.EventCancellations;
-import dev.ricr.skyblock.permissions.Policies;
 import dev.ricr.skyblock.shop.SignShop;
 import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.PlayerUtils;
@@ -29,7 +25,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -117,15 +112,18 @@ public class PlayerListeners implements Listener {
             return;
         }
 
-        switch (event.getAction()) {
-            case Action.PHYSICAL, Action.RIGHT_CLICK_BLOCK, Action.LEFT_CLICK_AIR, Action.RIGHT_CLICK_AIR,
-                 Action.LEFT_CLICK_BLOCK: return;
-        }
-
-        if (IslandProtectedBlocks.BLOCKS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {
+        if (IslandProtectedBlocks.REDSTONE_ITEMS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {
             event.setCancelled(true);
             player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             return;
+        }
+
+        switch (event.getAction()) {
+            case Action.PHYSICAL,
+                 Action.RIGHT_CLICK_BLOCK,
+                 Action.LEFT_CLICK_AIR,
+                 Action.RIGHT_CLICK_AIR,
+                 Action.LEFT_CLICK_BLOCK: return;
         }
 
         if (clickedBlock != null && clickedBlock.getState() instanceof Sign sign) {
@@ -194,12 +192,6 @@ public class PlayerListeners implements Listener {
             return;
         }
 
-        if (shouldStopIslandInteraction) {
-            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
-            event.setCancelled(true);
-            return;
-        }
-
         if (itemInHand.getType() == Material.BUCKET) {
             if (clickedBlock == null) return;
 
@@ -212,15 +204,11 @@ public class PlayerListeners implements Listener {
                 player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1f, 1f);
             }
         }
-    }
 
-    @EventHandler
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        var player = event.getPlayer();
 
-        var actionContext = new ActionContext(this.plugin, player, event);
-        if (!Policies.VILLAGER_TRADING.test(actionContext)) {
-            EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
+        if (shouldStopIslandInteraction) {
+            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
+            event.setCancelled(true);
             return;
         }
     }

@@ -64,7 +64,8 @@ public class IslandListeners implements Listener {
         var to = event.getFrom().getWorld();
         var player = event.getPlayer();
 
-        // we want to block all portal interactions regardless if the user has permissions or not
+        // we need to block all portal travels
+        // all are handled by the plugin
         event.setCancelled(true);
 
         if (!from.getName().startsWith("islands/")) return;
@@ -73,6 +74,7 @@ public class IslandListeners implements Listener {
 
         var actionContext = new ActionContext(this.plugin, player, event);
         if (!Policies.PORTAL_TRAVEL.test(actionContext)) {
+            EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
             return;
         }
 

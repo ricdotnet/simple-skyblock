@@ -13,6 +13,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 
 public class FeedbackListeners implements Listener {
     private final SimpleSkyblock plugin;
@@ -70,6 +71,16 @@ public class FeedbackListeners implements Listener {
         if (cancelReason == null) return;
 
         this.sendMessage((Player) event.getPlayer(), cancelReason);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerUsePortal(PlayerPortalEvent event) {
+        if (!event.isCancelled()) return;
+
+        var cancelReason = EventCancellations.get(event);
+        if (cancelReason == null) return;
+
+        this.sendMessage(event.getPlayer(), cancelReason);
     }
 
     private void sendMessage(Player player, EventCancellationReasons cancelReason) {

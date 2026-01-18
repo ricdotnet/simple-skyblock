@@ -3,6 +3,7 @@ package dev.ricr.skyblock.listeners;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.enums.EventCancellationReasons;
+import dev.ricr.skyblock.enums.IslandProtectedBlocks;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.gui.ConfirmGUI;
 import dev.ricr.skyblock.gui.GambleSessionGUI;
@@ -22,8 +23,10 @@ import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -34,6 +37,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -136,10 +140,14 @@ public class BaseListeners implements Listener {
 
     @EventHandler
     public void onEntityInteract(PlayerInteractEntityEvent event) {
-        var actionContext = new ActionContext(this.plugin, event.getPlayer(), event);
-        if (!Policies.VILLAGER_TRADING.test(actionContext)) {
-            EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
-            return;
+        var interactedEntity = event.getRightClicked();
+
+        if (interactedEntity instanceof Villager) {
+            var actionContext = new ActionContext(this.plugin, event.getPlayer(), event);
+            if (!Policies.VILLAGER_TRADING.test(actionContext)) {
+                EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
+                return;
+            }
         }
     }
 
@@ -166,6 +174,8 @@ public class BaseListeners implements Listener {
         var to = event.getTo().getWorld();
         var player = event.getPlayer();
 
+        event.setCancelled(true);
+
         if (to.getEnvironment() != World.Environment.THE_END) {
             return;
         }
@@ -191,6 +201,23 @@ public class BaseListeners implements Listener {
     }
 
     @EventHandler
+    public void onPlayerInteractWithDoor(PlayerInteractEvent event) {
+        var player = event.getPlayer();
+        var clickedBlock = event.getClickedBlock();
+        var clickedBlockMaterial = clickedBlock == null ? Material.AIR : clickedBlock.getType();
+
+        if (!IslandProtectedBlocks.DOORS.contains(clickedBlockMaterial)) {
+            return;
+        }
+
+        var actionContext = new ActionContext(this.plugin, player, event);
+        if (!Policies.OPEN_DOORS.test(actionContext)) {
+            EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
+            return;
+        }
+    }
+
+    @EventHandler
     public void onEntityUsePortals(EntityPortalEvent event) {
         event.setCancelled(true);
 
@@ -207,7 +234,7 @@ public class BaseListeners implements Listener {
         InventoryType inventoryType = inventory.getType();
         InventoryHolder inventoryHolder = inventory.getHolder();
 
-        if (inventoryType == InventoryType.PLAYER) {
+        if (inventoryType == InventoryType.PLAYER || inventoryType == InventoryType.MERCHANT) {
             return;
         }
 

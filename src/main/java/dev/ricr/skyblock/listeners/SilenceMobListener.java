@@ -8,6 +8,7 @@ import dev.ricr.skyblock.permissions.Policies;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -25,6 +26,12 @@ public class SilenceMobListener implements Listener {
         var player = event.getPlayer();
         var itemInHand = player.getInventory().getItem(event.getHand());
         var interactedEntity = event.getRightClicked();
+
+        // We ignore interaction with villagers to check trading
+        // This could break name-tagging villagers
+        if ((interactedEntity instanceof Villager) && Material.NAME_TAG != itemInHand.getType()) {
+            return;
+        }
 
         var actionContext = new ActionContext(this.plugin, player, event);
         if (!Policies.INTERACT_WITH_MOBS.test(actionContext)) {

@@ -4,12 +4,14 @@ import com.j256.ormlite.dao.Dao;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.PlayerEntity;
+import dev.ricr.skyblock.enums.SoundType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -152,5 +154,13 @@ public class PlayerUtils {
     public static boolean hasEmptyInventorySlots(Player player) {
         long spaces = Arrays.stream(player.getInventory().getContents()).filter(Objects::nonNull).count();
         return spaces > 0;
+    }
+
+    public static void playSound(Player player, SoundType soundType) {
+        if (SoundType.POSITIVE == soundType) {
+            player.playSound(player, Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1f);
+        } else {
+            player.playSound(player, Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+        }
     }
 }

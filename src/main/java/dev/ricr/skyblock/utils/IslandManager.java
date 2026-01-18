@@ -120,41 +120,7 @@ public class IslandManager {
             }
         }
 
-        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
-    }
-
-    public boolean shouldStopNetherTeleport(Player player) {
-        var world = player.getWorld();
-
-        if (player.isOp() && ServerUtils.isOpOverride() || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
-            return false;
-        }
-
-        if (world.getName().equals("lobby")) {
-            return true;
-        }
-
-        var islandRecord = this.findCurrentIslandRecord(world.getName());
-        if (islandRecord == null) {
-            return true;
-        }
-
-        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
-                return false;
-            }
-        }
-
-        try {
-            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
-            if (island.isPrivate() || !island.isAllowNetherTeleport()) {
-                return true;
-            }
-        } catch (SQLException e) {
-            // ignore for now
-        }
-
-        return false;
+        return true;
     }
 
     private IslandRecord findCurrentIslandRecord(String worldName) {
