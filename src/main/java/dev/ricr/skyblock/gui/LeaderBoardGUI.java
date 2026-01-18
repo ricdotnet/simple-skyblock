@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
@@ -28,7 +29,7 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final Inventory inventory;
 
     public LeaderBoardGUI(SimpleSkyblock plugin, Player player) {
-        this.inventory = Bukkit.createInventory(this, 27, Component.text("Balance leaderboard"));
+        this.inventory = Bukkit.createInventory(this, 27, Component.text(DisplayNames.BALANCE_LEADERBOARD));
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Dao<PlayerEntity, String> playersDao = plugin.databaseManager.getPlayersDao();

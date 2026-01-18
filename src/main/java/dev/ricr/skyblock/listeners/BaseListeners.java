@@ -31,11 +31,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.event.inventory.PrepareGrindstoneEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -44,6 +47,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.persistence.PersistentDataType;
 
 public class BaseListeners implements Listener {
     private final SimpleSkyblock plugin;
@@ -268,6 +272,35 @@ public class BaseListeners implements Listener {
                     return;
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onPrepareAnvil(PrepareAnvilEvent event) {
+        var left = event.getInventory().getItem(0);
+        if (left == null || left.getType().isAir()) return;
+
+        if (left.getItemMeta().getPersistentDataContainer().has(ServerUtils.NO_ANVIL, PersistentDataType.BYTE)) {
+            event.setResult(null);
+        }
+    }
+
+    @EventHandler
+    public void onPrepareGrindstone(PrepareGrindstoneEvent event) {
+        var first = event.getInventory().getUpperItem();
+        if (first == null) return;
+
+        if (first.getItemMeta().getPersistentDataContainer().has(ServerUtils.NO_ANVIL, PersistentDataType.BYTE)) {
+            event.setResult(null);
+        }
+    }
+
+    @EventHandler
+    public void onPrepareEnchant(PrepareItemEnchantEvent event) {
+        var item = event.getItem();
+
+        if (item.getItemMeta().getPersistentDataContainer().has(ServerUtils.NO_ENCHANTMENT, PersistentDataType.BYTE)) {
+            event.setCancelled(true);
         }
     }
 

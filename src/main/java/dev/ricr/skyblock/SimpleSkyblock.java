@@ -10,7 +10,7 @@ import dev.ricr.skyblock.listeners.ChatListener;
 import dev.ricr.skyblock.listeners.FeedbackListeners;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
-import dev.ricr.skyblock.listeners.LuckyEnchantmentListener;
+import dev.ricr.skyblock.listeners.LuckyPickaxeListener;
 import dev.ricr.skyblock.listeners.PlayerListeners;
 import dev.ricr.skyblock.listeners.ServerLoadListener;
 import dev.ricr.skyblock.listeners.SilenceMobListener;
@@ -91,7 +91,7 @@ public class SimpleSkyblock extends JavaPlugin {
         new ServerLoadListener(this);
         new InventoryClickListener(this);
         new BarterListener(this);
-        new LuckyEnchantmentListener(this);
+        new LuckyPickaxeListener(this);
         new VillagerShopInteractListener(this);
         new SilenceMobListener(this);
 

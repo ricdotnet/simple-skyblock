@@ -2,7 +2,7 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.SoundType;
-import dev.ricr.skyblock.utils.CustomItems;
+import dev.ricr.skyblock.items.CreeperCoin;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -37,7 +37,7 @@ public class BarterListener implements Listener {
             }
 
             barteredItems.clear();
-            var creeperCoinItem = CustomItems.createCreeperCoinItem(this.plugin);
+            var creeperCoinItem = CreeperCoin.create(this.plugin);
             barteredItems.add(creeperCoinItem);
         }
     }

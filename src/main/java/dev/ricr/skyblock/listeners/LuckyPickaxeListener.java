@@ -1,24 +1,26 @@
 package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.enchantments.LuckyEnchantment;
-import dev.ricr.skyblock.enchantments.PluginEnchantments;
+import dev.ricr.skyblock.enums.CustomItems;
 import dev.ricr.skyblock.enums.EventCancellationReasons;
 import dev.ricr.skyblock.enums.SoundType;
+import dev.ricr.skyblock.items.LuckyPickaxe;
 import dev.ricr.skyblock.permissions.ActionContext;
 import dev.ricr.skyblock.permissions.EventCancellations;
 import dev.ricr.skyblock.permissions.Policies;
 import dev.ricr.skyblock.utils.PlayerUtils;
+import dev.ricr.skyblock.utils.ServerUtils;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
-public class LuckyEnchantmentListener implements Listener {
+public class LuckyPickaxeListener implements Listener {
     private final SimpleSkyblock plugin;
 
-    public LuckyEnchantmentListener(SimpleSkyblock plugin) {
+    public LuckyPickaxeListener(SimpleSkyblock plugin) {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -34,13 +36,19 @@ public class LuckyEnchantmentListener implements Listener {
             return;
         }
 
-        if (event.getBlock().getType() != Material.STONE
-                || !tool.containsEnchantment(PluginEnchantments.get(PluginEnchantments.LUCKY_ENCHANTMENT))) {
+        var itemPersistentDataContainer = tool.getPersistentDataContainer();
+        var customItem = itemPersistentDataContainer.get(ServerUtils.CUSTOM_ITEM, PersistentDataType.STRING);
+        if (customItem == null) {
+            return;
+        }
+        var customItemType = CustomItems.valueOf(customItem);
+
+        if (event.getBlock().getType() != Material.STONE || customItemType != CustomItems.LUCKY_PICKAXE) {
             return;
         }
 
-        if (Math.random() < 0.02) {
-            var randomOre = LuckyEnchantment.getRandom();
+        if (Math.random() < 0.10) {
+            var randomOre = LuckyPickaxe.getRandom();
             event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(randomOre));
             PlayerUtils.playSound(player, SoundType.POSITIVE);
         }

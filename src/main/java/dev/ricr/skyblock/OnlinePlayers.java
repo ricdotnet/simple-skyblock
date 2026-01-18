@@ -38,6 +38,8 @@ public class OnlinePlayers {
             for (var onlinePlayer : this.onlinePlayers.values()) {
                 var playerFastBoard = onlinePlayer.getFastBoard();
                 playerFastBoard.updateMoney();
+                playerFastBoard.updateWorldTime();
+                playerFastBoard.updatePing();
             }
         }, 0, 20);
     }

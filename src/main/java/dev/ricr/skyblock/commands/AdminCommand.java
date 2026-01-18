@@ -2,6 +2,7 @@ package dev.ricr.skyblock.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -10,6 +11,8 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
 import dev.ricr.skyblock.enums.InvalidWarpNames;
+import dev.ricr.skyblock.items.CreeperCoin;
+import dev.ricr.skyblock.items.LuckyPickaxe;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -47,6 +50,18 @@ public class AdminCommand implements ICommand {
                                 .then(Commands.argument("amount", DoubleArgumentType.doubleArg())
                                         .executes(this::giveMoney)
                                 )
+                        )
+                )
+                .then(Commands.literal("giveCreeperCoins")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                        .executes(this::giveCreeperCoins)
+                                )
+                        )
+                )
+                .then(Commands.literal("giveLuckyPickaxe")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .executes(this::giveLuckyPickaxe)
                         )
                 )
                 .then(Commands.literal("createWarp")
@@ -121,6 +136,42 @@ public class AdminCommand implements ICommand {
 
         targetPlayer.sendMessage(Component.text(String.format("An admin sent you %s", ServerUtils.formatMoneyValue(amount)),
                 NamedTextColor.GREEN));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int giveCreeperCoins(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
+            // Should only suggest online players
+            player.sendMessage(Component.text("Invalid player", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var amount = ctx.getArgument("amount", Integer.class);
+        var creeperCoin = CreeperCoin.create(this.plugin);
+        creeperCoin.setAmount(amount);
+        player.give(creeperCoin);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int giveLuckyPickaxe(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
+            // Should only suggest online players
+            player.sendMessage(Component.text("Invalid player", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var luckyPickaxe = LuckyPickaxe.create(this.plugin);
+        player.give(luckyPickaxe);
 
         return Command.SINGLE_SUCCESS;
     }

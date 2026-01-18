@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.gui;
 
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.Buttons;
 import dev.ricr.skyblock.permissions.IslandPermissions;
@@ -30,7 +31,7 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     public IslandSettingsGUI(SimpleSkyblock plugin, Player player) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 36, Component.text("Island settings"));
+        this.inventory = Bukkit.createInventory(this, 36, Component.text(DisplayNames.ISLAND_SETTINGS));
 
         this.loadSettings(this.getIslandPermissions(player));
         InventoryUtils.fillEmptySlots(this.inventory);
@@ -83,35 +84,35 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private void loadSettings(IslandPermissions islandPermissions) {
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.BREAK_BLOCKS),
-                10, Buttons.BreakBlocksButton, "Break blocks", "Allow other players to break blocks in your island."
+                10, Buttons.BreakBlocksButton, "ʙʀᴇᴀᴋ ʙʟᴏᴄᴋꜱ", "Allow other players to break blocks in your island."
         );
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.PLACE_BLOCKS),
-                11, Buttons.PlaceBlocksButton, "Place blocks", "Allow other players to place blocks in your island."
+                11, Buttons.PlaceBlocksButton, "ᴘʟᴀᴄᴇ ʙʟᴏᴄᴋꜱ", "Allow other players to place blocks in your island."
         );
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.KILL_MOBS),
-                12, Buttons.KillMobsButton, "Kill mobs", "Allow other players to kill mobs in your island."
+                12, Buttons.KillMobsButton, "ᴋɪʟʟ ᴍᴏʙꜱ", "Allow other players to kill mobs in your island."
         );
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.INTERACT_WITH_MOBS),
-                13, Buttons.InteractWithMobsButton, "Interact with mobs", "Allow other players to interact with mobs in your island."
+                13, Buttons.InteractWithMobsButton, "ɪɴᴛᴇʀᴀᴄᴛ ᴡɪᴛʜ ᴍᴏʙꜱ", "Allow other players to interact with mobs in your island."
         );
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.VILLAGER_TRADING),
-                14, Buttons.VillagerTradingButton, "Villager trading", "Allow other players to trade with villagers in your island."
+                14, Buttons.VillagerTradingButton, "ᴠɪʟʟᴀɢᴇʀ ᴛʀᴀᴅɪɴɢ", "Allow other players to trade with villagers in your island."
         );
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.PORTAL_TRAVEL),
-                15, Buttons.PortalTravelButton, "Portal travel", "Allow other players to travel through your nether portal."
+                15, Buttons.PortalTravelButton, "ᴘᴏʀᴛᴀʟ ᴛʀᴀᴠᴇʟ", "Allow other players to travel through your nether portal."
         );
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.OPEN_INVENTORIES),
-                16, Buttons.OpenInventoriesButton, "Open inventories", "Allow other players to use inventories in your island (chests, barrels, crafting table, etc)."
+                16, Buttons.OpenInventoriesButton, "ᴏᴘᴇɴ ɪɴᴠᴇɴᴛᴏʀɪᴇꜱ", "Allow other players to use inventories in your island (chests, barrels, crafting table, etc)."
         );
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.OPEN_DOORS),
-                19, Buttons.OpenDoorsButton, "Open doors", "Allow other players to open doors in your island."
+                19, Buttons.OpenDoorsButton, "ᴏᴘᴇɴ ᴅᴏᴏʀꜱ", "Allow other players to open doors in your island."
         );
     }
 

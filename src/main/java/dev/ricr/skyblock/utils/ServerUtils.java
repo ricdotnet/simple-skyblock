@@ -68,6 +68,11 @@ public class ServerUtils {
 
     public static NamespacedKey VILLAGER_SHOP_NAME;
 
+    // custom items
+    public static NamespacedKey CUSTOM_ITEM;
+    public static NamespacedKey NO_ANVIL;
+    public static NamespacedKey NO_ENCHANTMENT;
+
     public static double CREEPER_COIN_CHANCE = 2.0;
 
     // server configs - TODO: refactor to a better solution
@@ -122,6 +127,10 @@ public class ServerUtils {
         SIGN_SHOP_IN_ITEM = new NamespacedKey(plugin, "sign_shop_in_item");
         SIGN_SHOP_OWNER = new NamespacedKey(plugin, "sign_shop_owner");
         VILLAGER_SHOP_NAME = new NamespacedKey(plugin, "villager_shop_name");
+
+        CUSTOM_ITEM = new NamespacedKey(plugin, "custom_item");
+        NO_ANVIL = new NamespacedKey(plugin, "no_anvil");
+        NO_ENCHANTMENT = new NamespacedKey(plugin, "no_enchantment");
     }
 
     public static World loadOrCreateLobby() {

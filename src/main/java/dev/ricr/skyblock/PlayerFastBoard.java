@@ -5,7 +5,6 @@ import dev.ricr.skyblock.gui.GambleSessionGUI;
 import dev.ricr.skyblock.utils.ServerUtils;
 import fr.mrmicky.fastboard.adventure.FastBoard;
 import lombok.Getter;
-import org.bukkit.Bukkit;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 
@@ -20,69 +19,64 @@ public class PlayerFastBoard {
         this.plugin = plugin;
         this.fastBoard = new FastBoard(player);
 
-        var title = "<gold>Simple Skyblock";
+        var title = "<gold>ꜱɪᴍᴘʟᴇ ꜱᴋʏʙʟᴏᴄᴋ";
         fastBoard.updateTitle(this.plugin.miniMessage.deserialize(title));
 
         this.updateMoney(playerEntity);
         this.updateDeaths();
         this.updateGamble(null);
         this.updatePing();
-
-        Bukkit.getScheduler().runTaskTimer(this.plugin, () -> {
-            this.updateWorldTime();
-            this.updatePing();
-        }, 0, 20);
     }
 
     public void updateWorldTime() {
         var player = this.fastBoard.getPlayer();
         var currentWorld = player.getWorld();
         var currentTime = currentWorld.getTime();
-        var currentTimeLine = String.format("<green>⌚ <white>Time <green>%s", ServerUtils.longToTime(currentTime));
+        var currentTimeLine = String.format("<green>⌚ <white>ᴛɪᴍᴇ <green>%s", ServerUtils.longToTime(currentTime));
         this.fastBoard.updateLine(2, this.plugin.miniMessage.deserialize(currentTimeLine));
     }
 
     public void updateMoney() {
         var player = this.fastBoard.getPlayer();
         var playerEntity = this.plugin.onlinePlayers.getOnlinePlayers().get(player.getUniqueId()).getPlayerEntity();
-        var moneyLine = String.format("<gold>\uD83D\uDCB2 <white>Money <green>%s", ServerUtils.formatMoneyValue(playerEntity.getBalance()));
+        var moneyLine = String.format("<gold>\uD83D\uDCB2 <white>ᴍᴏɴᴇʏ <green>%s", ServerUtils.formatMoneyValue(playerEntity.getBalance()));
         this.fastBoard.updateLine(4, this.plugin.miniMessage.deserialize(moneyLine));
     }
 
     public void updateMoney(PlayerEntity player) {
-        var moneyLine = String.format("<green>\uD83D\uDCB2 <white>Money <green>%s", ServerUtils.formatMoneyValue(player.getBalance()));
+        var moneyLine = String.format("<green>\uD83D\uDCB2 <white>ᴍᴏɴᴇʏ <green>%s", ServerUtils.formatMoneyValue(player.getBalance()));
         this.fastBoard.updateLine(4, this.plugin.miniMessage.deserialize(moneyLine));
     }
 
     public void updateDeaths() {
         var player = this.fastBoard.getPlayer();
         var deaths = player.getStatistic(Statistic.DEATHS);
-        var deathsLine = String.format("<red>\uD83D\uDC80 <white>Deaths <red>%d", deaths);
+        var deathsLine = String.format("<red>\uD83D\uDC80 <white>ᴅᴇᴀᴛʜꜱ <red>%d", deaths);
         this.fastBoard.updateLine(5, this.plugin.miniMessage.deserialize(deathsLine));
     }
 
     public void updatePing() {
         var player = this.fastBoard.getPlayer();
-        var pingLine = String.format("<gray>Ping (<blue>%dms</blue>)", player.getPing());
+        var pingLine = String.format("<gray>ᴘɪɴɢ (<blue>%dms</blue>)", player.getPing());
         this.fastBoard.updateLine(10, this.plugin.miniMessage.deserialize(pingLine));
     }
 
     public void updateWorld(String worldName) {
-        var worldLine = String.format("<blue>\uD83C\uDF0D <white>World <green>%s", worldName);
+        var worldLine = String.format("<blue>\uD83C\uDF0D <white>ᴡᴏʀʟᴅ <green>%s", worldName);
         this.fastBoard.updateLine(1, this.plugin.miniMessage.deserialize(worldLine));
     }
 
     public void updateGamble(@Nullable GambleSessionGUI gambleSessionGUI) {
         if (gambleSessionGUI == null) {
-            var gambleLine = String.format("<blue>\uD83C\uDFB2 <white>Gamble: <yellow>%s", ServerUtils.formatMoneyValue(0));
-            var gambleInfoLine = "<blue>\uD83D\uDD51 <red>not gambling";
+            var gambleLine = String.format("<blue>\uD83C\uDFB2 <white>ɢᴀᴍʙʟᴇ: <yellow>%s", ServerUtils.formatMoneyValue(0));
+            var gambleInfoLine = "<blue>\uD83D\uDD51 <red>ɴᴏᴛ ɢᴀᴍʙʟɪɴɢ";
             this.fastBoard.updateLine(7, this.plugin.miniMessage.deserialize(gambleLine));
             this.fastBoard.updateLine(8, this.plugin.miniMessage.deserialize(gambleInfoLine));
         } else {
             var countdown = gambleSessionGUI.getCountdownClock().get();
             var amount = gambleSessionGUI.getAmount();
-            var gambleLine = String.format("<blue>\uD83C\uDFB2 <white>Gamble: <yellow>%s", ServerUtils.formatMoneyValue(amount));
-            var gambleInfoLine = String.format("<blue>\uD83D\uDD51 <white>Countdown: <yellow>%s", countdown + "s");
+            var gambleLine = String.format("<blue>\uD83C\uDFB2 <white>ɢᴀᴍʙʟᴇ: <yellow>%s", ServerUtils.formatMoneyValue(amount));
+            var gambleInfoLine = String.format("<blue>\uD83D\uDD51 <white>ᴄᴏᴜɴᴛᴅᴏᴡɴ: <yellow>%s", countdown + "s");
             this.fastBoard.updateLine(7, this.plugin.miniMessage.deserialize(gambleLine));
             this.fastBoard.updateLine(8, this.plugin.miniMessage.deserialize(gambleInfoLine));
         }

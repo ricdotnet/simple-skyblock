@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.gui;
 
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
@@ -33,7 +34,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     public IslandGUI(SimpleSkyblock plugin, Player player) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 54, Component.text("Island menu"));
+        this.inventory = Bukkit.createInventory(this, 54, Component.text(DisplayNames.ISLAND_MENU));
 
         this.openInventory(player);
     }
@@ -97,38 +98,38 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         var isIslandPrivate = playerIsland.isPrivate();
         var islandPrivacyDescription = "Makes your island private and prevents other players from sending visit requests.";
-        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island privacy", islandPrivacyDescription);
+        this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "ɪꜱʟᴀɴᴅ ᴘʀɪᴠᴀᴄʏ", islandPrivacyDescription);
 
         var islandAllowOfflineVisits = playerIsland.isAllowOfflineVisits();
         var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
-        this.addBooleanButton(islandAllowOfflineVisits, 11, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription);
+        this.addBooleanButton(islandAllowOfflineVisits, 11, Buttons.IslandAllowOfflineVisits, "ᴏꜰꜰʟɪɴᴇ ᴠɪꜱɪᴛꜱ", islandAllowOfflineVisitsDescription);
 
         var isDoMobSpawn = islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS);
         var islandDoMobSpawnDescription = "Allows mobs to spawn in your island.";
-        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 12, Buttons.IslandAllowMobSpawning, "Mob spawning", islandDoMobSpawnDescription);
+        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 12, Buttons.IslandAllowMobSpawning, "ᴍᴏʙ ꜱᴘᴀᴡɴɪɴɢ", islandDoMobSpawnDescription);
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
         var expansionSize = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity().getExpansionSize();
         var totalSize = (defaultSize + expansionSize) * 2 + 1;
-        this.setItemSimpleMeta(islandSizeIcon, String.format("Island size: %sx%s", totalSize, totalSize), null);
+        this.setItemSimpleMeta(islandSizeIcon, String.format("ɪꜱʟᴀɴᴅ ꜱɪᴢᴇ: %sx%s", totalSize, totalSize), null);
         this.inventory.setItem(14, islandSizeIcon);
 
         var seedButton = new ItemStack(Material.FILLED_MAP);
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
-        this.setItemSimpleMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
+        this.setItemSimpleMeta(seedButton, String.format("ꜱʜᴏᴡ ꜱᴇᴇᴅ: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
         this.inventory.setItem(15, seedButton);
 
         var islandSettingsButton = new ItemStack(Material.GRASS_BLOCK);
-        this.setItemSimpleMeta(islandSettingsButton, "Modify island settings", Buttons.ModifyIslandSettings);
+        this.setItemSimpleMeta(islandSettingsButton, "ᴍᴏᴅɪꜰʏ ɪꜱʟᴀɴᴅ ꜱᴇᴛᴛɪɴɢꜱ", Buttons.ModifyIslandSettings);
         this.inventory.setItem(16, islandSettingsButton);
 
         var trustedPlayersListButton = new ItemStack(Material.ENDER_EYE);
-        this.setItemSimpleMeta(trustedPlayersListButton, "See trusted players", Buttons.IslandTrustedPlayersList);
+        this.setItemSimpleMeta(trustedPlayersListButton, "ꜱᴇᴇ ᴛʀᴜꜱᴛᴇᴅ ᴘʟᴀʏᴇʀꜱ", Buttons.IslandTrustedPlayersList);
         this.inventory.setItem(37, trustedPlayersListButton);
 
         var blockedPlayersListButton = new ItemStack(Material.FIRE_CHARGE);
-        this.setItemSimpleMeta(blockedPlayersListButton, "See blocked players", Buttons.IslandBlockedPlayersList);
+        this.setItemSimpleMeta(blockedPlayersListButton, "ꜱᴇᴇ ʙʟᴏᴄᴋᴇᴅ ᴘʟᴀʏᴇʀꜱ", Buttons.IslandBlockedPlayersList);
         this.inventory.setItem(38, blockedPlayersListButton);
 
         InventoryUtils.fillEmptySlots(this.inventory);

@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.gui;
 
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.enums.SoundType;
@@ -31,7 +32,7 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     public AuctionHouseGUI(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 54, Component.text("Auction house"));
+        this.inventory = Bukkit.createInventory(this, 54, Component.text(DisplayNames.AUCTION_HOUSE));
 
         this.loadAuctionHouseItems();
         this.addPageAndRefreshButtons();
@@ -98,19 +99,19 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
         long totalPages = this.plugin.auctionHouseItems.getTotalPages();
 
         ItemMeta nextPageMeta = nextPage.getItemMeta();
-        nextPageMeta.displayName(Component.text("Next page", NamedTextColor.GREEN));
+        nextPageMeta.displayName(Component.text(DisplayNames.NEXT_PAGE, NamedTextColor.GREEN));
         nextPageMeta.getPersistentDataContainer()
                 .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING, ServerUtils.AUCTION_NEXT_PAGE);
         nextPage.setItemMeta(nextPageMeta);
 
         ItemMeta previousPageMeta = previousPage.getItemMeta();
-        previousPageMeta.displayName(Component.text("Previous page", NamedTextColor.GREEN));
+        previousPageMeta.displayName(Component.text(DisplayNames.PREVIOUS_PAGE, NamedTextColor.GREEN));
         previousPageMeta.getPersistentDataContainer()
                 .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING, ServerUtils.AUCTION_PREVIOUS_PAGE);
         previousPage.setItemMeta(previousPageMeta);
 
         ItemMeta refreshMeta = refreshButton.getItemMeta();
-        refreshMeta.displayName(Component.text("Auction House", NamedTextColor.GREEN));
+        refreshMeta.displayName(Component.text(DisplayNames.AUCTION_HOUSE, NamedTextColor.GREEN));
         refreshMeta.lore(List.of(Component.text(String.format("Page %s/%s - Click to refresh", currentPage,
                 totalPages), NamedTextColor.WHITE)));
         refreshMeta.getPersistentDataContainer()

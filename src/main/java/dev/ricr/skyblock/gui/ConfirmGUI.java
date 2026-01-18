@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.gui;
 
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.database.DatabaseChange;
@@ -43,7 +44,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                       ShopType shopType) {
         this.plugin = plugin;
         this.shopType = shopType;
-        this.inventory = Bukkit.createInventory(this, 27, Component.text("Confirm order"));
+        this.inventory = Bukkit.createInventory(this, 27, Component.text(DisplayNames.CONFIRM_ORDER));
 
         ItemStack itemStack = new ItemStack(item, 1);
         inventory.setItem(13, itemStack);
@@ -82,7 +83,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
                 ItemStack sellAll = new ItemStack(Material.TNT, 1);
                 ItemMeta sellAllItemMeta = sellAll.getItemMeta();
-                sellAllItemMeta.displayName(Component.text("Sell all " + item.name()));
+                sellAllItemMeta.displayName(Component.text(DisplayNames.SELL_ALL + " " + item.name()));
                 sellAllItemMeta.lore(List.of(
                         this.plugin.miniMessage.deserialize("<!italic><white>Total: <color:#F23CC7A><price>",
                                 Placeholder.unparsed("price", ServerUtils.formatMoneyValue(pricePair.sellPrice() * totalInPlayerInventory)))
@@ -97,7 +98,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
             ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);
             ItemMeta meta = goBackButton.getItemMeta();
-            meta.displayName(Component.text("Go back"));
+            meta.displayName(Component.text(DisplayNames.GO_BACK));
             goBackButton.setItemMeta(meta);
             inventory.setItem(22, goBackButton);
         }
@@ -108,7 +109,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
     public ConfirmGUI(SimpleSkyblock plugin, ItemStack item, ShopType shopType) {
         this.plugin = plugin;
         this.shopType = shopType;
-        this.inventory = Bukkit.createInventory(this, 27, Component.text("Confirm order"));
+        this.inventory = Bukkit.createInventory(this, 27, Component.text(DisplayNames.CONFIRM_ORDER));
 
         inventory.setItem(13, item);
 
@@ -135,7 +136,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         ItemMeta confirmBuyItemMeta = confirmBuy.getItemMeta();
 
         if (confirmBuyItemMeta != null) {
-            confirmBuyItemMeta.displayName(Component.text("Confirm AH purchase"));
+            confirmBuyItemMeta.displayName(Component.text(DisplayNames.CONFIRM_AH_PURCHASE));
             confirmBuyItemMeta.lore(List.of(
                     this.plugin.miniMessage.deserialize("<!italic><white>Price: <color:#23CC7A><price>",
                             Placeholder.unparsed("price", ServerUtils.formatMoneyValue(auctionHouseItem.getPrice())))
@@ -147,7 +148,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         ItemMeta cancelItemMeta = cancel.getItemMeta();
 
         if (cancelItemMeta != null) {
-            cancelItemMeta.displayName(Component.text("Cancel AH purchase"));
+            cancelItemMeta.displayName(Component.text(DisplayNames.CANCEL_AH_PURCHASE));
             cancel.setItemMeta(cancelItemMeta);
         }
 
