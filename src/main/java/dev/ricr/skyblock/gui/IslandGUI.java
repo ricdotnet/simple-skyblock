@@ -5,7 +5,9 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.enums.Buttons;
+import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.utils.InventoryUtils;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
@@ -197,6 +199,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
             var privacyUpdated = String.format("<white>Island has been made %s", island.isPrivate() ? "<green>private" : "<red>public");
             player.sendMessage(this.plugin.miniMessage.deserialize(privacyUpdated));
+            PlayerUtils.playSound(player, SoundType.POSITIVE);
         } catch (SQLException e) {
             // ignore for now
         }
@@ -229,6 +232,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
             var offlineVisitsUpdated = String.format("<white>Offline visits have been %s", island.isAllowOfflineVisits() ? "<green>enabled" : "<red>disabled");
             player.sendMessage(this.plugin.miniMessage.deserialize(offlineVisitsUpdated));
+            PlayerUtils.playSound(player, SoundType.POSITIVE);
         } catch (SQLException e) {
             // ignore for now
         }
@@ -279,6 +283,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         var mobSpawningUpdated = String.format("<white>Mob spawning as been %s", !isDoMobSpawn ? "<green>enabled" : "<red>disabled");
         player.sendMessage(this.plugin.miniMessage.deserialize(mobSpawningUpdated));
+        PlayerUtils.playSound(player, SoundType.POSITIVE);
 
         // refresh only
         this.openInventory(player);

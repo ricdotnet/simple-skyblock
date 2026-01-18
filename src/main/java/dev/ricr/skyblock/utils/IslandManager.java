@@ -40,6 +40,10 @@ public class IslandManager {
     }
 
     public IslandRecord getIslandRecord(UUID playerUniqueId) {
+        if (this.islands.get(playerUniqueId) == null) {
+            this.addPlayerIsland(playerUniqueId);
+        }
+
         return this.islands.get(playerUniqueId);
     }
 

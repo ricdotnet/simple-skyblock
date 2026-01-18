@@ -18,6 +18,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     public IslandSettingsGUI(SimpleSkyblock plugin, Player player) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 36, Component.text(DisplayNames.ISLAND_SETTINGS));
+        this.inventory = Bukkit.createInventory(this, 45, Component.text(DisplayNames.ISLAND_SETTINGS));
 
         this.loadSettings(this.getIslandPermissions(player));
         InventoryUtils.fillEmptySlots(this.inventory);
@@ -46,6 +47,11 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var clicked = event.getCurrentItem();
 
         if (clicked == null) {
+            return;
+        }
+
+        if (clicked.getType() == Material.BARRIER) {
+            this.handleClickGoBack(player);
             return;
         }
 
@@ -114,6 +120,12 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.OPEN_DOORS),
                 19, Buttons.OpenDoorsButton, "ᴏᴘᴇɴ ᴅᴏᴏʀꜱ", "Allow other players to open doors in your island."
         );
+
+        ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);
+        ItemMeta meta = goBackButton.getItemMeta();
+        meta.displayName(Component.text(DisplayNames.GO_BACK));
+        goBackButton.setItemMeta(meta);
+        this.inventory.setItem(40, goBackButton);
     }
 
     private void addBooleanButton(boolean isTrue, int inventoryPosition, Buttons buttonType, String label, String description) {
@@ -162,6 +174,11 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var playerUniqueId = player.getUniqueId();
         return this.plugin.islandManager
                 .getIslandRecord(playerUniqueId).islandPermissions();
+    }
+
+    private void handleClickGoBack(Player player) {
+        this.inventory.close();
+        player.openInventory(new IslandGUI(this.plugin, player).getInventory());
     }
 
 }
