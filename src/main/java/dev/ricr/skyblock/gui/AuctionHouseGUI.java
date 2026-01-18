@@ -2,14 +2,15 @@ package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
+import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.utils.ConcurrentLocks;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -146,7 +147,7 @@ public class AuctionHouseGUI implements InventoryHolder, ISimpleSkyblockGUI {
             if (player.getInventory()
                     .firstEmpty() == -1) {
                 player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.NEGATIVE);
                 return;
             }
 

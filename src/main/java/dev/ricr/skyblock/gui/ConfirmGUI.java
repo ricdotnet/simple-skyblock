@@ -5,6 +5,7 @@ import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.enums.ShopType;
+import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.enums.TransactionType;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.ConcurrentLocks;
@@ -200,7 +201,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                         if (isAvailable == null) {
                             var notAvailableMessage = "<red>The item has already been sold or removed from the auction house.";
                             player.sendMessage(this.plugin.miniMessage.deserialize(notAvailableMessage));
-                            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                            PlayerUtils.playSound(player, SoundType.NEGATIVE);
 
                             itemLock.unlock();
                             ConcurrentLocks.removeLock(auctionHouseItem.getId());
@@ -214,7 +215,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     if (auctionHouseItem.getOwnerName()
                             .equals(player.getName())) {
                         player.sendMessage(Component.text("You can't buy your own item.", NamedTextColor.RED));
-                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                        PlayerUtils.playSound(player, SoundType.NEGATIVE);
 
                         itemLock.unlock();
                         ConcurrentLocks.removeLock(auctionHouseItem.getId());
@@ -224,7 +225,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
                     if (isPlayerInventoryFull(player)) {
                         player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
-                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                        PlayerUtils.playSound(player, SoundType.NEGATIVE);
 
                         itemLock.unlock();
                         ConcurrentLocks.removeLock(auctionHouseItem.getId());
@@ -238,7 +239,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                     if (buyerPlayerEntity.getBalance() < price) {
                         player.sendMessage(Component.text("You don't have enough money to buy this item.",
                                 NamedTextColor.RED));
-                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                        PlayerUtils.playSound(player, SoundType.NEGATIVE);
 
                         itemLock.unlock();
                         ConcurrentLocks.removeLock(auctionHouseItem.getId());
@@ -340,7 +341,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             if (itemAmount == 0) {
                 player.sendMessage(Component.text("You don't have any of that item in your inventory.",
                         NamedTextColor.RED));
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.NEGATIVE);
                 return;
             }
         }
@@ -364,7 +365,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         if (transactionType == TransactionType.ShopBuy) {
             if (isPlayerInventoryFull(player)) {
                 player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.NEGATIVE);
                 return;
             }
 
@@ -380,11 +381,11 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 player.sendMessage(Component.text(String.format("You bought %s %s for %s", itemAmount,
                         ServerUtils.getTextFromComponent(actionableItem.displayName()),
                         ServerUtils.formatMoneyValue(totalPrice)), NamedTextColor.GREEN));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.POSITIVE);
             } else {
                 player.sendMessage(Component.text("You don't have enough money to buy this item.",
                         NamedTextColor.RED));
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.NEGATIVE);
                 return;
             }
         } else {
@@ -395,7 +396,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             if (!playerHasItem) {
                 player.sendMessage(Component.text("You don't have enough of that item in your inventory.",
                         NamedTextColor.RED));
-                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.NEGATIVE);
                 return;
             }
 
@@ -404,7 +405,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
             player.getInventory()
                     .removeItem(new ItemStack(material, itemAmount));
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+            PlayerUtils.playSound(player, SoundType.POSITIVE);
 
             player.sendMessage(Component.text(String.format("You sold %s %s for %s", itemAmount,
                     ServerUtils.getTextFromComponent(actionableItem.displayName()),

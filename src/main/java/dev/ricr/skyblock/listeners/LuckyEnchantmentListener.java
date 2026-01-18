@@ -4,11 +4,12 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enchantments.LuckyEnchantment;
 import dev.ricr.skyblock.enchantments.PluginEnchantments;
 import dev.ricr.skyblock.enums.EventCancellationReasons;
+import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.permissions.ActionContext;
 import dev.ricr.skyblock.permissions.EventCancellations;
 import dev.ricr.skyblock.permissions.Policies;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -41,7 +42,7 @@ public class LuckyEnchantmentListener implements Listener {
         if (Math.random() < 0.02) {
             var randomOre = LuckyEnchantment.getRandom();
             event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(randomOre));
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+            PlayerUtils.playSound(player, SoundType.POSITIVE);
         }
     }
 
