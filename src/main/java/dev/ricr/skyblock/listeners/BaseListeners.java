@@ -7,6 +7,7 @@ import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.gui.ConfirmGUI;
 import dev.ricr.skyblock.gui.GambleSessionGUI;
 import dev.ricr.skyblock.gui.IslandGUI;
+import dev.ricr.skyblock.gui.IslandSettingsGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.gui.PlayersListGUI;
@@ -230,6 +231,8 @@ public class BaseListeners implements Listener {
             case VillagerShopGUI ignored -> {
             }
             case PlayersListGUI<?> ignored -> {
+            }
+            case IslandSettingsGUI ignored -> {
             }
             default -> {
                 var actionContext = new ActionContext(this.plugin, player, event);

@@ -1,23 +1,56 @@
 package dev.ricr.skyblock.permissions;
 
+import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.IslandEntity;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Setter
 @Getter
 public class IslandPermissions {
+    private final SimpleSkyblock plugin;
+    private final UUID islandUniqueId;
     private Map<Policies.PoliciesEnum, Boolean> permissions = new HashMap<>();
 
-    public IslandPermissions() {
+    public IslandPermissions(SimpleSkyblock plugin, UUID islandUniqueId) {
+        this.plugin = plugin;
+        this.islandUniqueId = islandUniqueId;
         // used when the permissions are first added to a player
         this.deserialize("all=false:villager_trading=false:open_inventories=false:kill_mobs=false:portal_travel=false:place_blocks=false:break_blocks=false:interact_with_mobs=false:open_doors=false");
     }
 
-    public IslandPermissions(String permissions) {
+    public IslandPermissions(SimpleSkyblock plugin, UUID islandUniqueId, String permissions) {
+        this.plugin = plugin;
+        this.islandUniqueId = islandUniqueId;
         this.deserialize(permissions);
+    }
+
+    public Boolean getPermissionValue(Policies.PoliciesEnum permission) {
+        return this.permissions.get(permission);
+    }
+
+    public void switchPermission(Policies.PoliciesEnum permission) {
+        this.permissions.compute(permission, (policyEnum, permissionValue) -> Boolean.FALSE.equals(permissionValue));
+
+        IslandEntity islandEntity;
+        try {
+            islandEntity = this.plugin.databaseManager.getIslandsDao().queryForId(this.islandUniqueId.toString());
+        } catch (SQLException e) {
+            this.permissions.compute(permission, (policyEnum, permissionValue) -> Boolean.FALSE.equals(permissionValue));
+            this.plugin.getLogger().severe(String.format("Failed when trying to switch a permission for island id %s", islandUniqueId));
+            return;
+        }
+
+        islandEntity.setPermissions(this.toString());
+
+        var islandRecordUpdate = new DatabaseChange.IslandRecordUpdate(islandEntity);
+        this.plugin.databaseChangesAccumulator.add(islandRecordUpdate);
     }
 
     public void deserialize(String permissions) {

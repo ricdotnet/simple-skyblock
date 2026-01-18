@@ -58,7 +58,7 @@ public class IslandManager {
             }
 
             if (playerIsland.getPermissions() == null) {
-                playerIsland.setPermissions(new IslandPermissions().toString());
+                playerIsland.setPermissions(new IslandPermissions(this.plugin, playerUniqueId).toString());
 
                 var islandRecordUpdate = new DatabaseChange.IslandRecordUpdate(playerIsland);
                 this.plugin.databaseChangesAccumulator.add(islandRecordUpdate);
@@ -79,7 +79,7 @@ public class IslandManager {
                             .getPlayerId(), blockedPlayer.getPlayer().getUsername())
             ).collect(ArrayList::new, List::add, List::addAll);
 
-            var islandPermissions = new IslandPermissions(playerIsland.getPermissions());
+            var islandPermissions = new IslandPermissions(this.plugin, playerUniqueId, playerIsland.getPermissions());
 
             this.islands.put(playerUniqueId,
                     new IslandRecord(

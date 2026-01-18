@@ -24,6 +24,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -69,7 +70,8 @@ public class IslandCommand implements ICommand {
                         .then(Commands.literal("set").executes(this::setIslandTeleportPosition))
                 )
                 .then(Commands.literal("expand")
-                        .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 10))
+                        .then(Commands.argument("blocks", IntegerArgumentType.integer())
+                                .suggests(this::getMaxIslandExpansionAmount)
                                 .executes(this::expandIsland)
                         )
                 )
@@ -192,7 +194,7 @@ public class IslandCommand implements ICommand {
             island.setPositionX(0.0d);
             island.setPositionZ(0.0d);
 
-            island.setPermissions(new IslandPermissions().toString());
+            island.setPermissions(new IslandPermissions(this.plugin, player.getUniqueId()).toString());
 
             IslandEntity finalIsland = island;
             Bukkit.getAsyncScheduler().runNow(this.plugin, (task) -> {
@@ -537,8 +539,12 @@ public class IslandCommand implements ICommand {
 
         var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
         if (playerEntity.getBalance() < totalPriceToExpand) {
-            player.sendMessage(Component.text(String.format("You do not have enough money to expand your island by %d blocks", blocksToExpand),
-                    NamedTextColor.RED));
+            var notEnoughMoney = this.plugin.miniMessage.deserialize(
+                    "<red>You would need <gold><total_amount></gold> to expand by <blocks> blocks",
+                    Placeholder.unparsed("total_amount", ServerUtils.formatMoneyValue(totalPriceToExpand)),
+                    Placeholder.unparsed("blocks", String.valueOf(blocksToExpand))
+            );
+            player.sendMessage(notEnoughMoney);
             return Command.SINGLE_SUCCESS;
         }
 
@@ -689,6 +695,19 @@ public class IslandCommand implements ICommand {
         islandRecord.blockedPlayers().stream()
                 .filter(blockedPlayerTuple -> blockedPlayerTuple.getSecond().toLowerCase().startsWith(remaining))
                 .forEach(blockedPlayerTuple -> builder.suggest(blockedPlayerTuple.getSecond()));
+
+        return builder.buildFuture();
+    }
+
+    private CompletableFuture<Suggestions> getMaxIslandExpansionAmount(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+        var onlinePlayer = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+
+        var expansionPrice = this.plugin.serverConfig.getInt("island.expand_price", 10000);
+        var maxExpansion = NumberUtils.objectToIntOrZero(onlinePlayer.getPlayerEntity().getBalance() / expansionPrice);
+
+        builder.suggest(maxExpansion);
 
         return builder.buildFuture();
     }

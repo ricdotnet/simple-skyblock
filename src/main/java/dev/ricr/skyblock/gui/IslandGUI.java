@@ -62,6 +62,10 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case Buttons.IslandShowSeed -> this.handleShowIslandSeedClick(player);
             case Buttons.IslandTrustedPlayersList -> this.handleIslandTrustedPlayersClick(player);
             case Buttons.IslandBlockedPlayersList -> this.handleIslandBlockedPlayersClick(player);
+            case Buttons.ModifyIslandSettings -> this.handleModifyIslandSettingsButton(player);
+            case BreakBlocksButton, PlaceBlocksButton, KillMobsButton, InteractWithMobsButton, VillagerTradingButton,
+                 PortalTravelButton, OpenInventoriesButton, OpenDoorsButton -> {
+            }
         }
     }
 
@@ -95,17 +99,13 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var islandPrivacyDescription = "Makes your island private and prevents other players from sending visit requests.";
         this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "Island privacy", islandPrivacyDescription);
 
-        var isIslandAllowNetherTeleport = playerIsland.isAllowNetherTeleport();
-        var islandAllowNetherTeleportDescription = "Prevents other players from teleporting to your nether island using your nether portal.";
-        this.addBooleanButton(isIslandAllowNetherTeleport, 11, Buttons.IslandAllowNetherTeleport, "Nether teleport", islandAllowNetherTeleportDescription);
-
         var islandAllowOfflineVisits = playerIsland.isAllowOfflineVisits();
         var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
-        this.addBooleanButton(islandAllowOfflineVisits, 12, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription);
+        this.addBooleanButton(islandAllowOfflineVisits, 11, Buttons.IslandAllowOfflineVisits, "Offline visits", islandAllowOfflineVisitsDescription);
 
         var isDoMobSpawn = islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS);
         var islandDoMobSpawnDescription = "Allows mobs to spawn in your island.";
-        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 19, Buttons.IslandAllowMobSpawning, "Mob spawning", islandDoMobSpawnDescription);
+        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 12, Buttons.IslandAllowMobSpawning, "Mob spawning", islandDoMobSpawnDescription);
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
@@ -118,6 +118,10 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var showSeedPrice = this.plugin.serverConfig.getDouble("show-seed-price", 25000);
         this.setItemSimpleMeta(seedButton, String.format("Show seed: %s", ServerUtils.formatMoneyValue(showSeedPrice)), Buttons.IslandShowSeed);
         this.inventory.setItem(15, seedButton);
+
+        var islandSettingsButton = new ItemStack(Material.GRASS_BLOCK);
+        this.setItemSimpleMeta(islandSettingsButton, "Modify island settings", Buttons.ModifyIslandSettings);
+        this.inventory.setItem(16, islandSettingsButton);
 
         var trustedPlayersListButton = new ItemStack(Material.ENDER_EYE);
         this.setItemSimpleMeta(trustedPlayersListButton, "See trusted players", Buttons.IslandTrustedPlayersList);
@@ -291,5 +295,11 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         var playerIslandRecord = this.plugin.islandManager.getIslandRecord(playerUniqueId);
 
         new PlayersListGUI<>(player, playerIslandRecord.blockedPlayers(), "Blocked Players");
+    }
+
+    private void handleModifyIslandSettingsButton(Player player) {
+        this.inventory.close();
+
+        new IslandSettingsGUI(this.plugin, player);
     }
 }
