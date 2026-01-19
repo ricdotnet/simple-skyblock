@@ -129,7 +129,6 @@ public class BaseListeners implements Listener {
         var actionContext = new ActionContext(this.plugin, event.getPlayer(), event);
         if (!Policies.BREAK_BLOCKS.test(actionContext)) {
             EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
-            return;
         }
     }
 
@@ -138,7 +137,6 @@ public class BaseListeners implements Listener {
         var actionContext = new ActionContext(this.plugin, event.getPlayer(), event);
         if (!Policies.PLACE_BLOCKS.test(actionContext)) {
             EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
-            return;
         }
     }
 
@@ -150,7 +148,6 @@ public class BaseListeners implements Listener {
             var actionContext = new ActionContext(this.plugin, event.getPlayer(), event);
             if (!Policies.VILLAGER_TRADING.test(actionContext)) {
                 EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
-                return;
             }
         }
     }
@@ -167,10 +164,7 @@ public class BaseListeners implements Listener {
         var actionContext = new ActionContext(this.plugin, damager, event);
         if (!(damagee instanceof Player) && !Policies.KILL_MOBS.test(actionContext)) {
             EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
-            return;
         }
-
-        event.getDamager().sendMessage("attacked the zombie");
     }
 
     @EventHandler
@@ -217,7 +211,6 @@ public class BaseListeners implements Listener {
         var actionContext = new ActionContext(this.plugin, player, event);
         if (!Policies.OPEN_DOORS.test(actionContext)) {
             EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
-            return;
         }
     }
 
@@ -269,7 +262,6 @@ public class BaseListeners implements Listener {
                 var actionContext = new ActionContext(this.plugin, player, event);
                 if (!Policies.OPEN_INVENTORIES.test(actionContext)) {
                     EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
-                    return;
                 }
             }
         }
