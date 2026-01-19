@@ -10,6 +10,8 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
 import dev.ricr.skyblock.enums.InvalidWarpNames;
+import dev.ricr.skyblock.enums.SoundType;
+import dev.ricr.skyblock.permissions.Policies;
 import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -17,9 +19,11 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.AllArgsConstructor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.World;
 
 import java.sql.SQLException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
@@ -101,12 +105,15 @@ public class WarpCommand implements ICommand {
                 return Command.SINGLE_SUCCESS;
             }
 
+            var targetIslandId = UUID.fromString(warpEntity.getPlayer().getPlayerId());
+            var islandRecord = this.plugin.islandManager.getIslandRecord(targetIslandId);
+
             var location = ServerUtils.deserializeLocation(this.plugin, warpEntity);
             var locationWorld = location.getWorld();
 
             if (locationWorld == null) {
-                var message = String.format("<red>Warp <gold>%s</gold> is in an invalid world", warpName);
-                player.sendMessage(this.plugin.miniMessage.deserialize(message));
+                var message = "<red>Warp <gold><warp></gold> is in an invalid world";
+                player.sendMessage(this.plugin.miniMessage.deserialize(message, Placeholder.unparsed("warp", warpName)));
                 return Command.SINGLE_SUCCESS;
             }
 
@@ -124,6 +131,22 @@ public class WarpCommand implements ICommand {
 
                 var playerUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
                 this.plugin.databaseChangesAccumulator.add(playerUpdate);
+            } else {
+                if (islandRecord.isPrivate()) {
+                    var islandIsPrivateMessage = "<red>The owner of Warp <gold><warp></gold> has their island private";
+                    player.sendMessage(this.plugin.miniMessage.deserialize(islandIsPrivateMessage, Placeholder.unparsed("warp", warpName)));
+                    return Command.SINGLE_SUCCESS;
+                }
+
+                if (locationWorld.getEnvironment() == World.Environment.NETHER) {
+                    // TODO: implement the ALL permission check here
+                    if (!islandRecord.islandPermissions().getPermissionValue(Policies.PoliciesEnum.PORTAL_TRAVEL)) {
+                        var noPortalTravelMessage = "<red>The owner of Warp <gold><warp></gold> has portal travel deactivated";
+                        player.sendMessage(this.plugin.miniMessage.deserialize(noPortalTravelMessage, Placeholder.unparsed("warp", warpName)));
+                        PlayerUtils.playSound(player, SoundType.NEGATIVE);
+                        return Command.SINGLE_SUCCESS;
+                    }
+                }
             }
 
             player.teleport(location);

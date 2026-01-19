@@ -103,11 +103,11 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.addBooleanButton(isIslandPrivate, 10, Buttons.IslandPrivacy, "ɪꜱʟᴀɴᴅ ᴘʀɪᴠᴀᴄʏ", islandPrivacyDescription);
 
         var islandAllowOfflineVisits = playerIsland.isAllowOfflineVisits();
-        var islandAllowOfflineVisitsDescription = "Allows other players to visit your island even if you are offline. Also allows them to simply visit without confirmation even when you are online.";
+        var islandAllowOfflineVisitsDescription = "Allows other players to visit your island when you are offline and bypasses visit requests when you are online. This does not affect warps in your islands.";
         this.addBooleanButton(islandAllowOfflineVisits, 11, Buttons.IslandAllowOfflineVisits, "ᴏꜰꜰʟɪɴᴇ ᴠɪꜱɪᴛꜱ", islandAllowOfflineVisitsDescription);
 
         var isDoMobSpawn = islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS);
-        var islandDoMobSpawnDescription = "Allows mobs to spawn in your island.";
+        var islandDoMobSpawnDescription = "Allows mobs to spawn in your islands.";
         this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 12, Buttons.IslandAllowMobSpawning, "ᴍᴏʙ ꜱᴘᴀᴡɴɪɴɢ", islandDoMobSpawnDescription);
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
@@ -204,6 +204,11 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             // ignore for now
         }
 
+        var islandRecord = this.plugin.islandManager
+                .getIslandRecord(player.getUniqueId())
+                .updateIslandPrivacy();
+        this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), islandRecord);
+
         // refresh only
         this.openInventory(player);
     }
@@ -236,6 +241,11 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
         } catch (SQLException e) {
             // ignore for now
         }
+
+        var islandRecord = this.plugin.islandManager
+                .getIslandRecord(player.getUniqueId())
+                .updateAllowOfflineVisits();
+        this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), islandRecord);
 
         // refresh only
         this.openInventory(player);

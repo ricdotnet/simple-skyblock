@@ -86,8 +86,14 @@ public class IslandManager {
             var islandPermissions = new IslandPermissions(this.plugin, playerUniqueId, playerIsland.getPermissions());
 
             this.islands.put(playerUniqueId,
-                    new IslandRecord(
-                            playerUniqueId, islandX, islandZ, islandPermissions, trustedPlayersId, blockedPlayersId
+                    new IslandRecord(playerUniqueId,
+                            islandX,
+                            islandZ,
+                            playerIsland.isPrivate(),
+                            playerIsland.isAllowOfflineVisits(),
+                            islandPermissions,
+                            trustedPlayersId,
+                            blockedPlayersId
                     )
             );
         } catch (SQLException e) {
