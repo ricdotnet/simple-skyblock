@@ -43,7 +43,7 @@ public class LuckyPickaxe {
     public static Material getRandom() {
         var random = new Random();
         var r = random.nextInt(100);
-        if (r == 1) return Material.DIAMOND;
+        if (r == 1) return Math.random() <= 0.1 ? Material.NETHERITE_SCRAP : Material.DIAMOND;
         else if (r > 1 && r <= 5) return Material.EMERALD;
         else if (r > 5 && r <= 15) return Material.REDSTONE;
         else if (r > 15 && r <= 25) return Material.LAPIS_LAZULI;

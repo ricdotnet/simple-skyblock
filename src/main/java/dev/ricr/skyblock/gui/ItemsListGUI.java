@@ -48,7 +48,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
             ItemMeta meta = item.getItemMeta();
 
             if (meta != null) {
-                meta.displayName(Component.text(material.name()));
+                meta.displayName(item.displayName());
                 meta.lore(List.of(
                         this.plugin.miniMessage.deserialize("<!italic><white>Sell: " +
                                 (prices.sellPrice() == -1 ? "<red>Not available" : "<color:#23CC7A>" + ServerUtils.formatMoneyValue(prices.sellPrice()))),

@@ -19,7 +19,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -50,20 +49,20 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         inventory.setItem(13, itemStack);
 
         if (shopType == ShopType.AuctionHouse) {
-            ItemStack confirmBuy = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1),
+            ItemStack confirmBuy = setOptionMeta(new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1),
                     pricePair.buyPrice(), TransactionType.ShopBuy);
-            ItemStack cancel = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, 1),
+            ItemStack cancel = setOptionMeta(new ItemStack(Material.RED_STAINED_GLASS_PANE, 1),
                     pricePair.sellPrice(), TransactionType.ShopSell);
 
             inventory.setItem(9, confirmBuy);
             inventory.setItem(17, cancel);
         } else {
             if (pricePair.buyPrice() >= 0) {
-                ItemStack buySingle = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1),
+                ItemStack buySingle = setOptionMeta(new ItemStack(Material.GREEN_STAINED_GLASS_PANE, 1),
                         pricePair.buyPrice(), TransactionType.ShopBuy);
-                ItemStack buyHalfStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
+                ItemStack buyHalfStack = setOptionMeta(new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
                         itemStack.getMaxStackSize() / 2), pricePair.buyPrice(), TransactionType.ShopBuy);
-                ItemStack buyFullStack = setOptionMeta(item, new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
+                ItemStack buyFullStack = setOptionMeta(new ItemStack(Material.GREEN_STAINED_GLASS_PANE,
                         item.getMaxStackSize()), pricePair.buyPrice(), TransactionType.ShopBuy);
 
                 inventory.setItem(11, buySingle);
@@ -72,28 +71,30 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
             }
 
             if (pricePair.sellPrice() >= 0) {
-                ItemStack sellSingle = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE, 1),
+                ItemStack sellSingle = setOptionMeta(new ItemStack(Material.RED_STAINED_GLASS_PANE, 1),
                         pricePair.sellPrice(), TransactionType.ShopSell);
-                ItemStack sellHalfStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE,
+                ItemStack sellHalfStack = setOptionMeta(new ItemStack(Material.RED_STAINED_GLASS_PANE,
                         itemStack.getMaxStackSize() / 2), pricePair.sellPrice(), TransactionType.ShopSell);
-                ItemStack sellFullStack = setOptionMeta(item, new ItemStack(Material.RED_STAINED_GLASS_PANE,
+                ItemStack sellFullStack = setOptionMeta(new ItemStack(Material.RED_STAINED_GLASS_PANE,
                         item.getMaxStackSize()), pricePair.sellPrice(), TransactionType.ShopSell);
 
                 int totalInPlayerInventory = PlayerUtils.getAllItemsInInventoryOfItem(player, item);
 
-                ItemStack sellAll = new ItemStack(Material.TNT, 1);
-                ItemMeta sellAllItemMeta = sellAll.getItemMeta();
-                sellAllItemMeta.displayName(Component.text(DisplayNames.SELL_ALL + " " + item.name()));
+                var sellAllButton = new ItemStack(Material.TNT, 1);
+                var sellAllItemMeta = sellAllButton.getItemMeta();
+                sellAllItemMeta.displayName(Component.text(DisplayNames.SELL_ALL));
                 sellAllItemMeta.lore(List.of(
                         this.plugin.miniMessage.deserialize("<!italic><white>Total: <color:#F23CC7A><price>",
                                 Placeholder.unparsed("price", ServerUtils.formatMoneyValue(pricePair.sellPrice() * totalInPlayerInventory)))
                 ));
-                sellAll.setItemMeta(sellAllItemMeta);
+                sellAllItemMeta.getPersistentDataContainer()
+                        .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING, TransactionType.ShopSell.getLabel());
+                sellAllButton.setItemMeta(sellAllItemMeta);
 
                 inventory.setItem(15, sellSingle);
                 inventory.setItem(16, sellHalfStack);
                 inventory.setItem(17, sellFullStack);
-                inventory.setItem(26, sellAll);
+                inventory.setItem(26, sellAllButton);
             }
 
             ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);
@@ -350,13 +351,10 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
         double totalPrice;
         double finalBalance;
 
-        TransactionType transactionType;
-        if (clickedItemName.contains("Buy")) {
-            transactionType = TransactionType.ShopBuy;
-        } else if (clickedItemName.contains("Sell")) {
-            transactionType = TransactionType.ShopSell;
-        } else {
-            player.sendMessage(Component.text("Something went wrong.", NamedTextColor.RED));
+        var transactionType = this.getTransactionType(clicked);
+        if (transactionType == null) {
+            this.plugin.getLogger().severe("Could not find a valid transaction type for transaction");
+            player.sendMessage(this.plugin.miniMessage.deserialize("<red>Something went wrong"));
             return;
         }
 
@@ -365,7 +363,7 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         if (transactionType == TransactionType.ShopBuy) {
             if (isPlayerInventoryFull(player)) {
-                player.sendMessage(Component.text("Your inventory is full", NamedTextColor.RED));
+                player.sendMessage(this.plugin.miniMessage.deserialize("<red>Your inventory is full"));
                 PlayerUtils.playSound(player, SoundType.NEGATIVE);
                 return;
             }
@@ -433,18 +431,20 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 ServerUtils.formatMoneyValue(finalBalance)), NamedTextColor.GOLD));
     }
 
-    private ItemStack setOptionMeta(Material material, ItemStack itemStack, double price,
+    private ItemStack setOptionMeta(ItemStack itemStack, double price,
                                     TransactionType transactionType) {
         ItemMeta meta = itemStack.getItemMeta();
         int stackSize = itemStack.getAmount();
 
         if (meta != null) {
-            meta.displayName(Component.text(transactionType + " " + material.name()));
+            meta.displayName(Component.text(transactionType.getLabel() + " " + itemStack.getAmount()));
             meta.lore(List.of(
                     this.plugin.miniMessage.deserialize("<!italic><white>Total: <color:#23CC7A><price>",
                             Placeholder.unparsed("price", ServerUtils.formatMoneyValue(price * stackSize)))
             ));
-            meta.itemName(Component.text(transactionType.name()));
+            meta.itemName(Component.empty());
+            meta.getPersistentDataContainer()
+                    .set(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING, transactionType.getLabel());
             itemStack.setItemMeta(meta);
         }
 
@@ -452,19 +452,27 @@ public class ConfirmGUI implements InventoryHolder, ISimpleSkyblockGUI {
     }
 
     private void sendMessageToSeller(String sellerId, Player buyer, String itemName, double price) {
-        Player seller = this.plugin.getServer()
-                .getPlayer(UUID.fromString(sellerId));
+        Player seller = this.plugin.getServer().getPlayer(UUID.fromString(sellerId));
 
         if (seller != null) {
-            seller.sendMessage(Component.text(String.format("%s bought your %s from the action house for %s",
-                            buyer.getName(), itemName, ServerUtils.formatMoneyValue(price)),
-                    NamedTextColor.GOLD));
-            seller.playSound(seller.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+            var message = "<gold><buyer></gold><green> bought your <gold><item></gold> from the auction house for <gold><price>";
+            seller.sendMessage(this.plugin.miniMessage.deserialize(
+                    message,
+                    Placeholder.unparsed("buyer", buyer.getName()),
+                    Placeholder.unparsed("item", itemName),
+                    Placeholder.unparsed("price", ServerUtils.formatMoneyValue(price))
+            ));
+            PlayerUtils.playSound(seller, SoundType.POSITIVE);
         }
     }
 
     private boolean isPlayerInventoryFull(Player player) {
-        return player.getInventory()
-                .firstEmpty() == -1;
+        return player.getInventory().firstEmpty() == -1;
+    }
+
+    private TransactionType getTransactionType(ItemStack itemStack) {
+        var itemStackPdc = itemStack.getItemMeta().getPersistentDataContainer();
+        var transactionTypeLabel = itemStackPdc.get(ServerUtils.GUI_BUTTON_TYPE, PersistentDataType.STRING);
+        return TransactionType.getByLabel(transactionTypeLabel);
     }
 }

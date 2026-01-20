@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
@@ -19,16 +20,19 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitTask;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AdminCommand implements ICommand {
     private final SimpleSkyblock plugin;
+    private @Nullable BukkitTask opOverrideWarningTask;
 
     public void register() {
         this.plugin.getLifecycleManager()
@@ -76,10 +80,24 @@ public class AdminCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var isOpOverride = ServerUtils.isOpOverride();
-        ServerUtils.setOpOverride(!isOpOverride);
+        var updated = !ServerUtils.isOpOverride();
+        ServerUtils.setOpOverride(updated);
 
-        player.sendMessage(Component.text(String.format("Op override is now %s", ServerUtils.isOpOverride()), NamedTextColor.GREEN));
+        if (updated) {
+            this.opOverrideWarningTask = Bukkit.getScheduler().runTaskTimer(this.plugin, () ->
+                    this.plugin.getServer().getOnlinePlayers().forEach(onlinePlayer -> {
+                        if (onlinePlayer.isOp()) {
+                            onlinePlayer.sendActionBar(this.plugin.miniMessage.deserialize(DisplayNames.OP_OVERRIDE));
+                        }
+                    }), 0L, 40L);
+        } else {
+            if (this.opOverrideWarningTask != null) {
+                this.opOverrideWarningTask.cancel();
+            }
+        }
+
+        var message = "Op override is now " + (updated ? "<green>enabled" : "<red>disabled");
+        player.sendMessage(this.plugin.miniMessage.deserialize(message));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -154,7 +172,7 @@ public class AdminCommand implements ICommand {
         var amount = ctx.getArgument("amount", Integer.class);
         var creeperCoin = CreeperCoin.create(this.plugin);
         creeperCoin.setAmount(amount);
-        player.give(creeperCoin);
+        targetPlayer.give(creeperCoin);
 
         return Command.SINGLE_SUCCESS;
     }
@@ -171,7 +189,7 @@ public class AdminCommand implements ICommand {
         }
 
         var luckyPickaxe = LuckyPickaxe.create(this.plugin);
-        player.give(luckyPickaxe);
+        targetPlayer.give(luckyPickaxe);
 
         return Command.SINGLE_SUCCESS;
     }

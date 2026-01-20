@@ -117,6 +117,14 @@ public class WarpCommand implements ICommand {
                 return Command.SINGLE_SUCCESS;
             }
 
+            var isIslandOwner = PlayerUtils.isPlayerInOwnIsland(player, locationWorld.getName());
+            if (isIslandOwner) {
+                player.teleport(location);
+                var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
+                PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
+                return Command.SINGLE_SUCCESS;
+            }
+
             if (locationWorld.getEnvironment() == World.Environment.THE_END) {
                 var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
                 var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();

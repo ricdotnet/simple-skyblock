@@ -21,4 +21,6 @@ public class DisplayNames {
     public static String SHOP = "ꜱʜᴏᴘ";
     public static String BALANCE_LEADERBOARD = "ʙᴀʟᴀɴᴄᴇ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ";
 
+    public static String OP_OVERRIDE = "<red>⚠ <bold>ᴀᴅᴍɪɴ ᴏᴠᴇʀʀɪᴅᴇ ᴇɴᴀʙʟᴇᴅ";
+
 }
