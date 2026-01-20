@@ -32,6 +32,7 @@ public final class Requirements {
     }
 
     private static boolean hasPermission(ActionContext actionContext, String permission) {
+        var permissionEnumValue = Policies.PoliciesEnum.getByLabel(permission);
         var player = actionContext.player();
         var world = player.getWorld();
 
@@ -44,7 +45,8 @@ public final class Requirements {
             return false;
         }
 
-        if (world.getName().contains(player.getUniqueId().toString())) {
+        if (world.getName().contains(player.getUniqueId().toString())
+                && !Policies.DENY_FOR_ALL.contains(permissionEnumValue)) {
             return true;
         }
 
@@ -60,14 +62,13 @@ public final class Requirements {
             }
         }
 
-        // If the player is trusted ignore the permission check
+        // If the player is trusted, ignore the permission check
         for (var trustedPlayer : islandRecord.trustedPlayers()) {
             if (trustedPlayer.getFirst().equals(player.getUniqueId().toString())) {
                 return true;
             }
         }
 
-        var permissionEnumValue = Policies.PoliciesEnum.getByLabel(permission);
         return islandRecord.islandPermissions().getPermissions().get(permissionEnumValue);
     }
 

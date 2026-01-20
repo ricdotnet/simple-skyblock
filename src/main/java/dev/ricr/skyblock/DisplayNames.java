@@ -4,6 +4,8 @@ public class DisplayNames {
 
     public static String CREEPER_COIN = "ᴄʀᴇᴇᴘᴇʀ ᴄᴏɪɴ";
     public static String LUCKY_PICKAXE = "ʟᴜᴄᴋʏ ᴘɪᴄᴋᴀxᴇ";
+    public static String PLAYTIME_KEY = "ᴘʟᴀʏᴛɪᴍᴇ ᴋᴇʏ";
+
     public static String BLOCKS_SHOP = "ʙʟᴏᴄᴋꜱ ꜱʜᴏᴘ";
     public static String ITEMS_SHOP = "ɪᴛᴇᴍꜱ ꜱʜᴏᴘ";
     public static String SELECT_SHOP = "ꜱᴇʟᴇᴄᴛ ꜱʜᴏᴘ";

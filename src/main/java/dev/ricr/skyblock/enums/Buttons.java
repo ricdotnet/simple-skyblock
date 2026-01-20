@@ -19,7 +19,8 @@ public enum Buttons {
     VillagerTradingButton("villager_trading"),
     PortalTravelButton("portal_travel"),
     OpenInventoriesButton("open_inventories"),
-    OpenDoorsButton("open_doors");
+    OpenDoorsButton("open_doors"),
+    PvPButton("pvp");
 
     public final String label;
 

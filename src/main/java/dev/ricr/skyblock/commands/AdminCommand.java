@@ -14,6 +14,7 @@ import dev.ricr.skyblock.database.WarpEntity;
 import dev.ricr.skyblock.enums.InvalidWarpNames;
 import dev.ricr.skyblock.items.CreeperCoin;
 import dev.ricr.skyblock.items.LuckyPickaxe;
+import dev.ricr.skyblock.items.PlayTimeKey;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -66,6 +67,11 @@ public class AdminCommand implements ICommand {
                 .then(Commands.literal("giveLuckyPickaxe")
                         .then(Commands.argument("player", ArgumentTypes.player())
                                 .executes(this::giveLuckyPickaxe)
+                        )
+                )
+                .then(Commands.literal("givePlayTimeKey")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .executes(this::givePlayTimeKey)
                         )
                 )
                 .then(Commands.literal("createWarp")
@@ -190,6 +196,23 @@ public class AdminCommand implements ICommand {
 
         var luckyPickaxe = LuckyPickaxe.create(this.plugin);
         targetPlayer.give(luckyPickaxe);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int givePlayTimeKey(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
+            // Should only suggest online players
+            player.sendMessage(Component.text("Invalid player", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var playTimeKey = PlayTimeKey.create(this.plugin);
+        targetPlayer.give(playTimeKey);
 
         return Command.SINGLE_SUCCESS;
     }

@@ -24,7 +24,7 @@ public class IslandPermissions {
         this.plugin = plugin;
         this.islandUniqueId = islandUniqueId;
         // used when the permissions are first added to a player
-        this.deserialize("all=false:villager_trading=false:open_inventories=false:kill_mobs=false:portal_travel=false:place_blocks=false:break_blocks=false:interact_with_mobs=false:open_doors=false");
+        this.deserialize("all=false:villager_trading=false:open_inventories=false:kill_mobs=false:portal_travel=false:place_blocks=false:break_blocks=false:interact_with_mobs=false:open_doors=false:pvp=false");
     }
 
     public IslandPermissions(SimpleSkyblock plugin, UUID islandUniqueId, String permissions) {
@@ -34,6 +34,9 @@ public class IslandPermissions {
     }
 
     public Boolean getPermissionValue(Policies.PoliciesEnum permission) {
+        if (!this.permissions.containsKey(permission)) {
+            this.permissions.put(permission, Boolean.FALSE);
+        }
         return this.permissions.get(permission);
     }
 

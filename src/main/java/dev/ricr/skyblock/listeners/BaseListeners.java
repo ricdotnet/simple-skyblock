@@ -25,6 +25,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
@@ -159,10 +160,16 @@ public class BaseListeners implements Listener {
         }
 
         // TODO: we could allow pvp with an island rule
-
-        var damagee = event.getEntity();
         var actionContext = new ActionContext(this.plugin, damager, event);
-        if (!(damagee instanceof Player) && !Policies.KILL_MOBS.test(actionContext)) {
+        var damagee = event.getEntity();
+        if (damagee instanceof HumanEntity) {
+            if (!Policies.PVP.test(actionContext)) {
+                EventCancellations.add(event, EventCancellationReasons.NO_PVP);
+            }
+            return;
+        }
+
+        if (!Policies.KILL_MOBS.test(actionContext)) {
             EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
         }
     }

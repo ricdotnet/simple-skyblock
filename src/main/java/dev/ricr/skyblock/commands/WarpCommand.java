@@ -105,9 +105,6 @@ public class WarpCommand implements ICommand {
                 return Command.SINGLE_SUCCESS;
             }
 
-            var targetIslandId = UUID.fromString(warpEntity.getPlayer().getPlayerId());
-            var islandRecord = this.plugin.islandManager.getIslandRecord(targetIslandId);
-
             var location = ServerUtils.deserializeLocation(this.plugin, warpEntity);
             var locationWorld = location.getWorld();
 
@@ -116,6 +113,16 @@ public class WarpCommand implements ICommand {
                 player.sendMessage(this.plugin.miniMessage.deserialize(message, Placeholder.unparsed("warp", warpName)));
                 return Command.SINGLE_SUCCESS;
             }
+
+            if (warpEntity.getPlayer() == null) {
+                player.teleport(location);
+                var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
+                PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
+                return Command.SINGLE_SUCCESS;
+            }
+
+            var targetIslandId = UUID.fromString(warpEntity.getPlayer().getPlayerId());
+            var islandRecord = this.plugin.islandManager.getIslandRecord(targetIslandId);
 
             var isIslandOwner = PlayerUtils.isPlayerInOwnIsland(player, locationWorld.getName());
             if (isIslandOwner) {

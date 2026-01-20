@@ -2,6 +2,7 @@ package dev.ricr.skyblock;
 
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.enums.SoundType;
+import dev.ricr.skyblock.items.PlayTimeKey;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import lombok.Getter;
 import org.bukkit.entity.Player;
@@ -79,9 +80,13 @@ public class OnlinePlayers {
         private void updatePlayTime() {
             this.playTimeKeyRemaining--;
             if (this.playTimeKeyRemaining < 0) {
-                this.playTimeKeyRemaining = this.defaultPlayTimeKeyCountdown;
-                this.player.sendMessage(this.plugin.miniMessage.deserialize("<green>You have received a play time key</green>"));
+                var playTimeKey = PlayTimeKey.create(this.plugin);
+                this.player.give(playTimeKey);
+
+                this.player.sendMessage(this.plugin.miniMessage.deserialize("<green>You have received a PlayTime Key</green>"));
                 PlayerUtils.playSound(this.player, SoundType.POSITIVE);
+
+                this.playTimeKeyRemaining = this.defaultPlayTimeKeyCountdown;
             }
         }
     }

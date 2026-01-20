@@ -66,9 +66,15 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case Buttons.IslandTrustedPlayersList -> this.handleIslandTrustedPlayersClick(player);
             case Buttons.IslandBlockedPlayersList -> this.handleIslandBlockedPlayersClick(player);
             case Buttons.ModifyIslandSettings -> this.handleModifyIslandSettingsButton(player);
-            case BreakBlocksButton, PlaceBlocksButton, KillMobsButton, InteractWithMobsButton, VillagerTradingButton,
-                 PortalTravelButton, OpenInventoriesButton, OpenDoorsButton -> {
-            }
+            case Buttons.BreakBlocksButton,
+                 Buttons.PlaceBlocksButton,
+                 Buttons.KillMobsButton,
+                 Buttons.InteractWithMobsButton,
+                 Buttons.VillagerTradingButton,
+                 Buttons.PortalTravelButton,
+                 Buttons.OpenInventoriesButton,
+                 Buttons.OpenDoorsButton,
+                 Buttons.PvPButton -> {/* ignore */}
         }
     }
 

@@ -73,6 +73,7 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case Buttons.PortalTravelButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.PORTAL_TRAVEL);
             case Buttons.OpenInventoriesButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.OPEN_INVENTORIES);
             case Buttons.OpenDoorsButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.OPEN_DOORS);
+            case Buttons.PvPButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.PVP);
             case Buttons.IslandPrivacy,
                  Buttons.IslandAllowNetherTeleport,
                  Buttons.IslandAllowOfflineVisits,
@@ -119,6 +120,10 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.OPEN_DOORS),
                 19, Buttons.OpenDoorsButton, "ᴏᴘᴇɴ ᴅᴏᴏʀꜱ", "Allow other players to open doors in your island."
+        );
+        addBooleanButton(
+                islandPermissions.getPermissionValue(Policies.PoliciesEnum.PVP),
+                20, Buttons.PvPButton, "ᴘᴠᴘ", "Allow PVP in your island."
         );
 
         ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);

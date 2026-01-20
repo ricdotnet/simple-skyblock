@@ -115,6 +115,13 @@ public class SimpleSkyblock extends JavaPlugin {
             this.getLogger().severe(e.getMessage());
         }
 
+        // Save all playtime key remaining times
+        // The save action happens in the removePlayer() method and since we're already closing the server,
+        // I don't think there will be any issues with saving data
+        for (var player : this.onlinePlayers.getOnlinePlayers().keySet()) {
+            this.onlinePlayers.removePlayer(player);
+        }
+
         this.getLogger().info("SimpleSkyblock has been disabled!");
     }
 

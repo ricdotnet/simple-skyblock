@@ -2,7 +2,16 @@ package dev.ricr.skyblock.permissions;
 
 import lombok.Getter;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 public class Policies {
+
+    // Just a simple way to deny certain permissions to all players including the owner of the island
+    // of course this is ignored in case the island has the permission set to true
+    public static final Set<PoliciesEnum> DENY_FOR_ALL = EnumSet.of(
+            PoliciesEnum.PVP
+    );
 
     private static final Requirement<ActionContext> ALL = Requirements.permission(PoliciesEnum.ALL.getLabel());
 
@@ -16,6 +25,7 @@ public class Policies {
     public static final Requirement<ActionContext> OPEN_INVENTORIES = Policies.ALL.or(Requirements.permission(PoliciesEnum.OPEN_INVENTORIES.getLabel()));
     // all doors should be opened, normal doors, trap doors and even fence gates
     public static final Requirement<ActionContext> OPEN_DOORS = Policies.ALL.or(Requirements.permission(PoliciesEnum.OPEN_DOORS.getLabel()));
+    public static final Requirement<ActionContext> PVP = Policies.ALL.or(Requirements.permission(PoliciesEnum.PVP.getLabel()));
 
     public enum PoliciesEnum {
         ALL("all"),
@@ -26,7 +36,8 @@ public class Policies {
         VILLAGER_TRADING("villager_trading"),
         PORTAL_TRAVEL("portal_travel"),
         OPEN_INVENTORIES("open_inventories"),
-        OPEN_DOORS("open_doors");
+        OPEN_DOORS("open_doors"),
+        PVP("pvp");
 
         @Getter
         private final String label;

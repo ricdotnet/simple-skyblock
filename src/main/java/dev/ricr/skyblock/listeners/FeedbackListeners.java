@@ -85,7 +85,8 @@ public class FeedbackListeners implements Listener {
 
     private void sendMessage(Player player, EventCancellationReasons cancelReason) {
         switch (cancelReason) {
-            case NO_PERMISSION -> player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
+            case NO_PERMISSION -> player.sendActionBar(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
+            case NO_PVP -> player.sendActionBar(Messages.PVP_NOT_ALLOWED.component(this.plugin));
             case PLUGIN_BEHAVIOUR -> { /* we ignore this */ }
         }
     }
