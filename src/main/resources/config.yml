@@ -2,6 +2,7 @@
 lobby: true
 end_portal_price: 100000
 max_player_warps: 3
+play_time_key_countdown: 14400 # this is in seconds
 island:
   starting_border_radius: 60
   show_seed_price: 25000

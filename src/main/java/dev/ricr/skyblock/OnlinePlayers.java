@@ -1,6 +1,8 @@
 package dev.ricr.skyblock;
 
 import dev.ricr.skyblock.database.PlayerEntity;
+import dev.ricr.skyblock.enums.SoundType;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 
@@ -25,12 +27,16 @@ public class OnlinePlayers {
         this.onlinePlayers.put(playerUUID, new OnlinePlayer(this.plugin, player, playerEntity));
     }
 
-    public void removePlayer(UUID uuid) {
-        this.onlinePlayers.remove(uuid);
+    public void removePlayer(UUID playerUniqueId) {
+        var onlinePlayer = this.onlinePlayers.remove(playerUniqueId);
+
+        var playerConfig = PlayerUtils.getPlayerConfiguration(this.plugin, playerUniqueId);
+        playerConfig.set("play_time_key_countdown", onlinePlayer.playTimeKeyRemaining + 1);
+        PlayerUtils.savePlayerConfiguration(this.plugin, playerConfig, playerUniqueId);
     }
 
-    public OnlinePlayer getPlayer(UUID uuid) {
-        return this.onlinePlayers.get(uuid);
+    public OnlinePlayer getPlayer(UUID playerUniqueId) {
+        return this.onlinePlayers.get(playerUniqueId);
     }
 
     private void fastBoardUpdater() {
@@ -40,6 +46,9 @@ public class OnlinePlayers {
                 playerFastBoard.updateMoney();
                 playerFastBoard.updateWorldTime();
                 playerFastBoard.updatePing();
+                playerFastBoard.updatePlayTime(onlinePlayer.playTimeKeyRemaining);
+
+                onlinePlayer.updatePlayTime();
             }
         }, 0, 20);
     }
@@ -52,12 +61,28 @@ public class OnlinePlayers {
         private final PlayerEntity playerEntity;
         @Getter
         private final PlayerFastBoard fastBoard;
+        private final int defaultPlayTimeKeyCountdown;
+        @Getter
+        private int playTimeKeyRemaining;
 
         public OnlinePlayer(SimpleSkyblock plugin, Player player, PlayerEntity playerEntity) {
             this.plugin = plugin;
             this.player = player;
             this.playerEntity = playerEntity;
             this.fastBoard = new PlayerFastBoard(this.plugin, player, playerEntity);
+
+            this.defaultPlayTimeKeyCountdown = this.plugin.serverConfig.getInt("play_time_key_countdown", 14400);
+            var playerConfiguration = PlayerUtils.getPlayerConfiguration(this.plugin, player.getUniqueId());
+            this.playTimeKeyRemaining = playerConfiguration.getInt("play_time_key_countdown", this.defaultPlayTimeKeyCountdown);
+        }
+
+        private void updatePlayTime() {
+            this.playTimeKeyRemaining--;
+            if (this.playTimeKeyRemaining < 0) {
+                this.playTimeKeyRemaining = this.defaultPlayTimeKeyCountdown;
+                this.player.sendMessage(this.plugin.miniMessage.deserialize("<green>You have received a play time key</green>"));
+                PlayerUtils.playSound(this.player, SoundType.POSITIVE);
+            }
         }
     }
 

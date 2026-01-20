@@ -96,7 +96,9 @@ public class PlayerUtils {
         return YamlConfiguration.loadConfiguration(playerFile);
     }
 
-    public static void savePlayerConfiguration(FileConfiguration playerConfig, File playerConfigFile) {
+    public static void savePlayerConfiguration(SimpleSkyblock plugin, FileConfiguration playerConfig, UUID playerUniqueId) {
+        var playerConfigFile = new File(plugin.getDataFolder(), String.format("%s.yml", playerUniqueId));
+
         try {
             playerConfig.save(playerConfigFile);
         } catch (Exception e) {
@@ -113,8 +115,7 @@ public class PlayerUtils {
         playerConfig.set("tp.yaw", location.getYaw());
         playerConfig.set("tp.pitch", location.getPitch());
 
-        var playerConfigFile = new File(plugin.getDataFolder(), String.format("%s.yml", player.getUniqueId()));
-        PlayerUtils.savePlayerConfiguration(playerConfig, playerConfigFile);
+        PlayerUtils.savePlayerConfiguration(plugin, playerConfig, player.getUniqueId());
     }
 
     public static Location getTpLocation(SimpleSkyblock plugin, UUID playerUniqueId) {
