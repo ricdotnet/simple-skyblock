@@ -22,7 +22,6 @@ public class DisplayNames {
     public static String ISLAND_SETTINGS = "ɪꜱʟᴀɴᴅ ꜱᴇᴛᴛɪɴɢꜱ";
     public static String SHOP = "ꜱʜᴏᴘ";
     public static String BALANCE_LEADERBOARD = "ʙᴀʟᴀɴᴄᴇ ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ";
-    public static String PLAYTIME_KEY_CHEST = "ᴘʟᴀʏᴛɪᴍᴇ ᴋᴇʏ ᴄʜᴇꜱᴛ";
 
     public static String OP_OVERRIDE = "<red>⚠ <bold>ᴀᴅᴍɪɴ ᴏᴠᴇʀʀɪᴅᴇ ᴇɴᴀʙʟᴇᴅ";
 

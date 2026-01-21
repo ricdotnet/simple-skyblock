@@ -5,13 +5,13 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.enums.EventCancellationReasons;
 import dev.ricr.skyblock.enums.IslandProtectedBlocks;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
+import dev.ricr.skyblock.gui.ChestKeyGUI;
 import dev.ricr.skyblock.gui.ConfirmGUI;
 import dev.ricr.skyblock.gui.GambleSessionGUI;
 import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.gui.IslandSettingsGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
-import dev.ricr.skyblock.gui.PlayTimeChestGUI;
 import dev.ricr.skyblock.gui.PlayersListGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
 import dev.ricr.skyblock.gui.VillagerShopGUI;
@@ -35,6 +35,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -281,7 +282,7 @@ public class BaseListeners implements Listener {
             }
             case IslandSettingsGUI ignored -> {
             }
-            case PlayTimeChestGUI ignored -> {
+            case ChestKeyGUI ignored -> {
             }
             default -> {
                 var actionContext = new ActionContext(this.plugin, player, event);
@@ -319,7 +320,7 @@ public class BaseListeners implements Listener {
         if (chestName == null) return;
         event.setCancelled(true);
 
-        new PlayTimeChestGUI(this.plugin, player);
+        new ChestKeyGUI(this.plugin, player);
     }
 
     @EventHandler
@@ -338,6 +339,23 @@ public class BaseListeners implements Listener {
 
         if (item.getItemMeta().getPersistentDataContainer().has(ServerUtils.NO_ENCHANTMENT, PersistentDataType.BYTE)) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onTrampleFarmland(EntityChangeBlockEvent event) {
+        var entity = event.getEntity();
+        if (!(entity instanceof Player player)) {
+            return;
+        }
+
+        if (event.getBlock().getType() != Material.FARMLAND || event.getTo() != Material.DIRT) {
+            return;
+        }
+
+        var actionContext = new ActionContext(this.plugin, player, event);
+        if (!Policies.BREAK_BLOCKS.test(actionContext)) {
+            EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
         }
     }
 

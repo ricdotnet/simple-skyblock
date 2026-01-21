@@ -284,7 +284,12 @@ public class ServerUtils {
         if (worldName.contains("_the_end")) {
             loadedWorld = plugin.worldManager.load(worldName);
         } else {
-            loadedWorld = plugin.worldManager.loadOrCreate(UUID.fromString(warpEntity.getPlayer().getPlayerId()), worldEnvironment, null);
+            var player = warpEntity.getPlayer();
+            if (player == null) {
+                loadedWorld = Bukkit.getWorld(worldName);
+            } else {
+                loadedWorld = plugin.worldManager.loadOrCreate(UUID.fromString(player.getPlayerId()), worldEnvironment, null);
+            }
         }
 
         if (loadedWorld == null) {

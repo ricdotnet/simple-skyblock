@@ -10,6 +10,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -81,6 +82,17 @@ public class FeedbackListeners implements Listener {
         if (cancelReason == null) return;
 
         this.sendMessage(event.getPlayer(), cancelReason);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onTrampleFarmland(EntityChangeBlockEvent event) {
+        if (!event.isCancelled()) return;
+        if (!(event.getEntity() instanceof Player player)) return;
+
+        var cancelReason = EventCancellations.get(event);
+        if (cancelReason == null) return;
+
+        this.sendMessage(player, cancelReason);
     }
 
     private void sendMessage(Player player, EventCancellationReasons cancelReason) {

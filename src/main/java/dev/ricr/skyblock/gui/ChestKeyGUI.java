@@ -1,6 +1,5 @@
 package dev.ricr.skyblock.gui;
 
-import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.items.CreeperCoin;
@@ -19,14 +18,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
-public class PlayTimeChestGUI implements InventoryHolder, ISimpleSkyblockGUI {
+public class ChestKeyGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final SimpleSkyblock plugin;
     @Getter
     private final Inventory inventory;
 
-    public PlayTimeChestGUI(SimpleSkyblock plugin, Player player) {
+    public ChestKeyGUI(SimpleSkyblock plugin, Player player) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 27, Component.text(DisplayNames.PLAYTIME_KEY_CHEST));
+        this.inventory = Bukkit.createInventory(this, 27, Component.text("ᴘʟᴀʏᴛɪᴍᴇ ᴋᴇʏ ᴄʜᴇꜱᴛ"));
 
         this.loadInventory();
         InventoryUtils.fillEmptySlots(this.inventory);
@@ -50,9 +49,10 @@ public class PlayTimeChestGUI implements InventoryHolder, ISimpleSkyblockGUI {
             return;
         }
 
+        player.getInventory().remove(PlayTimeKey.create(this.plugin));
         player.give(clicked.clone());
 
-        var successMessage = "<green>You have received a <item>";
+        var successMessage = "<green>Your key has been exchanged for <item>";
         player.sendMessage(this.plugin.miniMessage.deserialize(
                 successMessage,
                 Placeholder.unparsed("item", ServerUtils.getTextFromComponent(clicked.getItemMeta().displayName()))

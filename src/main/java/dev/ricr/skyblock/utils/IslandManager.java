@@ -105,34 +105,6 @@ public class IslandManager {
         this.islands.remove(playerUniqueId);
     }
 
-    public boolean shouldStopIslandInteraction(Player player) {
-        var world = player.getWorld();
-
-        if (player.isOp() && ServerUtils.isOpOverride() || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
-            return false;
-        }
-
-        if (world.getName().equals("lobby")) {
-            return true;
-        }
-
-        var islandRecord = this.findCurrentIslandRecord(world.getName());
-
-        // TODO: check this actually makes sense
-        if (islandRecord == null) {
-            // would mean the current island or place has no owner, so we move on
-            return false;
-        }
-
-        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private IslandRecord findCurrentIslandRecord(String worldName) {
         for (IslandRecord islandRecord : this.islands.values()) {
             if (worldName.contains(islandRecord.owner().toString())) {

@@ -38,6 +38,7 @@ public class ServerLoadListener implements Listener {
 
         for (Map<?, ?> keyChestConfig : keyChestsConfig) {
             var chestName = keyChestConfig.get("name").toString();
+            var displayName = keyChestConfig.get("display_name").toString();
             var worldName = keyChestConfig.get("world");
             var x = keyChestConfig.get("x");
             var y = keyChestConfig.get("y");
