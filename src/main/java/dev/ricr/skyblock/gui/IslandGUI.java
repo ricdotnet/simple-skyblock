@@ -74,7 +74,8 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
                  Buttons.PortalTravelButton,
                  Buttons.OpenInventoriesButton,
                  Buttons.OpenDoorsButton,
-                 Buttons.PvPButton -> {/* ignore */}
+                 Buttons.PvPButton,
+                 Buttons.InteractWithRedstoneButton -> {/* ignore */}
         }
     }
 

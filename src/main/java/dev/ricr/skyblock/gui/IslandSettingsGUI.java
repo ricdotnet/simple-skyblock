@@ -74,6 +74,7 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
             case Buttons.OpenInventoriesButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.OPEN_INVENTORIES);
             case Buttons.OpenDoorsButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.OPEN_DOORS);
             case Buttons.PvPButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.PVP);
+            case Buttons.InteractWithRedstoneButton -> islandPermissions.switchPermission(Policies.PoliciesEnum.INTERACT_WITH_REDSTONE);
             case Buttons.IslandPrivacy,
                  Buttons.IslandAllowNetherTeleport,
                  Buttons.IslandAllowOfflineVisits,
@@ -124,6 +125,10 @@ public class IslandSettingsGUI implements InventoryHolder, ISimpleSkyblockGUI {
         addBooleanButton(
                 islandPermissions.getPermissionValue(Policies.PoliciesEnum.PVP),
                 20, Buttons.PvPButton, "ᴘᴠᴘ", "Allow PVP in your island."
+        );
+        addBooleanButton(
+                islandPermissions.getPermissionValue(Policies.PoliciesEnum.INTERACT_WITH_REDSTONE),
+                21, Buttons.InteractWithRedstoneButton, "ᴀʟʟᴏᴡ ʀᴇᴅꜱᴛᴏɴᴇ", "Allow players to use redstone components in your island (buttons, levers, etc)."
         );
 
         ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);

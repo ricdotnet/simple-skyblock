@@ -2,7 +2,6 @@ package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.IslandEntity;
-import dev.ricr.skyblock.enums.IslandProtectedBlocks;
 import dev.ricr.skyblock.enums.SignShopType;
 import dev.ricr.skyblock.shop.SignShop;
 import dev.ricr.skyblock.utils.Messages;
@@ -104,17 +103,9 @@ public class PlayerListeners implements Listener {
         Block clickedBlock = event.getClickedBlock();
         Material clickedBlockMaterial = clickedBlock == null ? Material.AIR : clickedBlock.getType();
 
-        var shouldStopIslandInteraction = this.plugin.islandManager.shouldStopIslandInteraction(player);
-
         if (clickedBlockMaterial == Material.DRAGON_EGG) {
             event.setCancelled(true);
             player.sendMessage(Messages.DRAGON_EGG_BELONGS_TO_SERVER.component(this.plugin));
-            return;
-        }
-
-        if (IslandProtectedBlocks.REDSTONE_ITEMS.contains(clickedBlockMaterial) && shouldStopIslandInteraction) {
-            event.setCancelled(true);
-            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
             return;
         }
 
@@ -203,13 +194,6 @@ public class PlayerListeners implements Listener {
                 clickedBlock.setType(Material.AIR);
                 player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1f, 1f);
             }
-        }
-
-
-        if (shouldStopIslandInteraction) {
-            player.sendMessage(Messages.CANNOT_DO_THAT_HERE.component(this.plugin));
-            event.setCancelled(true);
-            return;
         }
     }
 

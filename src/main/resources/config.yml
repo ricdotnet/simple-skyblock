@@ -7,3 +7,9 @@ island:
   starting_border_radius: 60
   show_seed_price: 25000
   expand_price: 2000 # price per block - 10 blocks means 10 * price
+key_chests:
+  - name: "PLAYTIME_KEY"
+    world: "lobby"
+    x: 0
+    y: 44
+    z: 6

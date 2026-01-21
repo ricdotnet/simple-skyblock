@@ -20,7 +20,8 @@ public enum Buttons {
     PortalTravelButton("portal_travel"),
     OpenInventoriesButton("open_inventories"),
     OpenDoorsButton("open_doors"),
-    PvPButton("pvp");
+    PvPButton("pvp"),
+    InteractWithRedstoneButton("interact_with_redstone");
 
     public final String label;
 

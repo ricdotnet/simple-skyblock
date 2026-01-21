@@ -11,6 +11,7 @@ import dev.ricr.skyblock.gui.IslandGUI;
 import dev.ricr.skyblock.gui.IslandSettingsGUI;
 import dev.ricr.skyblock.gui.ItemsListGUI;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
+import dev.ricr.skyblock.gui.PlayTimeChestGUI;
 import dev.ricr.skyblock.gui.PlayersListGUI;
 import dev.ricr.skyblock.gui.ShopTypeGUI;
 import dev.ricr.skyblock.gui.VillagerShopGUI;
@@ -25,6 +26,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Chest;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
@@ -222,6 +224,20 @@ public class BaseListeners implements Listener {
     }
 
     @EventHandler
+    public void onPlayerInteractWithRedstone(PlayerInteractEvent event) {
+        var player = event.getPlayer();
+        var clickedBlock = event.getClickedBlock();
+        var clickedBlockMaterial = clickedBlock == null ? Material.AIR : clickedBlock.getType();
+
+        var actionContext = new ActionContext(this.plugin, player, event);
+        if (IslandProtectedBlocks.REDSTONE_ITEMS.contains(clickedBlockMaterial)) {
+            if (!Policies.INTERACT_WITH_REDSTONE.test(actionContext)) {
+                EventCancellations.add(event, EventCancellationReasons.NO_PERMISSION);
+            }
+        }
+    }
+
+    @EventHandler
     public void onEntityUsePortals(EntityPortalEvent event) {
         event.setCancelled(true);
 
@@ -265,6 +281,8 @@ public class BaseListeners implements Listener {
             }
             case IslandSettingsGUI ignored -> {
             }
+            case PlayTimeChestGUI ignored -> {
+            }
             default -> {
                 var actionContext = new ActionContext(this.plugin, player, event);
                 if (!Policies.OPEN_INVENTORIES.test(actionContext)) {
@@ -282,6 +300,26 @@ public class BaseListeners implements Listener {
         if (left.getItemMeta().getPersistentDataContainer().has(ServerUtils.NO_ANVIL, PersistentDataType.BYTE)) {
             event.setResult(null);
         }
+    }
+
+    @EventHandler
+    public void onPlayerInteractWithKeyChest(PlayerInteractEvent event) {
+        var player = event.getPlayer();
+        var clickedBlock = event.getClickedBlock();
+
+        if (clickedBlock == null) return;
+        if (!(clickedBlock.getState() instanceof Chest chest)) {
+            return;
+        }
+
+        var chestPersistentDataContainer = chest.getPersistentDataContainer();
+        if (!chestPersistentDataContainer.has(ServerUtils.KEY_CHEST)) return;
+
+        var chestName = chestPersistentDataContainer.get(ServerUtils.KEY_CHEST, PersistentDataType.STRING);
+        if (chestName == null) return;
+        event.setCancelled(true);
+
+        new PlayTimeChestGUI(this.plugin, player);
     }
 
     @EventHandler

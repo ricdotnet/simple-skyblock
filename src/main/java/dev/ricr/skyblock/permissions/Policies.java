@@ -26,6 +26,7 @@ public class Policies {
     // all doors should be opened, normal doors, trap doors and even fence gates
     public static final Requirement<ActionContext> OPEN_DOORS = Policies.ALL.or(Requirements.permission(PoliciesEnum.OPEN_DOORS.getLabel()));
     public static final Requirement<ActionContext> PVP = Policies.ALL.or(Requirements.permission(PoliciesEnum.PVP.getLabel()));
+    public static final Requirement<ActionContext> INTERACT_WITH_REDSTONE = Policies.ALL.or(Requirements.permission(PoliciesEnum.INTERACT_WITH_REDSTONE.getLabel()));
 
     public enum PoliciesEnum {
         ALL("all"),
@@ -37,7 +38,8 @@ public class Policies {
         PORTAL_TRAVEL("portal_travel"),
         OPEN_INVENTORIES("open_inventories"),
         OPEN_DOORS("open_doors"),
-        PVP("pvp");
+        PVP("pvp"),
+        INTERACT_WITH_REDSTONE("interact_with_redstone");
 
         @Getter
         private final String label;
