@@ -1,6 +1,6 @@
 package dev.ricr.skyblock.listeners;
 
-import dev.ricr.skyblock.KeyChestManager;
+import dev.ricr.skyblock.utils.KeyChestManager;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.items.CreeperCoin;
 import dev.ricr.skyblock.items.LuckyPickaxe;

@@ -1,4 +1,4 @@
-package dev.ricr.skyblock;
+package dev.ricr.skyblock.utils;
 
 import lombok.Getter;
 import org.bukkit.inventory.ItemStack;

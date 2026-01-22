@@ -5,6 +5,7 @@ import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.CustomItems;
 import dev.ricr.skyblock.utils.ServerUtils;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -22,6 +23,8 @@ public class LuckyPickaxe {
 
     public static ItemStack create(SimpleSkyblock plugin) {
         var luckyPickaxe = new ItemStack(Material.DIAMOND_PICKAXE, 1);
+        luckyPickaxe.addEnchantment(Enchantment.EFFICIENCY, 2);
+
         var itemMeta = luckyPickaxe.getItemMeta();
 
         itemMeta.displayName(plugin.miniMessage.deserialize("<!italic><dark_purple>" + DisplayNames.LUCKY_PICKAXE));
