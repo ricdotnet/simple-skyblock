@@ -320,7 +320,8 @@ public class BaseListeners implements Listener {
         if (chestName == null) return;
         event.setCancelled(true);
 
-        new ChestKeyGUI(this.plugin, player);
+        var chestKey = this.plugin.keyChestManager.getKeyChest(chestName);
+        new ChestKeyGUI(this.plugin, player, chestKey.displayName(), chestKey.items());
     }
 
     @EventHandler

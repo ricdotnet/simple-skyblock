@@ -47,6 +47,7 @@ public class SimpleSkyblock extends JavaPlugin {
     public MiniMessage miniMessage;
     public WorldManager worldManager;
     public VillagerShopManager villagerShopManager;
+    public KeyChestManager keyChestManager;
 
     public static final Registry<Enchantment> ENCHANTMENTS = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
 
@@ -58,6 +59,7 @@ public class SimpleSkyblock extends JavaPlugin {
 
         this.miniMessage = MiniMessage.miniMessage();
         this.worldManager = new WorldManager(this);
+        this.keyChestManager = new KeyChestManager();
 
         // Simple online players cache to help with batching PlayerEntity related db operations
         this.onlinePlayers = new OnlinePlayers(this);

@@ -8,11 +8,12 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class CreeperCoin {
 
-    public static ItemStack create(SimpleSkyblock plugin) {
+    public static ItemStack create(SimpleSkyblock plugin, @Nullable Integer amount) {
         var creeperCoin = new ItemStack(Material.PAPER, 1);
         var itemMeta = creeperCoin.getItemMeta();
 
@@ -31,6 +32,10 @@ public class CreeperCoin {
         itemPersistentDataContainer.set(ServerUtils.NO_ANVIL, PersistentDataType.BYTE, (byte) 1);
 
         creeperCoin.setItemMeta(itemMeta);
+
+        if (amount != null) {
+            creeperCoin.setAmount(amount);
+        }
 
         return creeperCoin;
     }

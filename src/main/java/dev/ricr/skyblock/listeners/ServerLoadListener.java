@@ -1,6 +1,9 @@
 package dev.ricr.skyblock.listeners;
 
+import dev.ricr.skyblock.KeyChestManager;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.items.CreeperCoin;
+import dev.ricr.skyblock.items.LuckyPickaxe;
 import dev.ricr.skyblock.utils.ServerUtils;
 import org.bukkit.block.Chest;
 import org.bukkit.event.EventHandler;
@@ -8,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.List;
 import java.util.Map;
 
 public class ServerLoadListener implements Listener {
@@ -57,6 +61,13 @@ public class ServerLoadListener implements Listener {
             var chestPersistentDataContainer = chest.getPersistentDataContainer();
             chestPersistentDataContainer.set(ServerUtils.KEY_CHEST, PersistentDataType.STRING, chestName);
             chest.update(true);
+
+            var items = List.of(
+                    CreeperCoin.create(this.plugin, 3),
+                    LuckyPickaxe.create(this.plugin)
+            );
+            var keyChestRecord = new KeyChestManager.KeyChest(chestName, displayName, items);
+            this.plugin.keyChestManager.addKeyChest(keyChestRecord);
 
             var location = chest.getLocation();
             location.setX(location.getX() + 0.5);

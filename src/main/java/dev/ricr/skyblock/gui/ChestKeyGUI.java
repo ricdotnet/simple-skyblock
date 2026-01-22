@@ -2,8 +2,6 @@ package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.SoundType;
-import dev.ricr.skyblock.items.CreeperCoin;
-import dev.ricr.skyblock.items.LuckyPickaxe;
 import dev.ricr.skyblock.items.PlayTimeKey;
 import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
@@ -17,17 +15,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
 
 public class ChestKeyGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final SimpleSkyblock plugin;
     @Getter
     private final Inventory inventory;
 
-    public ChestKeyGUI(SimpleSkyblock plugin, Player player) {
+    public ChestKeyGUI(SimpleSkyblock plugin, Player player, String displayName, List<ItemStack> items) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 27, Component.text("ᴘʟᴀʏᴛɪᴍᴇ ᴋᴇʏ ᴄʜᴇꜱᴛ"));
+        this.inventory = Bukkit.createInventory(this, 27, Component.text(displayName));
 
-        this.loadInventory();
+        this.loadInventory(items);
         InventoryUtils.fillEmptySlots(this.inventory);
 
         player.openInventory(this.inventory);
@@ -62,13 +63,9 @@ public class ChestKeyGUI implements InventoryHolder, ISimpleSkyblockGUI {
         this.inventory.close();
     }
 
-    private void loadInventory() {
-        var creeperCoin = CreeperCoin.create(this.plugin);
-        creeperCoin.setAmount(3);
-
-        var luckyPickaxe = LuckyPickaxe.create(this.plugin);
-
-        this.inventory.setItem(10, creeperCoin);
-        this.inventory.setItem(11, luckyPickaxe);
+    private void loadInventory(List<ItemStack> items) {
+        for (int i = 0; i < items.size(); i++) {
+            this.inventory.setItem(12 + i, items.get(i));
+        }
     }
 }

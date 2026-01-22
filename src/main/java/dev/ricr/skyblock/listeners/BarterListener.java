@@ -37,7 +37,7 @@ public class BarterListener implements Listener {
             }
 
             barteredItems.clear();
-            var creeperCoinItem = CreeperCoin.create(this.plugin);
+            var creeperCoinItem = CreeperCoin.create(this.plugin, null);
             barteredItems.add(creeperCoinItem);
         }
     }

@@ -33,8 +33,7 @@ public class VillagerShopGUI {
         for (var item : this.shopItemsList) {
             var recipe = new MerchantRecipe(item.itemStack(), 999);
 
-            var creeperCoinItem = CreeperCoin.create(this.plugin);
-            creeperCoinItem.setAmount(item.coinAmount());
+            var creeperCoinItem = CreeperCoin.create(this.plugin, item.coinAmount());
             recipe.addIngredient(creeperCoinItem);
 
             if (item.tradeInExtra() != null && item.tradeInExtraAmount() != null) {

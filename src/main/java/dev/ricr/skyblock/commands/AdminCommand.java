@@ -176,8 +176,7 @@ public class AdminCommand implements ICommand {
         }
 
         var amount = ctx.getArgument("amount", Integer.class);
-        var creeperCoin = CreeperCoin.create(this.plugin);
-        creeperCoin.setAmount(amount);
+        var creeperCoin = CreeperCoin.create(this.plugin, amount);
         targetPlayer.give(creeperCoin);
 
         return Command.SINGLE_SUCCESS;
