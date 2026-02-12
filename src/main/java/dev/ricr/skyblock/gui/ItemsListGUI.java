@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.gui;
 
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.shop.ShopItems;
@@ -8,8 +9,6 @@ import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -33,7 +32,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
     public ItemsListGUI(SimpleSkyblock plugin, Map<Material, ShopItems.PricePair> shopItems, ShopType shopType) {
         this.plugin = plugin;
         this.shopType = shopType;
-        this.inventory = Bukkit.createInventory(this, 54, Component.text("Shop"));
+        this.inventory = Bukkit.createInventory(this, 54, Component.text(DisplayNames.SHOP));
 
         // starting at slot 10 for having a border around
         int slot = 10;
@@ -49,7 +48,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
             ItemMeta meta = item.getItemMeta();
 
             if (meta != null) {
-                meta.displayName(Component.text(material.name()));
+                meta.displayName(item.displayName());
                 meta.lore(List.of(
                         this.plugin.miniMessage.deserialize("<!italic><white>Sell: " +
                                 (prices.sellPrice() == -1 ? "<red>Not available" : "<color:#23CC7A>" + ServerUtils.formatMoneyValue(prices.sellPrice()))),
@@ -64,7 +63,7 @@ public class ItemsListGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         ItemStack goBackButton = new ItemStack(Material.BARRIER, 1);
         ItemMeta meta = goBackButton.getItemMeta();
-        meta.displayName(Component.text("Go back"));
+        meta.displayName(Component.text(DisplayNames.GO_BACK));
         goBackButton.setItemMeta(meta);
         inventory.setItem(49, goBackButton);
 

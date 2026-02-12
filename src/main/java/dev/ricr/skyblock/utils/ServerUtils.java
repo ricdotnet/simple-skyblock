@@ -2,6 +2,7 @@ package dev.ricr.skyblock.utils;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.WarpEntity;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -27,7 +28,6 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -60,6 +60,7 @@ public class ServerUtils {
 
     // custom display entities
     public static TextDisplay END_PORTAL_TEXT_DISPLAY;
+    public static TextDisplay KEY_CHEST_TEXT_DISPLAY;
 
     // sign shop
     public static NamespacedKey SIGN_SHOP_TYPE;
@@ -68,6 +69,13 @@ public class ServerUtils {
     public static NamespacedKey SIGN_SHOP_OWNER;
 
     public static NamespacedKey VILLAGER_SHOP_NAME;
+
+    // custom items
+    public static NamespacedKey CUSTOM_ITEM;
+    public static NamespacedKey NO_ANVIL;
+    public static NamespacedKey NO_ENCHANTMENT;
+
+    public static NamespacedKey KEY_CHEST;
 
     public static double CREEPER_COIN_CHANCE = 2.0;
 
@@ -123,6 +131,12 @@ public class ServerUtils {
         SIGN_SHOP_IN_ITEM = new NamespacedKey(plugin, "sign_shop_in_item");
         SIGN_SHOP_OWNER = new NamespacedKey(plugin, "sign_shop_owner");
         VILLAGER_SHOP_NAME = new NamespacedKey(plugin, "villager_shop_name");
+
+        CUSTOM_ITEM = new NamespacedKey(plugin, "custom_item");
+        NO_ANVIL = new NamespacedKey(plugin, "no_anvil");
+        NO_ENCHANTMENT = new NamespacedKey(plugin, "no_enchantment");
+
+        KEY_CHEST = new NamespacedKey(plugin, "key_chest");
     }
 
     public static World loadOrCreateLobby() {
@@ -144,6 +158,7 @@ public class ServerUtils {
         return player;
     }
 
+    // TODO: refactor text dispays into their own manager class
     public static void setEndPortalTextDisplay(SimpleSkyblock plugin) {
         var lobbyWorld = ServerUtils.loadOrCreateLobby();
         var textDisplayLocation = new Location(lobbyWorld, 0.5, 67.5, -9.5);
@@ -175,8 +190,27 @@ public class ServerUtils {
         ServerUtils.END_PORTAL_TEXT_DISPLAY = textDisplay;
     }
 
+    public static void setChestKeyTextDisplay(SimpleSkyblock plugin, Location location) {
+        var lobbyWorld = ServerUtils.loadOrCreateLobby();
+
+        var message = plugin.miniMessage.deserialize("<dark_purple>" + DisplayNames.PLAYTIME_KEY);
+        ServerUtils.KEY_CHEST_TEXT_DISPLAY = lobbyWorld.spawn(location, TextDisplay.class, entity -> {
+            entity.text(message);
+            entity.setVisibleByDefault(true);
+            entity.setBillboard(Display.Billboard.CENTER);
+            entity.setShadowed(true);
+            entity.setSeeThrough(true);
+            entity.setLineWidth(200);
+            entity.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            entity.setBrightness(new Display.Brightness(15, 15));
+            entity.setPersistent(true);
+            entity.setInvulnerable(true);
+            entity.setGravity(false);
+        });
+    }
+
     public static void cleanUpTextDisplays(SimpleSkyblock plugin) {
-        plugin.getServer().getLogger().info("Cleaning up end portal text displays...");
+        plugin.getLogger().info("Cleaning up end portal text displays");
 
         // TODO: refactor later with a list of text displays with ephemeral and dynamic displays if needed
         plugin.getServer().getWorlds().forEach(world -> world.getEntitiesByClass(TextDisplay.class).forEach(Display::remove));
@@ -250,7 +284,12 @@ public class ServerUtils {
         if (worldName.contains("_the_end")) {
             loadedWorld = plugin.worldManager.load(worldName);
         } else {
-            loadedWorld = plugin.worldManager.loadOrCreate(UUID.fromString(warpEntity.getPlayer().getPlayerId()), worldEnvironment, null);
+            var player = warpEntity.getPlayer();
+            if (player == null) {
+                loadedWorld = Bukkit.getWorld(worldName);
+            } else {
+                loadedWorld = plugin.worldManager.loadOrCreate(UUID.fromString(player.getPlayerId()), worldEnvironment, null);
+            }
         }
 
         if (loadedWorld == null) {

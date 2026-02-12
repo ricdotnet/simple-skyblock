@@ -3,9 +3,12 @@ package dev.ricr.skyblock.utils;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.ForeignCollection;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.database.DatabaseChange;
+import dev.ricr.skyblock.database.IslandBlockedPlayersEntity;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.IslandPlayerTrustLinkEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
+import dev.ricr.skyblock.permissions.IslandPermissions;
 import org.bukkit.entity.Player;
 
 import java.sql.SQLException;
@@ -37,6 +40,10 @@ public class IslandManager {
     }
 
     public IslandRecord getIslandRecord(UUID playerUniqueId) {
+        if (this.islands.get(playerUniqueId) == null) {
+            this.addPlayerIsland(playerUniqueId);
+        }
+
         return this.islands.get(playerUniqueId);
     }
 
@@ -48,22 +55,47 @@ public class IslandManager {
         Dao<IslandEntity, String> islandsDao = this.plugin.databaseManager.getIslandsDao();
 
         try {
-            IslandEntity playerIsland = islandsDao.queryForId(playerUniqueId.toString());
+            var playerIsland = islandsDao.queryForId(playerUniqueId.toString());
 
             if (playerIsland == null) {
                 return;
             }
 
+            if (playerIsland.getPermissions() == null) {
+                playerIsland.setPermissions(new IslandPermissions(this.plugin, playerUniqueId).toString());
+
+                var islandRecordUpdate = new DatabaseChange.IslandRecordUpdate(playerIsland);
+                this.plugin.databaseChangesAccumulator.add(islandRecordUpdate);
+            }
+
             int islandX = (int) playerIsland.getPositionX();
             int islandZ = (int) playerIsland.getPositionZ();
             ForeignCollection<IslandPlayerTrustLinkEntity> trustedPlayers = playerIsland.getTrustedPlayers();
+            ForeignCollection<IslandBlockedPlayersEntity> blockedPlayers = playerIsland.getBlockedPlayers();
 
             List<Tuple<String, String>> trustedPlayersId = trustedPlayers.stream().map(
                     trustedPlayer -> new Tuple<>(trustedPlayer.getPlayer()
                             .getPlayerId(), trustedPlayer.getPlayer().getUsername())
             ).collect(ArrayList::new, List::add, List::addAll);
 
-            this.islands.put(playerUniqueId, new IslandRecord(playerUniqueId, islandX, islandZ, trustedPlayersId));
+            List<Tuple<String, String>> blockedPlayersId = blockedPlayers.stream().map(
+                    blockedPlayer -> new Tuple<>(blockedPlayer.getPlayer()
+                            .getPlayerId(), blockedPlayer.getPlayer().getUsername())
+            ).collect(ArrayList::new, List::add, List::addAll);
+
+            var islandPermissions = new IslandPermissions(this.plugin, playerUniqueId, playerIsland.getPermissions());
+
+            this.islands.put(playerUniqueId,
+                    new IslandRecord(playerUniqueId,
+                            islandX,
+                            islandZ,
+                            playerIsland.isPrivate(),
+                            playerIsland.isAllowOfflineVisits(),
+                            islandPermissions,
+                            trustedPlayersId,
+                            blockedPlayersId
+                    )
+            );
         } catch (SQLException e) {
             // ignore for now
         }
@@ -71,68 +103,6 @@ public class IslandManager {
 
     public void removePlayerIsland(UUID playerUniqueId) {
         this.islands.remove(playerUniqueId);
-    }
-
-    public boolean shouldStopIslandInteraction(Player player) {
-        var world = player.getWorld();
-
-        if (player.isOp() && ServerUtils.isOpOverride() || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
-            return false;
-        }
-
-        if (world.getName().equals("lobby")) {
-            return true;
-        }
-
-        var islandRecord = this.findCurrentIslandRecord(world.getName());
-
-        // TODO: check this actually makes sense
-        if (islandRecord == null) {
-            // would mean the current island or place has no owner, so we move on
-            return false;
-        }
-
-        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
-                return false;
-            }
-        }
-
-        return !PlayerUtils.isPlayerInOwnIsland(player, world.getName());
-    }
-
-    public boolean shouldStopNetherTeleport(Player player) {
-        var world = player.getWorld();
-
-        if (player.isOp() && ServerUtils.isOpOverride() || PlayerUtils.isPlayerInOwnIsland(player, world.getName())) {
-            return false;
-        }
-
-        if (world.getName().equals("lobby")) {
-            return true;
-        }
-
-        var islandRecord = this.findCurrentIslandRecord(world.getName());
-        if (islandRecord == null) {
-            return true;
-        }
-
-        for (Tuple<String, String> trustedPlayerTuple : islandRecord.trustedPlayers()) {
-            if (player.getUniqueId().toString().equals(trustedPlayerTuple.getFirst())) {
-                return false;
-            }
-        }
-
-        try {
-            var island = this.plugin.databaseManager.getIslandsDao().queryForId(player.getUniqueId().toString());
-            if (island.isPrivate() || !island.isAllowNetherTeleport()) {
-                return true;
-            }
-        } catch (SQLException e) {
-            // ignore for now
-        }
-
-        return false;
     }
 
     private IslandRecord findCurrentIslandRecord(String worldName) {

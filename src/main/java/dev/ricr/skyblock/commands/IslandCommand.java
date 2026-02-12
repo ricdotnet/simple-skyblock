@@ -14,17 +14,17 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.IslandEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
 import dev.ricr.skyblock.gui.IslandGUI;
-import dev.ricr.skyblock.utils.CommandUtils;
+import dev.ricr.skyblock.permissions.IslandPermissions;
 import dev.ricr.skyblock.utils.NumberUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -35,6 +35,7 @@ import org.codehaus.plexus.util.FileUtils;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -54,13 +55,7 @@ public class IslandCommand implements ICommand {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> island = this.command();
-
-                    commands.registrar().register(island);
-                    commands.registrar().register(Commands.literal("is")
-                            .executes(this::teleportPlayerToOwnIsland)
-                            .redirect(island)
-                            .build()
-                    );
+                    commands.registrar().register(island, List.of("is"));
                 });
     }
 
@@ -75,14 +70,15 @@ public class IslandCommand implements ICommand {
                         .then(Commands.literal("set").executes(this::setIslandTeleportPosition))
                 )
                 .then(Commands.literal("expand")
-                        .then(Commands.argument("blocks", IntegerArgumentType.integer(1, 10))
+                        .then(Commands.argument("blocks", IntegerArgumentType.integer())
+                                .suggests(this::getMaxIslandExpansionAmount)
                                 .executes(this::expandIsland)
                         )
                 )
                 .then(Commands.literal("kick").executes(this::kickPlayersFromIsland))
                 .then(Commands.literal("trust")
                         .then(Commands.argument("player", StringArgumentType.string())
-                                .suggests(CommandUtils::currentOnlinePlayers)
+                                .suggests(PluginCommands::currentOnlinePlayers)
                                 .executes(this::trustPlayerToOwnIsland)
                         )
                 )
@@ -93,10 +89,21 @@ public class IslandCommand implements ICommand {
                 ))
                 .then(Commands.literal("visit")
                         .then(Commands.argument("player", StringArgumentType.string())
-                                .suggests(CommandUtils::currentOnlinePlayers)
+                                .suggests(PluginCommands::currentOnlinePlayers)
                                 .executes(this::visitPlayerIsland)
                         )
                 )
+                .then(Commands.literal("block")
+                        .then(Commands.argument("player", StringArgumentType.string())
+                                .suggests(PluginCommands::currentOnlinePlayers)
+                                .executes(this::blockPlayerFromIsland)
+                        )
+                )
+                .then(Commands.literal("unblock").then(
+                        Commands.argument("player", StringArgumentType.string())
+                                .suggests(this::getBlockedPlayersList)
+                                .executes(this::unblockPlayerFromIsland)
+                ))
                 .build();
     }
 
@@ -186,6 +193,8 @@ public class IslandCommand implements ICommand {
             // Using multiple island worlds means we always start at 0 64 0
             island.setPositionX(0.0d);
             island.setPositionZ(0.0d);
+
+            island.setPermissions(new IslandPermissions(this.plugin, player.getUniqueId()).toString());
 
             IslandEntity finalIsland = island;
             Bukkit.getAsyncScheduler().runNow(this.plugin, (task) -> {
@@ -464,11 +473,12 @@ public class IslandCommand implements ICommand {
         OfflinePlayer offlinePlayer = this.plugin.getServer().getOfflinePlayer(UUID.fromString(targetPlayerEntity.getPlayerId()));
         var targetPlayer = offlinePlayer.getPlayer();
 
+        var finalTargetPlayerEntity = targetPlayerEntity;
         var base = Component.text(String.format("%s", senderName), NamedTextColor.GOLD);
         var reason = Component.text("wants to visit your island.", NamedTextColor.GREEN);
         var clickable = Component.text("Click here to accept", NamedTextColor.AQUA)
                 .clickEvent(ClickEvent.callback(audience -> {
-                    var locationToTp = PlayerUtils.getTpLocation(plugin, offlinePlayer.getUniqueId());
+                    var locationToTp = PlayerUtils.getTpLocation(plugin, UUID.fromString(finalTargetPlayerEntity.getPlayerId()));
                     player.teleport(locationToTp);
                 }));
 
@@ -530,8 +540,12 @@ public class IslandCommand implements ICommand {
 
         var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
         if (playerEntity.getBalance() < totalPriceToExpand) {
-            player.sendMessage(Component.text(String.format("You do not have enough money to expand your island by %d blocks", blocksToExpand),
-                    NamedTextColor.RED));
+            var notEnoughMoney = this.plugin.miniMessage.deserialize(
+                    "<red>You would need <gold><total_amount></gold> to expand by <blocks> blocks",
+                    Placeholder.unparsed("total_amount", ServerUtils.formatMoneyValue(totalPriceToExpand)),
+                    Placeholder.unparsed("blocks", String.valueOf(blocksToExpand))
+            );
+            player.sendMessage(notEnoughMoney);
             return Command.SINGLE_SUCCESS;
         }
 
@@ -574,6 +588,127 @@ public class IslandCommand implements ICommand {
         islandRecord.trustedPlayers().stream()
                 .filter(trustedPlayerTuple -> trustedPlayerTuple.getSecond().toLowerCase().startsWith(remaining))
                 .forEach(trustedPlayerTuple -> builder.suggest(trustedPlayerTuple.getSecond()));
+
+        return builder.buildFuture();
+    }
+
+    private int blockPlayerFromIsland(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayerName = ctx.getArgument("player", String.class);
+        PlayerEntity targetPlayerEntity = null;
+
+        if (targetPlayerName.equals(player.getName())) {
+            var message = "<red>You cannot block yourself from your own";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        try {
+            targetPlayerEntity = this.playersDao.queryBuilder()
+                    .where()
+                    .eq("username", targetPlayerName)
+                    .queryForFirst();
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        if (targetPlayerEntity == null) {
+            var message = String.format("<gold>%s <red>does not exist in our database", targetPlayerName);
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        if (!this.playerIslandRecordExists(player)) {
+            var message = "<red>You do not have an island to block players from";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        try {
+            var playerIsland = islandsDao.queryForId(player.getUniqueId().toString());
+
+            var blockedPlayerAdd = new DatabaseChange.BlockedPlayerAdd(playerIsland, targetPlayerEntity);
+            this.plugin.databaseChangesAccumulator.add(blockedPlayerAdd);
+
+            var newIslandRecord = this.plugin.islandManager
+                    .getIslandRecord(player.getUniqueId())
+                    .addBlockedPlayer(targetPlayerEntity.getPlayerId(), targetPlayerEntity.getUsername());
+            this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
+
+            var blockSuccessMessage = String.format("<green>Player <gold>%s</gold> has been blocked from your island", targetPlayerEntity.getUsername());
+            player.sendMessage(this.plugin.miniMessage.deserialize(blockSuccessMessage));
+        } catch (SQLException e) {
+            // ignore for now
+        }
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int unblockPlayerFromIsland(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayerName = ctx.getArgument("player", String.class);
+        var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+        if (islandRecord == null) {
+            var message = "<red>You do not have an island to unblock players from";
+            sender.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        String targetPlayerUniqueId = null;
+
+        for (var blockedPlayerTuple : islandRecord.blockedPlayers()) {
+            if (blockedPlayerTuple.getSecond().equals(targetPlayerName)) {
+                targetPlayerUniqueId = blockedPlayerTuple.getFirst();
+                break;
+            }
+        }
+
+        if (targetPlayerUniqueId == null) {
+            sender.sendMessage(Component.text(String.format("Player %s is not blocked from your island", targetPlayerName), NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var blockedPlayerRemove = new DatabaseChange.BlockedPlayerRemove(player.getUniqueId().toString(), targetPlayerUniqueId);
+        this.plugin.databaseChangesAccumulator.add(blockedPlayerRemove);
+
+        var newIslandRecord = islandRecord.removeBlockedPlayer(targetPlayerName);
+        this.plugin.islandManager.replaceIslandRecord(player.getUniqueId(), newIslandRecord);
+
+        sender.sendMessage(Component.text(String.format("Player %s is no longer blocked from your island", targetPlayerName), NamedTextColor.GREEN));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private CompletableFuture<Suggestions> getBlockedPlayersList(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var islandRecord = this.plugin.islandManager.getIslandRecord(player.getUniqueId());
+        if (islandRecord == null) {
+            return builder.buildFuture();
+        }
+
+        var remaining = builder.getRemaining().toLowerCase();
+        islandRecord.blockedPlayers().stream()
+                .filter(blockedPlayerTuple -> blockedPlayerTuple.getSecond().toLowerCase().startsWith(remaining))
+                .forEach(blockedPlayerTuple -> builder.suggest(blockedPlayerTuple.getSecond()));
+
+        return builder.buildFuture();
+    }
+
+    private CompletableFuture<Suggestions> getMaxIslandExpansionAmount(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+        var onlinePlayer = this.plugin.onlinePlayers.getPlayer(player.getUniqueId());
+
+        var expansionPrice = this.plugin.serverConfig.getInt("island.expand_price", 10000);
+        var maxExpansion = NumberUtils.objectToIntOrZero(onlinePlayer.getPlayerEntity().getBalance() / expansionPrice);
+
+        builder.suggest(maxExpansion);
 
         return builder.buildFuture();
     }

@@ -1,39 +1,36 @@
 package dev.ricr.skyblock.commands;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import lombok.AllArgsConstructor;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
+import dev.ricr.skyblock.utils.ServerUtils;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
-@AllArgsConstructor
-public class LobbyCommand implements CommandExecutor {
+import java.util.List;
+
+public class LobbyCommand implements BasicCommand {
     private final SimpleSkyblock plugin;
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be executed by players");
-            return true;
-        }
+    public LobbyCommand(SimpleSkyblock plugin) {
+        this.plugin = plugin;
+        this.plugin.registerCommand("lobby", List.of("spawn"), this);
+    }
 
-        World lobbyWorld = Bukkit.getWorld("lobby");
+    @Override
+    public void execute(CommandSourceStack commandSourceStack, String[] args) {
+        var sender = commandSourceStack.getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        World lobbyWorld = this.plugin.worldManager.load("lobby");
 
         if (lobbyWorld == null) {
-            player.sendMessage(Component.text("The lobby world could not be found", NamedTextColor.RED));
-            return true;
+            player.sendMessage(this.plugin.miniMessage.deserialize("<red>The lobby world could not be found"));
+            return;
         }
 
         Location spawnLocation = new Location(lobbyWorld, 0.5, 65, 0.5);
         player.teleport(spawnLocation);
-
-        return true;
     }
 }

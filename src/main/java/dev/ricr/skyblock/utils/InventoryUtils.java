@@ -8,6 +8,9 @@ public class InventoryUtils {
 
     public static void fillEmptySlots(Inventory inventory) {
         var glassPane = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        var itemMeta = glassPane.getItemMeta();
+        itemMeta.setHideTooltip(true);
+        glassPane.setItemMeta(itemMeta);
 
         for (int i = 0; i < inventory.getSize(); i++) {
             if (inventory.getItem(i) == null) {

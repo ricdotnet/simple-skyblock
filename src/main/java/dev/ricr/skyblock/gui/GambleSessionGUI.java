@@ -3,8 +3,8 @@ package dev.ricr.skyblock.gui;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.GambleEntity;
-import dev.ricr.skyblock.database.PlayerEntity;
-import dev.ricr.skyblock.enums.GambleType;
+import dev.ricr.skyblock.enums.GambleOutcome;
+import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.utils.InventoryUtils;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -13,10 +13,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -94,11 +90,11 @@ public class GambleSessionGUI implements InventoryHolder {
 
                 gamble.setPlayer(playerEntity);
                 gamble.setAmount(this.amount);
-                gamble.setType(GambleType.Won.toString());
+                gamble.setType(GambleOutcome.Won.toString());
 
                 updatePlayerBalance(player, this.amount);
 
-                player.playSound(player.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_TWINKLE, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.POSITIVE);
             } else {
                 var message = Component.text("You lost the gamble \uD83E\uDD40", NamedTextColor.RED);
 
@@ -109,9 +105,9 @@ public class GambleSessionGUI implements InventoryHolder {
 
                 gamble.setPlayer(playerEntity);
                 gamble.setAmount(this.originalAmount);
-                gamble.setType(GambleType.Lost.toString());
+                gamble.setType(GambleOutcome.Lost.toString());
 
-                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.NEGATIVE);
             }
 
             var gambleRecordAdd = new DatabaseChange.GambleRecordAdd(gamble);

@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class Tuple<T, U> {
 
-    public T first;
-    public U second;
+    private T first;
+    private U second;
 
 }

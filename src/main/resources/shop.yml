@@ -91,6 +91,15 @@ items:
   - material: TROPICAL_FISH
     name: 'Tropical Fish'
     sell: 0.5
+  - material: IRON_INGOT
+    name: 'Iron Ingot'
+    sell: 10
+  - material: GOLD_INGOT
+    name: 'Gold Ingot'
+    sell: 20
+  - material: EMERALD
+    name: 'Emerald'
+    sell: 10
 
 villager_shops:
   - name: Trims
@@ -106,6 +115,19 @@ villager_shops:
         trade_in_extra: DIAMOND
         trade_in_extra_amount: 4
   - name: Miner
+    color: dark_gray
+    position:
+      x: 16.5
+      y: 64
+      z: 7.5
+    items:
+      - material: DEEPSLATE
+        amount: 6
+        coin_amount: 3
+      - material: NETHERRACK
+        amount: 16
+        coin_amount: 4
+  - name: Orer
     color: dark_gray
     position:
       x: 10.5
@@ -143,7 +165,7 @@ villager_shops:
         amount: 1
         coin_amount: 3
       - material: DEEPSLATE_IRON_ORE
-        amount: 1
+        amount: 2
         coin_amount: 3
       - material: DEEPSLATE_GOLD_ORE
         amount: 1
@@ -160,12 +182,15 @@ villager_shops:
       - material: DEEPSLATE_DIAMOND_ORE
         amount: 1
         coin_amount: 32
+      - material: GILDED_BLACKSTONE
+        amount: 2
+        coin_amount: 32
       - material: ANCIENT_DEBRIS
         amount: 2
         coin_amount: 64
       - material: BUDDING_AMETHYST
         amount: 1
-        coin_amount: 32
+        coin_amount: 64
   - name: Nature
     color: dark_green
     position:
@@ -250,6 +275,9 @@ villager_shops:
       - material: SWEET_BERRIES
         amount: 1
         coin_amount: 8
+      - material: COCOA_BEANS
+        amount: 1
+        coin_amount: 16
   - name: Iteman
     color: yellow
     position:

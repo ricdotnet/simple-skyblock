@@ -1,5 +1,6 @@
 package dev.ricr.skyblock.gui;
 
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.enums.ShopType;
 import dev.ricr.skyblock.shop.ShopItems;
@@ -22,23 +23,23 @@ public class ShopTypeGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     public ShopTypeGUI(SimpleSkyblock plugin) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 9, Component.text("Select shop"));
+        this.inventory = Bukkit.createInventory(this, 9, Component.text(DisplayNames.SELECT_SHOP));
 
         ItemStack blocksShop = new ItemStack(Material.COBBLESTONE, 1);
         ItemMeta blocksShopMeta = blocksShop.getItemMeta();
-        blocksShopMeta.displayName(Component.text("Blocks Shop"));
+        blocksShopMeta.displayName(Component.text(DisplayNames.BLOCKS_SHOP));
         blocksShopMeta.setEnchantmentGlintOverride(true);
         blocksShop.setItemMeta(blocksShopMeta);
 
         ItemStack itemsShop = new ItemStack(Material.DIAMOND, 1);
         ItemMeta itemsShopMeta = itemsShop.getItemMeta();
-        itemsShopMeta.displayName(Component.text("Items Shop"));
+        itemsShopMeta.displayName(Component.text(DisplayNames.ITEMS_SHOP));
         itemsShopMeta.setEnchantmentGlintOverride(true);
         itemsShop.setItemMeta(itemsShopMeta);
 
         ItemStack closeButton = new ItemStack(Material.BARRIER, 1);
         ItemMeta closeButtonMeta = closeButton.getItemMeta();
-        closeButtonMeta.displayName(Component.text("Close"));
+        closeButtonMeta.displayName(Component.text(DisplayNames.CLOSE));
         closeButton.setItemMeta(closeButtonMeta);
 
         inventory.setItem(0, blocksShop);
