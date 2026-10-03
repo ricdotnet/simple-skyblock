@@ -1,6 +1,7 @@
 package dev.ricr.skyblock.gui;
 
 import com.j256.ormlite.dao.Dao;
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.TransactionEntity;
 import dev.ricr.skyblock.database.PlayerEntity;
@@ -10,7 +11,7 @@ import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -28,7 +29,7 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
     private final Inventory inventory;
 
     public LeaderBoardGUI(SimpleSkyblock plugin, Player player) {
-        this.inventory = Bukkit.createInventory(this, 27, Component.text("Balance leaderboard"));
+        this.inventory = Bukkit.createInventory(this, 27, Component.text(DisplayNames.BALANCE_LEADERBOARD));
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Dao<PlayerEntity, String> playersDao = plugin.databaseManager.getPlayersDao();
@@ -81,24 +82,15 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
                     List<Component> lore = ServerUtils.getLoreOrEmptyComponentList(meta);
                     lore.add(Component.empty());
-                    lore.add(Component.text()
-                            .content("Balance: ")
-                            .append(Component.text(String.format("%s",
-                                            ServerUtils.formatMoneyValue(playerEntity.getBalance())),
-                                    NamedTextColor.GOLD))
-                            .build());
-                    lore.add(Component.text()
-                            .content("Bought: ")
-                            .append(Component.text(String.format("%s",
-                                            ServerUtils.formatMoneyValue(totalBought)),
-                                    NamedTextColor.GREEN))
-                            .build());
-                    lore.add(Component.text()
-                            .content("Sold: ")
-                            .append(Component.text(String.format("%s",
-                                            ServerUtils.formatMoneyValue(totalSold)),
-                                    NamedTextColor.BLUE))
-                            .build());
+                    lore.add(plugin.miniMessage.deserialize("<!italic><white>Balance: <color:#F23CC7A><balance>",
+                            Placeholder.unparsed("balance", ServerUtils.formatMoneyValue(playerEntity.getBalance()))
+                    ));
+                    lore.add(plugin.miniMessage.deserialize("<!italic><white>Bought: <color:#F23CC7A><total_bought>",
+                            Placeholder.unparsed("total_bought", ServerUtils.formatMoneyValue(totalBought))
+                    ));
+                    lore.add(plugin.miniMessage.deserialize("<!italic><white>Sold: <color:#F23CC7A><total_sold>",
+                            Placeholder.unparsed("total_sold", ServerUtils.formatMoneyValue(totalSold))
+                    ));
                     meta.lore(lore);
                     playerHead.setItemMeta(meta);
 
@@ -111,24 +103,15 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
                 List<Component> lore = ServerUtils.getLoreOrEmptyComponentList(meta);
                 lore.add(Component.empty());
-                lore.add(Component.text()
-                        .content("Total balances: ")
-                        .append(Component.text(String.format("%s",
-                                        ServerUtils.formatMoneyValue(totalEconomyValue)),
-                                NamedTextColor.GOLD))
-                        .build());
-                lore.add(Component.text()
-                        .content("Total bought: ")
-                        .append(Component.text(String.format("%s",
-                                        ServerUtils.formatMoneyValue(totalServerBought)),
-                                NamedTextColor.GREEN))
-                        .build());
-                lore.add(Component.text()
-                        .content("Total sold: ")
-                        .append(Component.text(String.format("%s",
-                                        ServerUtils.formatMoneyValue(totalServerSold)),
-                                NamedTextColor.BLUE))
-                        .build());
+                lore.add(plugin.miniMessage.deserialize("<!italic><white>Total balances: <color:#F23CC7A><total_economy>",
+                        Placeholder.unparsed("total_economy", ServerUtils.formatMoneyValue(totalEconomyValue))
+                ));
+                lore.add(plugin.miniMessage.deserialize("<!italic><white>Total bought: <color:#F23CC7A><total_server_bought>",
+                        Placeholder.unparsed("total_server_bought", ServerUtils.formatMoneyValue(totalServerBought))
+                ));
+                lore.add(plugin.miniMessage.deserialize("<!italic><white>Total sold: <color:#F23CC7A><total_server_sold>",
+                        Placeholder.unparsed("total_server_sold", ServerUtils.formatMoneyValue(totalServerSold))
+                ));
                 meta.lore(lore);
                 totalEconomy.setItemMeta(meta);
 
@@ -138,7 +121,7 @@ public class LeaderBoardGUI implements InventoryHolder, ISimpleSkyblockGUI {
                 // Open async to allow all players to load without blocking the main thread with db operations
                 Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(this.getInventory()));
             } catch (SQLException e) {
-                System.out.println("Failed to load leaderboard: " + e.getMessage());
+                player.sendMessage(plugin.miniMessage.deserialize("<red>Failed to load leaderboard"));
             }
         });
     }

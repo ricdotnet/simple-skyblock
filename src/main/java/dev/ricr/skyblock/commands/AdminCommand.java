@@ -2,36 +2,43 @@ package dev.ricr.skyblock.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
 import dev.ricr.skyblock.enums.InvalidWarpNames;
+import dev.ricr.skyblock.items.CreeperCoin;
+import dev.ricr.skyblock.items.LuckyPickaxe;
+import dev.ricr.skyblock.items.PlayTimeKey;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitTask;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AdminCommand implements ICommand {
     private final SimpleSkyblock plugin;
+    private @Nullable BukkitTask opOverrideWarningTask;
 
     public void register() {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> admin = this.command();
-
                     commands.registrar().register(admin);
                 });
     }
@@ -50,6 +57,23 @@ public class AdminCommand implements ICommand {
                                 )
                         )
                 )
+                .then(Commands.literal("giveCreeperCoins")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                        .executes(this::giveCreeperCoins)
+                                )
+                        )
+                )
+                .then(Commands.literal("giveLuckyPickaxe")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .executes(this::giveLuckyPickaxe)
+                        )
+                )
+                .then(Commands.literal("givePlayTimeKey")
+                        .then(Commands.argument("player", ArgumentTypes.player())
+                                .executes(this::givePlayTimeKey)
+                        )
+                )
                 .then(Commands.literal("createWarp")
                         .then(Commands.argument("warp", StringArgumentType.string())
                                 .executes(this::createWarp)
@@ -62,10 +86,24 @@ public class AdminCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        var isOpOverride = ServerUtils.isOpOverride();
-        ServerUtils.setOpOverride(!isOpOverride);
+        var updated = !ServerUtils.isOpOverride();
+        ServerUtils.setOpOverride(updated);
 
-        player.sendMessage(Component.text(String.format("Op override is now %s", ServerUtils.isOpOverride()), NamedTextColor.GREEN));
+        if (updated) {
+            this.opOverrideWarningTask = Bukkit.getScheduler().runTaskTimer(this.plugin, () ->
+                    this.plugin.getServer().getOnlinePlayers().forEach(onlinePlayer -> {
+                        if (onlinePlayer.isOp()) {
+                            onlinePlayer.sendActionBar(this.plugin.miniMessage.deserialize(DisplayNames.OP_OVERRIDE));
+                        }
+                    }), 0L, 40L);
+        } else {
+            if (this.opOverrideWarningTask != null) {
+                this.opOverrideWarningTask.cancel();
+            }
+        }
+
+        var message = "Op override is now " + (updated ? "<green>enabled" : "<red>disabled");
+        player.sendMessage(this.plugin.miniMessage.deserialize(message));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -122,6 +160,58 @@ public class AdminCommand implements ICommand {
 
         targetPlayer.sendMessage(Component.text(String.format("An admin sent you %s", ServerUtils.formatMoneyValue(amount)),
                 NamedTextColor.GREEN));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int giveCreeperCoins(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
+            // Should only suggest online players
+            player.sendMessage(Component.text("Invalid player", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var amount = ctx.getArgument("amount", Integer.class);
+        var creeperCoin = CreeperCoin.create(this.plugin, amount);
+        targetPlayer.give(creeperCoin);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int giveLuckyPickaxe(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
+            // Should only suggest online players
+            player.sendMessage(Component.text("Invalid player", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var luckyPickaxe = LuckyPickaxe.create(this.plugin);
+        targetPlayer.give(luckyPickaxe);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int givePlayTimeKey(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
+
+        var targetPlayer = ServerUtils.resolvePlayerFromCommandArgument(sender, ctx);
+        if (targetPlayer == null) {
+            // Should only suggest online players
+            player.sendMessage(Component.text("Invalid player", NamedTextColor.RED));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        var playTimeKey = PlayTimeKey.create(this.plugin);
+        targetPlayer.give(playTimeKey);
 
         return Command.SINGLE_SUCCESS;
     }

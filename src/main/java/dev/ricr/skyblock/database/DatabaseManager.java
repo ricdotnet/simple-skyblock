@@ -7,18 +7,28 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.support.DatabaseConnection;
 import com.j256.ormlite.table.TableUtils;
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.utils.Tuple;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 @Getter
 public class DatabaseManager {
     private final SimpleSkyblock plugin;
     private final DatabaseChangesAccumulator accumulator;
+    private ConnectionSource connection = null;
 
+    private Dao<MigrationEntity, String> migrationsDao;
     private Dao<IslandPlayerTrustLinkEntity, String> islandPlayerTrustLinksDao;
     private Dao<PlayerEntity, String> playersDao;
     private Dao<IslandEntity, String> islandsDao;
@@ -27,6 +37,7 @@ public class DatabaseManager {
     private Dao<TransactionEntity, Integer> transactionsDao;
     private Dao<WarpEntity, String> warpsDao;
     private Dao<VillagerShopEntity, String> villagerShopsDao;
+    private Dao<IslandBlockedPlayersEntity, String> islandBlockedPlayersDao;
 
     public DatabaseManager(SimpleSkyblock plugin, DatabaseChangesAccumulator accumulator) {
         this.plugin = plugin;
@@ -38,34 +49,37 @@ public class DatabaseManager {
                 .info("Connecting to database in " + databaseUrl);
 
         try {
-            ConnectionSource connection = new JdbcConnectionSource(databaseUrl);
+            this.connection = new JdbcConnectionSource(databaseUrl);
 
-            this.islandPlayerTrustLinksDao = DaoManager.createDao(connection, IslandPlayerTrustLinkEntity.class);
-            this.playersDao = DaoManager.createDao(connection, PlayerEntity.class);
-            this.islandsDao = DaoManager.createDao(connection, IslandEntity.class);
-            this.gamblesDao = DaoManager.createDao(connection, GambleEntity.class);
-            this.auctionHouseDao = DaoManager.createDao(connection, AuctionHouseItemEntity.class);
-            this.transactionsDao = DaoManager.createDao(connection, TransactionEntity.class);
-            this.warpsDao = DaoManager.createDao(connection, WarpEntity.class);
-            this.villagerShopsDao = DaoManager.createDao(connection, VillagerShopEntity.class);
+            this.migrationsDao = DaoManager.createDao(this.connection, MigrationEntity.class);
+            this.islandPlayerTrustLinksDao = DaoManager.createDao(this.connection, IslandPlayerTrustLinkEntity.class);
+            this.playersDao = DaoManager.createDao(this.connection, PlayerEntity.class);
+            this.islandsDao = DaoManager.createDao(this.connection, IslandEntity.class);
+            this.gamblesDao = DaoManager.createDao(this.connection, GambleEntity.class);
+            this.auctionHouseDao = DaoManager.createDao(this.connection, AuctionHouseItemEntity.class);
+            this.transactionsDao = DaoManager.createDao(this.connection, TransactionEntity.class);
+            this.warpsDao = DaoManager.createDao(this.connection, WarpEntity.class);
+            this.villagerShopsDao = DaoManager.createDao(this.connection, VillagerShopEntity.class);
+            this.islandBlockedPlayersDao = DaoManager.createDao(this.connection, IslandBlockedPlayersEntity.class);
 
-            TableUtils.createTableIfNotExists(connection, IslandPlayerTrustLinkEntity.class);
-            TableUtils.createTableIfNotExists(connection, PlayerEntity.class);
-            TableUtils.createTableIfNotExists(connection, IslandEntity.class);
-            TableUtils.createTableIfNotExists(connection, TransactionEntity.class);
-            TableUtils.createTableIfNotExists(connection, GambleEntity.class);
-            TableUtils.createTableIfNotExists(connection, AuctionHouseItemEntity.class);
-            TableUtils.createTableIfNotExists(connection, TransactionEntity.class);
-            TableUtils.createTableIfNotExists(connection, WarpEntity.class);
-            TableUtils.createTableIfNotExists(connection, VillagerShopEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, MigrationEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, IslandPlayerTrustLinkEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, PlayerEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, IslandEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, TransactionEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, GambleEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, AuctionHouseItemEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, TransactionEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, WarpEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, VillagerShopEntity.class);
+            TableUtils.createTableIfNotExists(this.connection, IslandBlockedPlayersEntity.class);
 
             plugin.getLogger()
                     .info("Successfully connected to database.");
 
-            this.scheduleDbCommitTask(connection);
+            this.scheduleDbCommitTask(this.connection);
         } catch (SQLException e) {
-            plugin.getLogger()
-                    .severe("Failed to connect to database: " + e.getMessage());
+            plugin.getLogger().severe("Failed to connect to database: " + e.getMessage());
         }
     }
 
@@ -114,6 +128,75 @@ public class DatabaseManager {
         }
     }
 
+    public void runMigrations(File pluginFile) throws IOException {
+        var jarsTuple = this.loadMigrationEntries(pluginFile);
+
+        for (var migrationJarEntry : jarsTuple.getSecond()) {
+            var filename = migrationJarEntry.getName();
+            var migrationId = filename.substring("migrations/".length()).split("_")[0];
+
+            MigrationEntity migrationEntity;
+            try {
+                migrationEntity = this.migrationsDao.queryForId(migrationId);
+            } catch (SQLException e) {
+                this.plugin.getLogger().severe(
+                        String.format("Failed when querying migration %s using id %s: %s", filename, migrationId, e.getMessage())
+                );
+                continue;
+            }
+
+            if (migrationEntity != null) {
+                this.plugin.getLogger().info(String.format("Skipping migration %s because it has been executed before", filename));
+                continue;
+            }
+
+            this.plugin.getLogger().info(String.format("Executing new migration %s", filename));
+
+            migrationEntity = new MigrationEntity();
+            migrationEntity.setId(migrationId);
+            migrationEntity.setMigration(filename.substring("migrations/".length()));
+
+            String sql;
+            try (InputStream in = jarsTuple.getFirst().getInputStream(migrationJarEntry)) {
+                sql = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                this.plugin.getLogger().severe(
+                        String.format("Failed when trying to parse the raw sql for migration %s: %s", filename, e.getMessage())
+                );
+                continue;
+            }
+
+            try {
+                var rawConnection = this.connection.getReadWriteConnection(null);
+                rawConnection.executeStatement(sql, DatabaseConnection.DEFAULT_RESULT_FLAGS);
+
+                this.migrationsDao.create(migrationEntity);
+            } catch (SQLException e) {
+                this.plugin.getLogger().severe(
+                        String.format("Failed when creating a new entry for migration %s with id %s: %s",
+                                filename, migrationId, e.getMessage())
+                );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        jarsTuple.getFirst().close();
+    }
+
+    private Tuple<JarFile, List<JarEntry>> loadMigrationEntries(File pluginFile) {
+        try {
+            JarFile jar = new JarFile(pluginFile);
+            return new Tuple<>(jar, jar.stream()
+                    .filter(e -> e.getName().startsWith("migrations/"))
+                    .filter(e -> !e.isDirectory())
+                    .sorted(Comparator.comparing(JarEntry::getName))
+                    .toList());
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read migrations from JAR", e);
+        }
+    }
+
     private void applyChange(DatabaseChange change) throws SQLException {
         switch (change) {
             case DatabaseChange.PlayerCreateOrUpdate(PlayerEntity player) -> {
@@ -131,6 +214,23 @@ public class DatabaseManager {
                     this.auctionHouseDao.create(auctionHouseItem);
             case DatabaseChange.AuctionHouseItemRemove(AuctionHouseItemEntity auctionHouseItem) ->
                     this.auctionHouseDao.delete(auctionHouseItem);
+            case DatabaseChange.IslandRecordUpdate(IslandEntity islandEntity) -> this.islandsDao.update(islandEntity);
+            case DatabaseChange.BlockedPlayerAdd(IslandEntity playerIsland, PlayerEntity targetPlayer) -> {
+                var blockedPlayerIslandLink = new IslandBlockedPlayersEntity();
+
+                blockedPlayerIslandLink.setIsland(playerIsland);
+                blockedPlayerIslandLink.setPlayer(targetPlayer);
+
+                this.islandBlockedPlayersDao.create(blockedPlayerIslandLink);
+            }
+            case DatabaseChange.BlockedPlayerRemove(String islandOwnerId, String trustedPlayerId) -> {
+                var deleteBuilder = this.plugin.databaseManager.getIslandBlockedPlayersDao().deleteBuilder();
+                deleteBuilder.where()
+                        .eq("island_id", islandOwnerId)
+                        .and()
+                        .eq("player_id", trustedPlayerId);
+                deleteBuilder.delete();
+            }
             case DatabaseChange.TransactionAdd(TransactionEntity transaction) ->
                     this.transactionsDao.create(transaction);
             case DatabaseChange.TrustedPlayerAdd(IslandEntity playerIsland, PlayerEntity targetPlayer) -> {

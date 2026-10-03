@@ -28,9 +28,6 @@ public class IslandEntity {
     @DatabaseField(canBeNull = false)
     private double positionZ;
 
-    @ForeignCollectionField
-    private ForeignCollection<IslandPlayerTrustLinkEntity> trustedPlayers;
-
     @DatabaseField(canBeNull = false)
     private boolean isPrivate = false;
 
@@ -45,4 +42,13 @@ public class IslandEntity {
 
     @DatabaseField(canBeNull = false)
     private long seed;
+
+    @DatabaseField
+    private String permissions;
+
+    @ForeignCollectionField
+    private ForeignCollection<IslandPlayerTrustLinkEntity> trustedPlayers;
+
+    @ForeignCollectionField
+    private ForeignCollection<IslandBlockedPlayersEntity> blockedPlayers;
 }

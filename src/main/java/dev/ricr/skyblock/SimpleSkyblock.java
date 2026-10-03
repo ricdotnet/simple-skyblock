@@ -1,40 +1,41 @@
 package dev.ricr.skyblock;
 
-import dev.ricr.skyblock.commands.AdminCommand;
-import dev.ricr.skyblock.commands.AuctionHouseCommand;
-import dev.ricr.skyblock.commands.BalanceCommand;
-import dev.ricr.skyblock.commands.GambleCommand;
-import dev.ricr.skyblock.commands.IslandCommand;
-import dev.ricr.skyblock.commands.LeaderboardCommand;
-import dev.ricr.skyblock.commands.LobbyCommand;
-import dev.ricr.skyblock.commands.PayCommand;
-import dev.ricr.skyblock.commands.ShopCommand;
-import dev.ricr.skyblock.commands.WarpCommand;
+import dev.ricr.skyblock.commands.PluginCommands;
 import dev.ricr.skyblock.database.DatabaseChangesAccumulator;
 import dev.ricr.skyblock.database.DatabaseManager;
 import dev.ricr.skyblock.generators.IslandGenerator;
 import dev.ricr.skyblock.listeners.BarterListener;
+import dev.ricr.skyblock.listeners.BaseListeners;
 import dev.ricr.skyblock.listeners.ChatListener;
+import dev.ricr.skyblock.listeners.FeedbackListeners;
 import dev.ricr.skyblock.listeners.InventoryClickListener;
 import dev.ricr.skyblock.listeners.IslandListeners;
+import dev.ricr.skyblock.listeners.LuckyPickaxeListener;
 import dev.ricr.skyblock.listeners.PlayerListeners;
 import dev.ricr.skyblock.listeners.ServerLoadListener;
+import dev.ricr.skyblock.listeners.SilenceMobListener;
+import dev.ricr.skyblock.listeners.VillagerShopInteractListener;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
+import dev.ricr.skyblock.utils.KeyChestManager;
 import dev.ricr.skyblock.utils.ServerUtils;
 import dev.ricr.skyblock.utils.VillagerShopManager;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
 import dev.ricr.skyblock.utils.WorldManager;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Registry;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Objects;
 
 public class SimpleSkyblock extends JavaPlugin {
     public FileConfiguration serverConfig;
@@ -47,6 +48,9 @@ public class SimpleSkyblock extends JavaPlugin {
     public MiniMessage miniMessage;
     public WorldManager worldManager;
     public VillagerShopManager villagerShopManager;
+    public KeyChestManager keyChestManager;
+
+    public static final Registry<Enchantment> ENCHANTMENTS = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
 
     @Override
     public void onEnable() {
@@ -56,6 +60,7 @@ public class SimpleSkyblock extends JavaPlugin {
 
         this.miniMessage = MiniMessage.miniMessage();
         this.worldManager = new WorldManager(this);
+        this.keyChestManager = new KeyChestManager();
 
         // Simple online players cache to help with batching PlayerEntity related db operations
         this.onlinePlayers = new OnlinePlayers(this);
@@ -64,6 +69,14 @@ public class SimpleSkyblock extends JavaPlugin {
         this.databaseChangesAccumulator = new DatabaseChangesAccumulator(this);
 
         this.databaseManager = new DatabaseManager(this, this.databaseChangesAccumulator);
+        try {
+            this.databaseManager.runMigrations(this.getFile());
+        } catch (IOException e) {
+            this.getLogger().severe(
+                    String.format("Failed when trying to close the jar file after running migrations: %s", e.getMessage())
+            );
+        }
+
         this.islandManager = new IslandManager(this);
 
         // Open an auction house class with fast access Dao
@@ -73,32 +86,20 @@ public class SimpleSkyblock extends JavaPlugin {
         this.islandGenerator = new IslandGenerator(this);
 
         // Register listeners
-        new ServerLoadListener(this);
-        new ChatListener(this);
+        new FeedbackListeners(this);
+        new BaseListeners(this);
         new PlayerListeners(this);
-        new InventoryClickListener(this);
         new IslandListeners(this);
+        new ChatListener(this);
+        new ServerLoadListener(this);
+        new InventoryClickListener(this);
         new BarterListener(this);
+        new LuckyPickaxeListener(this);
+        new VillagerShopInteractListener(this);
+        new SilenceMobListener(this);
 
         // Register commands
-        new AdminCommand(this).register();
-        new IslandCommand(this).register();
-        new GambleCommand(this).register();
-        new PayCommand(this).register();
-        new WarpCommand(this).register();
-
-        Objects.requireNonNull(this.getCommand("lobby"))
-                .setExecutor(new LobbyCommand(this));
-        Objects.requireNonNull(this.getCommand("balance"))
-                .setExecutor(new BalanceCommand(this));
-        Objects.requireNonNull(this.getCommand("shop"))
-                .setExecutor(new ShopCommand(this));
-        Objects.requireNonNull(this.getCommand("leaderboard"))
-                .setExecutor(new LeaderboardCommand(this));
-
-        // TODO: refactor into command tree
-        Objects.requireNonNull(this.getCommand("auctionhouse"))
-                .setExecutor(new AuctionHouseCommand(this));
+        PluginCommands.register(this);
 
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);
@@ -115,6 +116,13 @@ public class SimpleSkyblock extends JavaPlugin {
         } catch (SQLException e) {
             this.getLogger().severe("Failed to commit changes to database on shutdown:");
             this.getLogger().severe(e.getMessage());
+        }
+
+        // Save all playtime key remaining times
+        // The save action happens in the removePlayer() method and since we're already closing the server,
+        // I don't think there will be any issues with saving data
+        for (var player : this.onlinePlayers.getOnlinePlayers().keySet()) {
+            this.onlinePlayers.removePlayer(player);
         }
 
         this.getLogger().info("SimpleSkyblock has been disabled!");

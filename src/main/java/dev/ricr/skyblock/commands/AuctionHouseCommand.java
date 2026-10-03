@@ -1,65 +1,74 @@
 package dev.ricr.skyblock.commands;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.AuctionHouseItemEntity;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.gui.AuctionHouseGUI;
 import dev.ricr.skyblock.utils.ServerUtils;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.AllArgsConstructor;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
+import java.util.List;
 
 @AllArgsConstructor
-public class AuctionHouseCommand implements CommandExecutor {
+public class AuctionHouseCommand implements ICommand {
     private final SimpleSkyblock plugin;
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-                             String[] args) {
+    public void register() {
+        this.plugin.getLifecycleManager()
+                .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+                    LiteralCommandNode<CommandSourceStack> auctionHouse = this.command();
+                    commands.registrar().register(auctionHouse, List.of("ah"));
+                });
+    }
+
+    private LiteralCommandNode<CommandSourceStack> command() {
+        return Commands.literal("auctionhouse")
+                .executes(this::openAuctionHouseGUI)
+                .then(Commands.literal("sell")
+                        .then(Commands.argument("price", DoubleArgumentType.doubleArg())
+                                .executes(this::sellItem)
+                        )
+                )
+                .build();
+    }
+
+    private int openAuctionHouseGUI(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        if (args.length > 1) {
-            player.sendMessage(Component.text()
-                    .content("Use /auctionhouse to open the auction house GUI")
-                    .color(NamedTextColor.YELLOW)
-                    .append(Component.newline())
-                    .append(Component.text("Or use /auctionhouse <price> to place an auction for the item you are " +
-                            "holding", NamedTextColor.YELLOW))
-                    .build());
+        var auctionHouseGUI = new AuctionHouseGUI(this.plugin);
+        player.openInventory(auctionHouseGUI.getInventory());
 
-            return true;
-        }
+        return Command.SINGLE_SUCCESS;
+    }
 
-        if (args.length == 0) {
-            var auctionHouseGUI = new AuctionHouseGUI(this.plugin);
-            player.openInventory(auctionHouseGUI.getInventory());
 
-            return true;
-        }
+    private int sellItem(CommandContext<CommandSourceStack> ctx) {
+        var sender = ctx.getSource().getSender();
+        var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        double price = Double.parseDouble(args[0]);
+        var price = ctx.getArgument("price", Double.class);
 
         if (price <= 0) {
-            player.sendMessage(Component.text("You cannot place an auction for a negative or zero price",
-                    NamedTextColor.RED));
-
-            return true;
+            player.sendMessage(this.plugin.miniMessage.deserialize("<red>You cannot place an auction for a negative or zero price"));
+            return Command.SINGLE_SUCCESS;
         }
 
         var itemInHand = player.getInventory().getItemInMainHand();
         var clonedItem = itemInHand.clone();
 
         if (itemInHand.getType() == Material.AIR) {
-            player.sendMessage(Component.text("You must be holding an item to place an auction for it",
-                    NamedTextColor.RED));
-            return true;
+            player.sendMessage(this.plugin.miniMessage.deserialize("<red>You must be holding an item to place an auction for it"));
+            return Command.SINGLE_SUCCESS;
         }
 
         var playerSellingEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
@@ -75,9 +84,8 @@ public class AuctionHouseCommand implements CommandExecutor {
         }
 
         if (playerListingsCount >= ServerUtils.AUCTION_HOUSE_MAX_LISTINGS) {
-            player.sendMessage(Component.text("You cannot place more than 10 auctions",
-                    NamedTextColor.RED));
-            return true;
+            player.sendMessage(this.plugin.miniMessage.deserialize("<red>You cannot place more than 10 auctions"));
+            return Command.SINGLE_SUCCESS;
         }
 
         var auctionHouseItemEntity = new AuctionHouseItemEntity();
@@ -92,8 +100,8 @@ public class AuctionHouseCommand implements CommandExecutor {
         this.plugin.auctionHouseItems.buildAndAddMeta(auctionHouseItemEntity.getId(), clonedItem, player.getName(), price);
 
         itemInHand.setAmount(0);
-        player.sendMessage(Component.text("Successfully placed an auction for your item", NamedTextColor.GREEN));
+        player.sendMessage(this.plugin.miniMessage.deserialize("<green>Successfully placed an auction for your item"));
 
-        return true;
+        return Command.SINGLE_SUCCESS;
     }
 }

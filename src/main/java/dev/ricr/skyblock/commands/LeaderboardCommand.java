@@ -3,26 +3,27 @@ package dev.ricr.skyblock.commands;
 import dev.ricr.skyblock.gui.LeaderBoardGUI;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.utils.ServerUtils;
-import lombok.AllArgsConstructor;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 
-@AllArgsConstructor
-public class LeaderboardCommand implements CommandExecutor {
+import java.util.List;
+
+
+public class LeaderboardCommand implements BasicCommand {
     private final SimpleSkyblock plugin;
 
+    public LeaderboardCommand(SimpleSkyblock plugin) {
+        this.plugin = plugin;
+        this.plugin.registerCommand("leaderboard", List.of("baltop", "balancetop"), this);
+    }
+
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label,
-                             @NotNull String[] strings) {
+    public void execute(CommandSourceStack commandSourceStack, String[] args) {
+        var sender = commandSourceStack.getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
-        player.sendMessage(Component.text("Loading balance leaderboard. This may take a moment", NamedTextColor.YELLOW));
+
+        player.sendMessage("Loading balance leaderboard, this could take a moment.");
 
         new LeaderBoardGUI(this.plugin, player);
-        return true;
     }
 }

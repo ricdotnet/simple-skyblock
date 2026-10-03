@@ -1,8 +1,8 @@
 package dev.ricr.skyblock.gui;
 
 import dev.ricr.skyblock.SimpleSkyblock;
+import dev.ricr.skyblock.items.CreeperCoin;
 import dev.ricr.skyblock.shop.VillagerShopItem;
-import dev.ricr.skyblock.utils.CustomItems;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -33,8 +33,7 @@ public class VillagerShopGUI {
         for (var item : this.shopItemsList) {
             var recipe = new MerchantRecipe(item.itemStack(), 999);
 
-            var creeperCoinItem = CustomItems.createCreeperCoinItem(this.plugin);
-            creeperCoinItem.setAmount(item.coinAmount());
+            var creeperCoinItem = CreeperCoin.create(this.plugin, item.coinAmount());
             recipe.addIngredient(creeperCoinItem);
 
             if (item.tradeInExtra() != null && item.tradeInExtraAmount() != null) {

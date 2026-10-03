@@ -7,7 +7,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
-import dev.ricr.skyblock.utils.CommandUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -25,7 +24,6 @@ public class PayCommand implements ICommand {
         this.plugin.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
                     LiteralCommandNode<CommandSourceStack> pay = this.command();
-
                     commands.registrar().register(pay);
                 });
     }
@@ -33,7 +31,7 @@ public class PayCommand implements ICommand {
     private LiteralCommandNode<CommandSourceStack> command() {
         return Commands.literal("pay")
                 .then(Commands.argument("player", ArgumentTypes.player())
-                        .suggests(CommandUtils::currentOnlinePlayers)
+                        .suggests(PluginCommands::currentOnlinePlayers)
                         .then(Commands.argument("amount", DoubleArgumentType.doubleArg(1))
                                 .executes(this::pay)
                         )

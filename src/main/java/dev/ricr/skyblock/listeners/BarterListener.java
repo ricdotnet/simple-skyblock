@@ -1,10 +1,11 @@
 package dev.ricr.skyblock.listeners;
 
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.utils.CustomItems;
+import dev.ricr.skyblock.enums.SoundType;
+import dev.ricr.skyblock.items.CreeperCoin;
+import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -32,11 +33,11 @@ public class BarterListener implements Listener {
                 player.sendMessage(this.plugin.miniMessage.deserialize("<green>You got <coin_amount>",
                         Placeholder.unparsed("coin_amount", coinAmount == 1 ? "1 Creeper Coin." : coinAmount + " Creeper Coins.")
                 ));
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+                PlayerUtils.playSound(player, SoundType.POSITIVE);
             }
 
             barteredItems.clear();
-            var creeperCoinItem = CustomItems.createCreeperCoinItem(this.plugin);
+            var creeperCoinItem = CreeperCoin.create(this.plugin, null);
             barteredItems.add(creeperCoinItem);
         }
     }

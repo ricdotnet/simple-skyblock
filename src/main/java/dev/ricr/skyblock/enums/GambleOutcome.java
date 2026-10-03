@@ -1,6 +1,6 @@
 package dev.ricr.skyblock.enums;
 
-public enum GambleType {
+public enum GambleOutcome {
     Won,
     Lost
 }
