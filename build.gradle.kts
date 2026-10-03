@@ -5,7 +5,7 @@
  */
 
 group = "dev.ricr.skyblock"
-version = "0.3.0"
+version = "0.0.1-beta"
 description = "SimpleSkyblock"
 java.sourceCompatibility = JavaVersion.VERSION_21
 

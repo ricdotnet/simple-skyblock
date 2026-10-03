@@ -1,8 +1,6 @@
 package dev.ricr.skyblock.generators;
 
-import dev.ricr.skyblock.enums.CustomStructures;
 import dev.ricr.skyblock.SimpleSkyblock;
-import dev.ricr.skyblock.utils.StructureUtils;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -27,21 +25,21 @@ public class IslandGenerator {
 
     public Location generateIsland(World world, Player player) {
         Location islandLocation = new Location(world, -5, 61, -5);
-        StructureUtils.placeStructure(this.plugin, islandLocation, CustomStructures.ISLAND);
+//        StructureUtils.placeStructure(this.plugin, islandLocation, CustomStructures.ISLAND);
         saveIslandLocation(player, islandLocation);
-        
+
         return islandLocation;
     }
 
     private void saveIslandLocation(Player player, Location location) {
         File playerFile = new File(dataFolder, player.getUniqueId() + ".yml");
         FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-        
+
         config.set("world", location.getWorld().getName());
         config.set("x", location.getX());
         config.set("y", location.getY());
         config.set("z", location.getZ());
-        
+
         try {
             config.save(playerFile);
         } catch (IOException e) {

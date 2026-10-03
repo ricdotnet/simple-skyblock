@@ -23,6 +23,7 @@ import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
 import dev.ricr.skyblock.utils.ServerUtils;
+import dev.ricr.skyblock.utils.SingleChunkWorldGenerator;
 import dev.ricr.skyblock.utils.VillagerShopManager;
 import dev.ricr.skyblock.utils.VoidWorldGenerator;
 import dev.ricr.skyblock.utils.WorldManager;
@@ -122,7 +123,7 @@ public class SimpleSkyblock extends JavaPlugin {
 
     @Override
     public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, String id) {
-        return new VoidWorldGenerator();
+        return new SingleChunkWorldGenerator(0, 0);
     }
 
     public void loadVillagerShops() {
