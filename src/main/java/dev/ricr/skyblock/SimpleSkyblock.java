@@ -15,6 +15,7 @@ import dev.ricr.skyblock.listeners.PlayerListeners;
 import dev.ricr.skyblock.listeners.ServerLoadListener;
 import dev.ricr.skyblock.listeners.SilenceMobListener;
 import dev.ricr.skyblock.listeners.VillagerShopInteractListener;
+import dev.ricr.skyblock.managers.WarpsManager;
 import dev.ricr.skyblock.shop.AuctionHouseItems;
 import dev.ricr.skyblock.shop.ShopItems;
 import dev.ricr.skyblock.utils.IslandManager;
@@ -49,6 +50,8 @@ public class SimpleSkyblock extends JavaPlugin {
     public WorldManager worldManager;
     public VillagerShopManager villagerShopManager;
     public KeyChestManager keyChestManager;
+
+    public WarpsManager warpsManager;
 
     public static final Registry<Enchantment> ENCHANTMENTS = RegistryAccess.registryAccess().getRegistry(RegistryKey.ENCHANTMENT);
 
@@ -103,6 +106,9 @@ public class SimpleSkyblock extends JavaPlugin {
 
         // Initiate static namespaced keys
         ServerUtils.initiateNamespacedKeys(this);
+
+        // Initiate other Managers
+        this.warpsManager = new WarpsManager(this);
 
         this.getLogger().info("SimpleSkyblock has been enabled!");
     }

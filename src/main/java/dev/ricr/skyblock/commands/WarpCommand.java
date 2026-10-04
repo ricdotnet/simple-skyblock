@@ -11,6 +11,7 @@ import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
 import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.permissions.Policies;
+import dev.ricr.skyblock.records.Warp;
 import dev.ricr.skyblock.utils.Messages;
 import dev.ricr.skyblock.utils.PlayerUtils;
 import dev.ricr.skyblock.utils.ServerUtils;
@@ -64,28 +65,20 @@ public class WarpCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        try {
-            var playerWarps = this.plugin.databaseManager.getWarpsDao()
-                    .queryBuilder()
-                    .where()
-                    .eq("player_id", player.getUniqueId().toString())
-                    .query();
+        var playerWarps = this.plugin.warpsManager.getPlayerWarps(player.getUniqueId().toString());
 
-            if (playerWarps.isEmpty()) {
-                var message = "<yellow>You don't have any warps";
-                sender.sendMessage(this.plugin.miniMessage.deserialize(message));
-                return Command.SINGLE_SUCCESS;
-            }
-
-            var warpNames = playerWarps.stream()
-                    .map(WarpEntity::getWarpName)
-                    .collect(java.util.stream.Collectors.joining(", "));
-
-            var message = String.format("<green>Your warps: <gray>%s", warpNames);
+        if (playerWarps.isEmpty()) {
+            var message = "<yellow>You don't have any warps";
             sender.sendMessage(this.plugin.miniMessage.deserialize(message));
-        } catch (SQLException e) {
-            // ignore for now
+            return Command.SINGLE_SUCCESS;
         }
+
+        var warpNames = playerWarps.stream()
+                .map(Warp::name)
+                .collect(java.util.stream.Collectors.joining(", "));
+
+        var message = String.format("<green>Your warps: <gray>%s", warpNames);
+        sender.sendMessage(this.plugin.miniMessage.deserialize(message));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -96,79 +89,74 @@ public class WarpCommand implements ICommand {
 
         var warpName = ctx.getArgument("warp", String.class).toLowerCase();
 
-        try {
-            var warpEntity = this.plugin.databaseManager.getWarpsDao().queryForId(warpName);
-            if (warpEntity == null) {
-                var message = String.format("<red>Warp <gold>%s</gold> does not exist", warpName);
-                player.sendMessage(this.plugin.miniMessage.deserialize(message));
-                return Command.SINGLE_SUCCESS;
-            }
+        var warp = this.plugin.warpsManager.getWarp(warpName);
+        if (warp == null) {
+            var message = String.format("<red>Warp <gold>%s</gold> does not exist", warpName);
+            player.sendMessage(this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
 
-            var location = ServerUtils.deserializeLocation(this.plugin, warpEntity);
-            var locationWorld = location.getWorld();
+        var locationWorld = warp.location().getWorld();
 
-            if (locationWorld == null) {
-                var message = "<red>Warp <gold><warp></gold> is in an invalid world";
-                player.sendMessage(this.plugin.miniMessage.deserialize(message, Placeholder.unparsed("warp", warpName)));
-                return Command.SINGLE_SUCCESS;
-            }
+        if (locationWorld == null) {
+            var message = "<red>Warp <gold><warp></gold> is in an invalid world";
+            player.sendMessage(this.plugin.miniMessage.deserialize(message, Placeholder.unparsed("warp", warpName)));
+            return Command.SINGLE_SUCCESS;
+        }
 
-            if (warpEntity.getPlayer() == null) {
-                player.teleport(location);
-                var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
-                PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
-                return Command.SINGLE_SUCCESS;
-            }
-
-            var targetIslandId = UUID.fromString(warpEntity.getPlayer().getPlayerId());
-            var islandRecord = this.plugin.islandManager.getIslandRecord(targetIslandId);
-
-            var isIslandOwner = PlayerUtils.isPlayerInOwnIsland(player, locationWorld.getName());
-            if (isIslandOwner) {
-                player.teleport(location);
-                var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
-                PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
-                return Command.SINGLE_SUCCESS;
-            }
-
-            if (locationWorld.getEnvironment() == World.Environment.THE_END) {
-                var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
-                var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
-                var playerBalance = playerEntity.getBalance();
-
-                if (playerBalance < endPortalPrice) {
-                    player.sendMessage(Messages.INSUFFICIENT_END_PORTAL_BALANCE.component(this.plugin, ServerUtils.formatMoneyValue(endPortalPrice - playerBalance)));
-                    return Command.SINGLE_SUCCESS;
-                }
-
-                playerEntity.setBalance(playerBalance - endPortalPrice);
-
-                var playerUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
-                this.plugin.databaseChangesAccumulator.add(playerUpdate);
-            } else {
-                if (islandRecord.isPrivate()) {
-                    var islandIsPrivateMessage = "<red>The owner of Warp <gold><warp></gold> has their island private";
-                    player.sendMessage(this.plugin.miniMessage.deserialize(islandIsPrivateMessage, Placeholder.unparsed("warp", warpName)));
-                    return Command.SINGLE_SUCCESS;
-                }
-
-                if (locationWorld.getEnvironment() == World.Environment.NETHER) {
-                    // TODO: implement the ALL permission check here
-                    if (!islandRecord.islandPermissions().getPermissionValue(Policies.PoliciesEnum.PORTAL_TRAVEL)) {
-                        var noPortalTravelMessage = "<red>The owner of Warp <gold><warp></gold> has portal travel deactivated";
-                        player.sendMessage(this.plugin.miniMessage.deserialize(noPortalTravelMessage, Placeholder.unparsed("warp", warpName)));
-                        PlayerUtils.playSound(player, SoundType.NEGATIVE);
-                        return Command.SINGLE_SUCCESS;
-                    }
-                }
-            }
-
-            player.teleport(location);
+        if (warp.owner().equals("server")) {
+            player.teleport(warp.location());
             var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
             PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
-        } catch (SQLException e) {
-            // ignore for now
+            return Command.SINGLE_SUCCESS;
         }
+
+        var targetIslandId = UUID.fromString(warp.owner());
+        var islandRecord = this.plugin.islandManager.getIslandRecord(targetIslandId);
+
+        var isIslandOwner = PlayerUtils.isPlayerInOwnIsland(player, locationWorld.getName());
+        if (isIslandOwner) {
+            player.teleport(warp.location());
+            var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
+            PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        if (locationWorld.getEnvironment() == World.Environment.THE_END) {
+            var endPortalPrice = this.plugin.serverConfig.getInt("end_portal_price", 100000);
+            var playerEntity = this.plugin.onlinePlayers.getPlayer(player.getUniqueId()).getPlayerEntity();
+            var playerBalance = playerEntity.getBalance();
+
+            if (playerBalance < endPortalPrice) {
+                player.sendMessage(Messages.INSUFFICIENT_END_PORTAL_BALANCE.component(this.plugin, ServerUtils.formatMoneyValue(endPortalPrice - playerBalance)));
+                return Command.SINGLE_SUCCESS;
+            }
+
+            playerEntity.setBalance(playerBalance - endPortalPrice);
+
+            var playerUpdate = new DatabaseChange.PlayerCreateOrUpdate(playerEntity);
+            this.plugin.databaseChangesAccumulator.add(playerUpdate);
+        } else {
+            if (islandRecord.isPrivate()) {
+                var islandIsPrivateMessage = "<red>The owner of Warp <gold><warp></gold> has their island private";
+                player.sendMessage(this.plugin.miniMessage.deserialize(islandIsPrivateMessage, Placeholder.unparsed("warp", warpName)));
+                return Command.SINGLE_SUCCESS;
+            }
+
+            if (locationWorld.getEnvironment() == World.Environment.NETHER) {
+                // TODO: implement the ALL permission check here
+                if (!islandRecord.islandPermissions().getPermissionValue(Policies.PoliciesEnum.PORTAL_TRAVEL)) {
+                    var noPortalTravelMessage = "<red>The owner of Warp <gold><warp></gold> has portal travel deactivated";
+                    player.sendMessage(this.plugin.miniMessage.deserialize(noPortalTravelMessage, Placeholder.unparsed("warp", warpName)));
+                    PlayerUtils.playSound(player, SoundType.NEGATIVE);
+                    return Command.SINGLE_SUCCESS;
+                }
+            }
+        }
+
+        player.teleport(warp.location());
+        var message = String.format("<green>Welcome to Warp <gold>%s", warpName);
+        PlayerUtils.showTitleMessage(this.plugin, player, this.plugin.miniMessage.deserialize(message));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -195,13 +183,13 @@ public class WarpCommand implements ICommand {
 
         var warpName = ctx.getArgument("warp", String.class).toLowerCase();
 
-        if (isReservedWarpName(warpName)) {
+        if (this.plugin.warpsManager.isReservedWarpName(warpName)) {
             var message = String.format("<red>Invalid warp name <gold>%s", warpName);
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
         }
 
-        var warpExists = this.warpNameExists(warpName);
+        var warpExists = this.plugin.warpsManager.warpExists(warpName);
         if (warpExists) {
             var message = String.format("<red>Warp with name <gold>%s</gold> already exists", warpName);
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
@@ -228,6 +216,9 @@ public class WarpCommand implements ICommand {
             player.sendMessage(this.plugin.miniMessage.deserialize(endWarpMessage));
             return Command.SINGLE_SUCCESS;
         }
+
+        var warp = new Warp(warpName, player.getUniqueId().toString(), location);
+        this.plugin.warpsManager.addWarp(warp);
 
         return Command.SINGLE_SUCCESS;
     }
@@ -257,6 +248,18 @@ public class WarpCommand implements ICommand {
             // ignore for now
         }
 
+        var warp = this.plugin.warpsManager.getWarp(warpName);
+
+        if (warp == null) {
+            return Command.SINGLE_SUCCESS;
+        }
+
+        if (!warp.owner().equals(player.getUniqueId().toString())) {
+            return Command.SINGLE_SUCCESS;
+        }
+
+        this.plugin.warpsManager.removeWarp(warpName);
+
         var message = String.format("<green>Warp <gold>%s</gold> deleted", warpName);
         sender.sendMessage(this.plugin.miniMessage.deserialize(message));
         return Command.SINGLE_SUCCESS;
@@ -266,19 +269,11 @@ public class WarpCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        try {
-            var warpEntities = this.plugin.databaseManager.getWarpsDao()
-                    .queryBuilder()
-                    .where()
-                    .eq("is_server", true)
-                    .or()
-                    .eq("player_id", player.getUniqueId().toString())
-                    .query();
+        var warps = this.plugin.warpsManager.getPlayerWarps(player.getUniqueId().toString());
+        warps.forEach(warp -> builder.suggest(warp.name()));
 
-            warpEntities.forEach(warp -> builder.suggest(warp.getWarpName()));
-        } catch (SQLException e) {
-            // ignore for now
-        }
+        var serverWarps = this.plugin.warpsManager.getPlayerWarps("server");
+        serverWarps.forEach(warp -> builder.suggest(warp.name()));
 
         return builder.buildFuture();
     }
@@ -287,37 +282,9 @@ public class WarpCommand implements ICommand {
         var sender = ctx.getSource().getSender();
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
-        try {
-            var warpEntities = this.plugin.databaseManager.getWarpsDao()
-                    .queryBuilder()
-                    .where()
-                    .eq("player_id", player.getUniqueId().toString())
-                    .query();
-
-            warpEntities.forEach(warp -> builder.suggest(warp.getWarpName()));
-        } catch (SQLException e) {
-            // ignore for now
-        }
+        var warps = this.plugin.warpsManager.getPlayerWarps(player.getUniqueId().toString());
+        warps.forEach(warp -> builder.suggest(warp.name()));
 
         return builder.buildFuture();
-    }
-
-    private boolean warpNameExists(String warpName) {
-        try {
-            var warpEntity = this.plugin.databaseManager.getWarpsDao().queryForId(warpName);
-            return warpEntity != null;
-        } catch (SQLException e) {
-            // ignore for now
-        }
-
-        // default to false if we get any error
-        return true;
-    }
-
-    private boolean isReservedWarpName(String warpName) {
-        var reservedWarpNames = this.plugin.serverConfig.getMapList("reserved_warp_names");
-
-        return reservedWarpNames.stream()
-                .anyMatch(name -> name.get("name").equals(warpName));
     }
 }
