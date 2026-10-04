@@ -243,6 +243,11 @@ villager_shops:
         coin_amount: 4
         trade_in_extra: GRASS_BLOCK
         trade_in_extra_amount: 32
+      - material: POPLAR_SAPLING
+        amount: 1
+        coin_amount: 8
+        trade_in_extra: GRASS_BLOCK
+        trade_in_extra_amount: 64
       - material: FLOWERING_AZALEA
         amount: 1
         coin_amount: 8
