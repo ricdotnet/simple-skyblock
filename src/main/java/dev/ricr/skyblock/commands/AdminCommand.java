@@ -11,7 +11,6 @@ import dev.ricr.skyblock.DisplayNames;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
-import dev.ricr.skyblock.enums.InvalidWarpNames;
 import dev.ricr.skyblock.items.CreeperCoin;
 import dev.ricr.skyblock.items.LuckyPickaxe;
 import dev.ricr.skyblock.items.PlayTimeKey;
@@ -27,7 +26,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.sql.SQLException;
 
 @RequiredArgsConstructor
@@ -221,9 +220,8 @@ public class AdminCommand implements ICommand {
         var player = ServerUtils.ensureCommandSenderIsPlayer(sender);
 
         var warpName = ctx.getArgument("warp", String.class).toLowerCase();
-        var warpEnum = InvalidWarpNames.getByName(warpName);
 
-        if (warpEnum != null && !warpEnum.isAdminOverride()) {
+        if (isReservedWarpNameAndNotOverridable(warpName)) {
             var message = String.format("<red>This warp name <gold>%s</gold> is marked as invalid and as non-overrideable", warpName);
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
@@ -263,5 +261,17 @@ public class AdminCommand implements ICommand {
 
         // default to false if we get any error
         return true;
+    }
+
+    private boolean isReservedWarpNameAndNotOverridable(String warpName) {
+        var reservedWarpNames = this.plugin.serverConfig.getMapList("reserved_warp_names");
+
+        for (var name : reservedWarpNames) {
+            if (name.get("name").equals(warpName) && name.get("admin_override").equals(false)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

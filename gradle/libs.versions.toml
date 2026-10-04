@@ -2,7 +2,9 @@
 # https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
 
 [versions]
-io-papermc-paper-paper-api = "1.21.11-R0.1-SNAPSHOT"
+paper = "26.3.build.+"
+fastboard = "2.2.2"
 
 [libraries]
-io-papermc-paper-paper-api = { module = "io.papermc.paper:paper-api", version.ref = "io-papermc-paper-paper-api" }
+paper = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper" }
+fastboard = { group = "fr.mrmicky", name = "fastboard", version.ref = "fastboard" }

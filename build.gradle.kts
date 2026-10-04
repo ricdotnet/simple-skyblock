@@ -5,29 +5,25 @@
  */
 
 group = "dev.ricr.skyblock"
-version = "0.4.1"
+version = "0.5.0"
 description = "SimpleSkyblock"
-java.sourceCompatibility = JavaVersion.VERSION_21
+java.sourceCompatibility = JavaVersion.VERSION_25
 
 plugins {
     `java-library`
     `maven-publish`
     java
-    id("io.github.goooler.shadow") version "8.1.8"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 repositories {
     mavenLocal()
-    maven {
-        url = uri("https://repo.papermc.io/repository/maven-public/")
-    }
-    maven {
-        url = uri("https://repo.maven.apache.org/maven2/")
-    }
+    maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.maven.apache.org/maven2/")
 }
 
 dependencies {
-    compileOnly(libs.io.papermc.paper.paper.api)
+    compileOnly(libs.paper)
 
     implementation("org.xerial:sqlite-jdbc:3.51.0.0")
     implementation("com.j256.ormlite:ormlite-core:6.1")
@@ -38,7 +34,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
 
-    implementation("fr.mrmicky:fastboard:2.1.5")
+    implementation(libs.fastboard)
 }
 
 publishing {

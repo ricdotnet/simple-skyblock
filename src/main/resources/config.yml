@@ -7,8 +7,45 @@ island:
   starting_border_radius: 60
   show_seed_price: 25000
   expand_price: 2000 # price per block - 10 blocks means 10 * price
+warps:
+  server:
+    - name: "keys"
+      world: "lobby"
+      x: 0
+      y: 44
+      z: 0
+  reserved_names:
+    - name: "warp"
+      admin_override: false
+    - name: "spawn"
+      admin_override: false
+    - name: "shop"
+      admin_override: true
+    - name: "trade"
+      admin_override: true
+    - name: "trade_hall"
+      admin_override: true
+    - name: "pvp_arena"
+      admin_override: true
+    - name: "pvp"
+      admin_override: false
+    - name: "end"
+      admin_override: false
+    - name: "the_end"
+      admin_override: false
+    - name: "end_portal"
+      admin_override: true
+    - name: "nether"
+      admin_override: false
+    - name: "the_nether"
+      admin_override: false
+    - name: "create"
+      admin_override: false
+    - name: "list"
+      admin_override: false
 key_chests:
   - name: "PLAYTIME_KEY"
+    display_name: "Playtime Key"
     world: "lobby"
     x: 0
     y: 44

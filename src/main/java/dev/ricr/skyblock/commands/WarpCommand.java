@@ -9,7 +9,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.ricr.skyblock.SimpleSkyblock;
 import dev.ricr.skyblock.database.DatabaseChange;
 import dev.ricr.skyblock.database.WarpEntity;
-import dev.ricr.skyblock.enums.InvalidWarpNames;
 import dev.ricr.skyblock.enums.SoundType;
 import dev.ricr.skyblock.permissions.Policies;
 import dev.ricr.skyblock.utils.Messages;
@@ -195,9 +194,8 @@ public class WarpCommand implements ICommand {
         }
 
         var warpName = ctx.getArgument("warp", String.class).toLowerCase();
-        var warpEnum = InvalidWarpNames.getByName(warpName);
 
-        if (warpEnum != null) {
+        if (isReservedWarpName(warpName)) {
             var message = String.format("<red>Invalid warp name <gold>%s", warpName);
             player.sendMessage(this.plugin.miniMessage.deserialize(message));
             return Command.SINGLE_SUCCESS;
@@ -314,5 +312,12 @@ public class WarpCommand implements ICommand {
 
         // default to false if we get any error
         return true;
+    }
+
+    private boolean isReservedWarpName(String warpName) {
+        var reservedWarpNames = this.plugin.serverConfig.getMapList("reserved_warp_names");
+
+        return reservedWarpNames.stream()
+                .anyMatch(name -> name.get("name").equals(warpName));
     }
 }

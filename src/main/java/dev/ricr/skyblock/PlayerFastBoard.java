@@ -8,7 +8,7 @@ import lombok.Getter;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class PlayerFastBoard {
     private final SimpleSkyblock plugin;

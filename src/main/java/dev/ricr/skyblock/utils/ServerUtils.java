@@ -158,7 +158,7 @@ public class ServerUtils {
         return player;
     }
 
-    // TODO: refactor text dispays into their own manager class
+    // TODO: refactor text displays into their own manager class
     public static void setEndPortalTextDisplay(SimpleSkyblock plugin) {
         var lobbyWorld = ServerUtils.loadOrCreateLobby();
         var textDisplayLocation = new Location(lobbyWorld, 0.5, 67.5, -9.5);
@@ -279,7 +279,7 @@ public class ServerUtils {
         var worldName = deserialized.get("world").toString();
         var worldEnvironment = worldName.contains("_nether") ? World.Environment.NETHER : World.Environment.NORMAL;
 
-        World loadedWorld = null;
+        World loadedWorld;
 
         if (worldName.contains("_the_end")) {
             loadedWorld = plugin.worldManager.load(worldName);

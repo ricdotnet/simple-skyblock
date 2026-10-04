@@ -24,7 +24,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,7 +115,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
         var isDoMobSpawn = islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS);
         var islandDoMobSpawnDescription = "Allows mobs to spawn in your islands.";
-        this.addBooleanButton(Boolean.TRUE.equals(isDoMobSpawn), 12, Buttons.IslandAllowMobSpawning, "ᴍᴏʙ ꜱᴘᴀᴡɴɪɴɢ", islandDoMobSpawnDescription);
+        this.addBooleanButton(isDoMobSpawn, 12, Buttons.IslandAllowMobSpawning, "ᴍᴏʙ ꜱᴘᴀᴡɴɪɴɢ", islandDoMobSpawnDescription);
 
         var islandSizeIcon = new ItemStack(Material.OAK_PLANKS);
         var defaultSize = this.plugin.serverConfig.getInt("island.starting_border_radius", 60);
@@ -284,7 +284,7 @@ public class IslandGUI implements InventoryHolder, ISimpleSkyblockGUI {
 
     private void handleMobSpawningClick(Player player) {
         var islandWorld = this.plugin.worldManager.loadOrCreate(player.getUniqueId(), null, null);
-        var isDoMobSpawn = Boolean.TRUE.equals(islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS));
+        var isDoMobSpawn = islandWorld.getGameRuleValue(GameRules.SPAWN_MOBS);
 
         islandWorld.setGameRule(GameRules.SPAWN_MOBS, !isDoMobSpawn);
 

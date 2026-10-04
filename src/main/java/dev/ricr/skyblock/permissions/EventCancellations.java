@@ -3,7 +3,7 @@ package dev.ricr.skyblock.permissions;
 import dev.ricr.skyblock.enums.EventCancellationReasons;
 import org.bukkit.event.Event;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
