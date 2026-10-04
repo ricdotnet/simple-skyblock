@@ -1,6 +1,6 @@
 # SimpleSkyblock Plugin
 
-A simple Paper plugin for Minecraft `>1.21.10` that every player to have their own island.
+A simple Paper plugin for Minecraft `26.3` that allows every player to have their own island.
 
 ## Features
 
